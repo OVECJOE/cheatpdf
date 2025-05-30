@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcryptjs";
-import { prisma } from "@/lib/config/db";
+import db from "@/lib/config/db";
+import { UserType } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
     try {
         const { email, password, name, country, language, userType } = await request.json();
+        if (userType && !Object.values(UserType).includes(userType.toUpperCase())) {
+            return NextResponse.json(
+                { message: "Invalid user type" },
+                { status: 400 }
+            );
+        }
 
         // Check if user already exists
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await db.user.findUnique({
             where: { email }
         });
 
@@ -22,14 +29,14 @@ export async function POST(request: NextRequest) {
         const hashedPassword = await hash(password, 12);
 
         // Create user
-        const user = await prisma.user.create({
+        const user = await db.user.create({
             data: {
                 email,
                 password: hashedPassword,
                 name,
                 country,
                 language,
-                userType: userType || "student",
+                userType: userType || UserType.STUDENT,
                 emailVerified: new Date(), // Auto-verify for demo
             }
         });

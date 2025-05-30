@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
-import { BookOpen, Mail, Lock, ArrowLeft, User, Globe } from "lucide-react";
+import { BookOpen, Mail, Lock, ArrowLeft, User } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 
@@ -46,8 +46,7 @@ export default function SignUpPage() {
           password: formData.password,
           name: formData.name,
           country: formData.country,
-          language: formData.language,
-          userType: "student" // Default to student for now
+          language: formData.language
         }),
       });
 

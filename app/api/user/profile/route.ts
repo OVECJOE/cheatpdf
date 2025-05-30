@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/config/auth";
-import { prisma } from "@/lib/config/db";
+import db from "@/lib/config/db";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         const session = await getServerSession(authOptions);
         
@@ -14,11 +14,8 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        const user = await prisma.user.findUnique({
+        const user = await db.user.findUnique({
             where: { id: session.user.id },
-            include: {
-                subscription: true,
-            }
         });
 
         if (!user) {
@@ -35,7 +32,7 @@ export async function GET(request: NextRequest) {
             country: user.country,
             language: user.language,
             userType: user.userType,
-            subscription: user.subscription
+            subscriptionStatus: user.subscriptionStatus
         });
 
     } catch (error) {
