@@ -57,21 +57,11 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const {
             userType,
-            country,
-            language,
             educationLevel,
             subjects,
             company,
             role,
         } = body;
-
-        // Validate required fields
-        if (!userType || !country || !language) {
-            return NextResponse.json(
-                { error: "User type, country, and language are required" },
-                { status: 400 },
-            );
-        }
 
         // Validate user type specific fields
         if (userType === UserType.STUDENT) {
@@ -101,8 +91,6 @@ export async function POST(request: NextRequest) {
             where: { id: session.user.id },
             data: {
                 userType,
-                country,
-                language,
                 educationLevel: userType === UserType.STUDENT
                     ? educationLevel
                     : null,

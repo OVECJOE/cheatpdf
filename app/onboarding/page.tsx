@@ -134,7 +134,7 @@ export default function OnboardingPage() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <button
-                  onClick={() => handleUserTypeSelect("student")}
+                  onClick={() => handleUserTypeSelect("STUDENT")}
                   className="p-6 border-2 border-gray-200 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition-colors text-left group"
                 >
                   <div className="flex items-center space-x-4 mb-4">
@@ -156,7 +156,7 @@ export default function OnboardingPage() {
                 </button>
 
                 <button
-                  onClick={() => handleUserTypeSelect("sourcer")}
+                  onClick={() => handleUserTypeSelect("TALENT_SOURCER")}
                   className="p-6 border-2 border-gray-200 rounded-lg hover:border-purple-600 hover:bg-purple-50 transition-colors text-left group"
                 >
                   <div className="flex items-center space-x-4 mb-4">
@@ -180,7 +180,7 @@ export default function OnboardingPage() {
             </Card>
           )}
 
-          {step === 2 && userType === "student" && (
+          {step === 2 && userType === "STUDENT" && (
             <Card className="p-8">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -282,7 +282,7 @@ export default function OnboardingPage() {
             </Card>
           )}
 
-          {step === 2 && userType === "sourcer" && (
+          {step === 2 && userType === "TALENT_SOURCER" && (
             <Card className="p-8">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
