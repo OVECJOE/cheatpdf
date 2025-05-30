@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  
+  // Profile information
+  userType      UserType  @default(STUDENT)
+  country       String?
+  language      String    @default("en")
+  educationLevel String?
+  subjects      String[]  @default([])
+  company       String?
+  role          String?
+  onboardingCompleted Boolean @default(false)
+  
+  // Subscription
+  subscriptionStatus SubscriptionStatus @default(FREE)
+  subscriptionEnds   DateTime?
+  stripeCustomerId   String?
+  
+  accounts Account[]
+  sessions Session[]
+  documents Document[]
+  chats     Chat[]
+  exams     Exam[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  name        String
+  fileName    String
+  fileSize    Int
+  contentType String
+  content     String   @db.Text
+  vectorized  Boolean  @default(false)
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  chats       Chat[]
+  exams       Exam[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Chat {
+  id          String   @id @default(cuid())
+  title       String
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  messages    Message[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  content   String      @db.Text
+  role      MessageRole
+  
+  chatId    String
+  chat      Chat        @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime    @default(now())
+}
+
+model Exam {
+  id          String     @id @default(cuid())
+  title       String
+  timeLimit   Int        // in minutes
+  totalQuestions Int
+  status      ExamStatus @default(NOT_STARTED)
+  score       Float?
+  startedAt   DateTime?
+  completedAt DateTime?
+  
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  documentId  String
+  document    Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  questions   ExamQuestion[]
+  answers     ExamAnswer[]
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model ExamQuestion {
+  id          String @id @default(cuid())
+  question    String @db.Text
+  options     String[] @default([])
+  correctAnswer String
+  explanation String @db.Text
+  
+  examId      String
+  exam        Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
+  
+  answers     ExamAnswer[]
+}
+
+model ExamAnswer {
+  id          String @id @default(cuid())
+  answer      String
+  isCorrect   Boolean
+  
+  examId      String
+  exam        Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
+  
+  questionId  String
+  question    ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+}
+
+enum UserType {
+  STUDENT
+  TALENT_SOURCER
+}
+
+enum SubscriptionStatus {
+  FREE
+  ACTIVE
+  CANCELED
+  PAST_DUE
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+enum ExamStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
