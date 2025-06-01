@@ -32,7 +32,9 @@ export async function GET() {
             country: user.country,
             language: user.language,
             userType: user.userType,
-            subscriptionStatus: user.subscriptionStatus
+            subscriptionStatus: user.subscriptionStatus,
+            createdAt: user.createdAt,
+            isEmailVerified: user.emailVerified !== null,
         });
 
     } catch (error) {

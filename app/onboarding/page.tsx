@@ -29,7 +29,7 @@ export default function OnboardingPage() {
   }
 
   if (status === "unauthenticated") {
-    router.push("/sign-in");
+    router.push("/auth/sign-in");
     return null;
   }
 
@@ -93,7 +93,7 @@ export default function OnboardingPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-amber-600 to-purple-600 rounded-lg flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900">CheatPDF</span>
@@ -108,13 +108,13 @@ export default function OnboardingPage() {
         <div className="max-w-md mx-auto mb-8">
           <div className="flex items-center justify-between">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              step >= 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
+              step >= 1 ? "bg-amber-600 text-white" : "bg-gray-200 text-gray-600"
             }`}>
               {step > 1 ? <CheckCircle className="w-5 h-5" /> : "1"}
             </div>
-            <div className={`flex-1 h-1 mx-2 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+            <div className={`flex-1 h-1 mx-2 ${step >= 2 ? "bg-amber-600" : "bg-gray-200"}`} />
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
+              step >= 2 ? "bg-amber-600 text-white" : "bg-gray-200 text-gray-600"
             }`}>
               {step > 2 ? <CheckCircle className="w-5 h-5" /> : "2"}
             </div>

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ interface Exam {
 }
 
 export default function ExamPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -55,11 +56,12 @@ export default function ExamPage() {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/sign-in");
+      router.push("/auth/sign-in");
       return;
     }
 
@@ -330,8 +332,6 @@ export default function ExamPage() {
               
               {activeExam.questions.map((question, index) => {
                 const isCorrect = question.userAnswer === question.correctAnswer;
-                const wasAnswered = question.userAnswer !== undefined;
-                
                 return (
                   <Card key={question.id} className="p-6">
                     <div className="flex items-start space-x-4">
@@ -503,7 +503,7 @@ export default function ExamPage() {
                     <Button 
                       variant="outline"
                       onClick={() => {
-                        const prevIndex = Math.max(0, currentQuestionIndex - 1);
+                        // const prevIndex = Math.max(0, currentQuestionIndex - 1);
                         // You could implement question navigation here
                       }}
                       disabled={currentQuestionIndex === 0}
@@ -710,7 +710,14 @@ export default function ExamPage() {
                           )}
                           
                           <Button
-                            onClick={() => exam.status === "completed" ? setActiveExam(exam) && setShowResults(true) : startExam(exam)}
+                            onClick={() => {
+                              if (exam.status === "completed") {
+                                setActiveExam(exam);
+                                setShowResults(true);
+                              } else {
+                                startExam(exam);
+                              }
+                            }}
                             size="sm"
                           >
                             {exam.status === "completed" ? "View Results" : "Start Exam"}
@@ -734,7 +741,7 @@ export default function ExamPage() {
                   </div>
                   <div className="flex items-start space-x-2">
                     <Clock className="w-4 h-4 text-blue-600 mt-0.5" />
-                    <p>Manage your time wisely - don't spend too long on one question</p>
+                    <p>Manage your time wisely - don&apos;t spend too long on one question</p>
                   </div>
                   <div className="flex items-start space-x-2">
                     <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5" />

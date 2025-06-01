@@ -3,15 +3,15 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { 
-  BookOpen, Upload, MessageCircle, Clock, TrendingUp, Settings,
+  BookOpen, Upload, MessageCircle, Clock, TrendingUp,
   Plus, FileText, Brain, Zap, Crown, User, LogOut, BarChart3
 } from "lucide-react";
+import { SubscriptionStatus } from "@prisma/client";
 
 interface Document {
   id: string;
@@ -44,12 +44,13 @@ export default function DashboardPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [chats, setChats] = useState<Chat[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/sign-in");
+      router.push("/auth/sign-in");
       return;
     }
 
@@ -89,7 +90,7 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+          <div className="w-8 h-8 bg-gradient-to-r from-amber-600 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-5 h-5 text-white animate-pulse" />
           </div>
           <p className="text-gray-600">Loading your dashboard...</p>
@@ -98,7 +99,7 @@ export default function DashboardPage() {
     );
   }
 
-  const isPro = userProfile?.subscription?.status === "active";
+  const isPro = userProfile.subscriptionStatus === SubscriptionStatus.ACTIVE;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -108,7 +109,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-amber-600 to-purple-600 rounded-lg flex items-center justify-center">
                   <BookOpen className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-xl font-bold text-gray-900">CheatPDF</span>
@@ -125,7 +126,7 @@ export default function DashboardPage() {
               {!isPro && (
                 <Button 
                   onClick={() => router.push("/upgrade")}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-700 hover:to-purple-700"
                 >
                   <Crown className="w-4 h-4 mr-2" />
                   Upgrade to Pro
@@ -162,7 +163,7 @@ export default function DashboardPage() {
 
         {/* Upgrade Banner */}
         {shouldUpgrade && !isPro && (
-          <Card className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white mb-8">
+          <Card className="p-6 bg-gradient-to-r from-amber-600 to-purple-600 text-white mb-8">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold mb-2">Unlock Premium Features</h3>
@@ -186,7 +187,7 @@ export default function DashboardPage() {
           <Card className="p-6">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6 text-blue-600" />
+                <FileText className="w-6 h-6 text-amber-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">{documents.length}</p>
@@ -299,7 +300,7 @@ export default function DashboardPage() {
                     <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                          <FileText className="w-4 h-4 text-blue-600" />
+                          <FileText className="w-4 h-4 text-amber-600" />
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">{doc.filename}</p>

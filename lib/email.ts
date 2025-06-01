@@ -79,9 +79,9 @@ export async function sendMagicLinkEmail(email: string, url: string) {
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">${process.env.NEXT_PUBLIC_APP_NAME || "StudyApp"}</div>
+      <div class="logo">${process.env.NEXT_PUBLIC_APP_NAME || "CheatPDF"}</div>
     </div>
-    
+
     <h1 class="title">Sign in to your account</h1>
     
     <p>Click the button below to securely sign in to your account. This link will expire in 24 hours.</p>
@@ -123,7 +123,7 @@ This email was sent from ${host}
     const { data, error } = await resend.emails.send({
       from: process.env.EMAIL_FROM || `noreply@${host}`,
       to: email,
-      subject: `Sign in to ${process.env.NEXT_PUBLIC_APP_NAME || "StudyApp"}`,
+      subject: `Sign in to ${process.env.NEXT_PUBLIC_APP_NAME || "CheatPDF"}`,
       text: textTemplate,
       html: emailTemplate,
     });
@@ -132,11 +132,8 @@ This email was sent from ${host}
       console.error("Resend error:", error);
       throw new Error("Failed to send email");
     }
-
-    console.log("Email sent successfully:", data);
     return data;
   } catch (error) {
-    console.error("Error sending email:", error);
     throw error;
   }
 }

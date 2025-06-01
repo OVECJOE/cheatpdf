@@ -19,7 +19,7 @@ export default function UpgradePage() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/sign-in");
+      router.push("/auth/sign-in");
       return;
     }
 
