@@ -9,12 +9,13 @@ import { useState } from "react";
 import { BookOpen, GraduationCap, Users, ArrowRight, CheckCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { UserType } from "@prisma/client";
 
 export default function OnboardingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [userType, setUserType] = useState("");
+  const [userType, setUserType] = useState<UserType>();
   const [studentData, setStudentData] = useState({
     educationLevel: "",
     subjects: [] as string[],
@@ -32,7 +33,7 @@ export default function OnboardingPage() {
     return null;
   }
 
-  const handleUserTypeSelect = (type: string) => {
+  const handleUserTypeSelect = (type: keyof typeof UserType) => {
     setUserType(type);
     setStep(2);
   };
@@ -134,12 +135,12 @@ export default function OnboardingPage() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <button
-                  onClick={() => handleUserTypeSelect("STUDENT")}
-                  className="p-6 border-2 border-gray-200 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition-colors text-left group"
+                  onClick={() => handleUserTypeSelect(UserType.STUDENT)}
+                  className="p-6 border-2 border-gray-200 rounded-lg hover:border-amber-600 hover:bg-amber-50 transition-colors text-left group"
                 >
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200">
-                      <GraduationCap className="w-6 h-6 text-blue-600" />
+                      <GraduationCap className="w-6 h-6 text-amber-600" />
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">Student</h3>
@@ -156,7 +157,7 @@ export default function OnboardingPage() {
                 </button>
 
                 <button
-                  onClick={() => handleUserTypeSelect("TALENT_SOURCER")}
+                  onClick={() => handleUserTypeSelect(UserType.TALENT_SOURCER)}
                   className="p-6 border-2 border-gray-200 rounded-lg hover:border-purple-600 hover:bg-purple-50 transition-colors text-left group"
                 >
                   <div className="flex items-center space-x-4 mb-4">
@@ -180,7 +181,7 @@ export default function OnboardingPage() {
             </Card>
           )}
 
-          {step === 2 && userType === "STUDENT" && (
+          {step === 2 && userType === UserType.STUDENT && (
             <Card className="p-8">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -282,7 +283,7 @@ export default function OnboardingPage() {
             </Card>
           )}
 
-          {step === 2 && userType === "TALENT_SOURCER" && (
+          {step === 2 && userType === UserType.TALENT_SOURCER && (
             <Card className="p-8">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -309,7 +310,7 @@ export default function OnboardingPage() {
                     </Button>
                     <Button 
                       variant="outline" 
-                      onClick={() => handleUserTypeSelect("student")}
+                      onClick={() => handleUserTypeSelect(UserType.STUDENT)}
                     >
                       Use Student Mode Instead
                     </Button>

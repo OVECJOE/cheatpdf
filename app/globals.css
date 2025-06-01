@@ -50,10 +50,12 @@
   --card-foreground: oklch(0.147 0.004 49.25);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(0.216 0.006 56.043);
+  /* Updated primary to amber-600 */
+  --primary: oklch(0.695 0.156 69.738);
   --primary-foreground: oklch(0.985 0.001 106.423);
-  --secondary: oklch(0.97 0.001 106.424);
-  --secondary-foreground: oklch(0.216 0.006 56.043);
+  /* Updated secondary to purple-600 */
+  --secondary: oklch(0.569 0.226 292.729);
+  --secondary-foreground: oklch(0.985 0.001 106.423);
   --muted: oklch(0.97 0.001 106.424);
   --muted-foreground: oklch(0.553 0.013 58.071);
   --accent: oklch(0.97 0.001 106.424);
@@ -84,9 +86,11 @@
   --card-foreground: oklch(0.985 0.001 106.423);
   --popover: oklch(0.216 0.006 56.043);
   --popover-foreground: oklch(0.985 0.001 106.423);
-  --primary: oklch(0.923 0.003 48.717);
-  --primary-foreground: oklch(0.216 0.006 56.043);
-  --secondary: oklch(0.268 0.007 34.298);
+  /* Updated primary to amber-600 for dark mode */
+  --primary: oklch(0.695 0.156 69.738);
+  --primary-foreground: oklch(0.147 0.004 49.25);
+  /* Updated secondary to purple-600 for dark mode */
+  --secondary: oklch(0.569 0.226 292.729);
   --secondary-foreground: oklch(0.985 0.001 106.423);
   --muted: oklch(0.268 0.007 34.298);
   --muted-foreground: oklch(0.709 0.01 56.259);
@@ -117,5 +121,22 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@keyframes neon-pulse {
+  0%, 100% { 
+      box-shadow: 
+          0 0 5px currentColor,
+          0 0 10px currentColor,
+          0 0 15px currentColor,
+          0 0 20px currentColor;
+  }
+  50% { 
+      box-shadow: 
+          0 0 2px currentColor,
+          0 0 5px currentColor,
+          0 0 8px currentColor,
+          0 0 12px currentColor;
   }
 }

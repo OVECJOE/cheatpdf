@@ -2,26 +2,23 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Brain, Clock, Users, CheckCircle, Star, Zap, Shield, Globe } from "lucide-react";
+import { ArrowRight, Brain, Clock, Users, CheckCircle, Star, Zap, Shield, Globe } from "lucide-react";
+import AppLogo from "@/components/app-logo";
+import Image from "next/image";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900">CheatPDF</span>
-          </div>
-          <nav className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-gray-600 hover:text-gray-900">Features</a>
-            <a href="#pricing" className="text-gray-600 hover:text-gray-900">Pricing</a>
-            <a href="#how-it-works" className="text-gray-600 hover:text-gray-900">How it Works</a>
-            <Link href="/sign-in" className="text-gray-600 hover:text-gray-900">Sign In</Link>
-            <Link href="/sign-up">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-5">
+          <AppLogo />
+          <nav className="hidden md:flex items-center space-x-6">
+            <a href="#features" className="text-gray-500 font-medium hover:text-gray-800">Features</a>
+            <a href="#pricing" className="text-gray-500 font-medium hover:text-gray-800">Pricing</a>
+            <a href="#how-it-works" className="text-gray-500 font-medium hover:text-gray-800">How it Works</a>
+            <Link href="/auth/sign-in" className="text-gray-500 font-medium hover:text-gray-800">Sign In</Link>
+            <Link href="/auth/sign-up">
               <Button>Get Started Free</Button>
             </Link>
           </nav>
@@ -34,22 +31,23 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="space-y-4">
-                <Badge variant="outline" className="text-blue-600 border-blue-600">
-                  🚀 AI-Powered Study Assistant
+                <Badge variant="outline" className="text-amber-600 border-amber-600">
+                  <Brain className="inline w-4 h-4 mr-1" />
+                  AI-Powered Study Assistant
                 </Badge>
                 <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                   Turn Your PDFs Into 
-                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> Smart Study Partners</span>
+                  <span className="bg-gradient-to-r from-amber-600 to-purple-600 bg-clip-text text-transparent"> Smart Study Partners</span>
                 </h1>
-                <p className="text-xl text-gray-600 leading-relaxed">
+                <p className="text-xl text-gray-700 leading-relaxed">
                   Upload your study materials, practice with AI-generated exams, and chat with your PDFs. 
                   CheatPDF helps students ace their exams with personalized AI tutoring.
                 </p>
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/sign-up">
-                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-8 py-6 text-lg">
+                <Link href="/auth/sign-up">
+                  <Button size="lg" className="bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-700 hover:to-purple-700 px-8 py-6 text-lg">
                     Start Studying for Free
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
@@ -63,27 +61,51 @@ export default function LandingPage() {
               <div className="flex items-center gap-6 pt-4">
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-blue-500"></div>
-                    <div className="w-8 h-8 rounded-full bg-green-500"></div>
-                    <div className="w-8 h-8 rounded-full bg-purple-500"></div>
+                    <div className="w-8 h-8 rounded-full bg-blue-500">
+                      <Image
+                        src="https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0" 
+                        alt="Student profile"
+                        width="100"
+                        height="100"
+                        className="rounded-full object-cover w-full h-full"
+                      />
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-green-500">
+                      <Image
+                        src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d" 
+                        alt="Student profile"
+                        width="100"
+                        height="100"
+                        className="rounded-full object-cover w-full h-full"
+                      />
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-purple-500">
+                      <Image
+                        src="https://images.unsplash.com/photo-1494790108377-be9c29b29330"
+                        alt="Student profile"
+                        width="100"
+                        height="100"
+                        className="rounded-full object-cover w-full h-full"
+                      />
+                    </div>
                   </div>
                   <span className="text-sm text-gray-600">10,000+ students trust CheatPDF</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                  ))}
                   <span className="text-sm text-gray-600 ml-1">4.9/5 rating</span>
                 </div>
               </div>
             </div>
 
             <div className="relative">
-              <img 
+              <Image
                 src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f" 
                 alt="Students studying with technology" 
+                width={800} 
+                height={600} 
                 className="rounded-2xl shadow-2xl"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
@@ -93,7 +115,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-4 bg-gray-50">
+      <section id="features" className="py-20 px-4 bg-purple-50">
         <div className="container mx-auto">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-4xl font-bold text-gray-900">Why Students Love CheatPDF</h2>
@@ -110,7 +132,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-semibold">AI Chat with PDFs</h3>
                 <p className="text-gray-600">
-                  Ask questions about your study materials and get instant, accurate answers. It's like having a tutor available 24/7.
+                  Ask questions about your study materials and get instant, accurate answers. It&apos;s like having a tutor available 24/7.
                 </p>
               </div>
             </Card>
@@ -171,7 +193,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-semibold">For All Students</h3>
                 <p className="text-gray-600">
-                  Whether you're in high school, college, or professional training - CheatPDF adapts to your learning level.
+                  Whether you&apos;re in high school, college, or professional training - CheatPDF adapts to your learning level.
                 </p>
               </div>
             </Card>
@@ -222,7 +244,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4 bg-gray-50">
+      <section id="pricing" className="py-20 px-4 bg-purple-50 scroll-smooth">
         <div className="container mx-auto">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-4xl font-bold text-gray-900">Simple, Student-Friendly Pricing</h2>
@@ -264,8 +286,8 @@ export default function LandingPage() {
               </div>
             </Card>
 
-            <Card className="p-8 border-2 border-blue-600 shadow-lg relative">
-              <Badge className="absolute -top-3 left-4 bg-blue-600">Most Popular</Badge>
+            <Card className="p-8 border-2 border-amber-600 shadow-lg relative">
+              <Badge className="absolute -top-3 left-4 bg-amber-600">Most Popular</Badge>
               <div className="space-y-6">
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900">Pro</h3>
@@ -298,7 +320,7 @@ export default function LandingPage() {
                   </li>
                 </ul>
                 <Link href="/sign-up">
-                  <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                  <Button className="w-full bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-700 hover:to-purple-700">
                     Upgrade to Pro
                   </Button>
                 </Link>
@@ -309,24 +331,24 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-purple-600">
+      <section className="py-20 px-4 bg-gradient-to-r to-purple-600 from-amber-600">
         <div className="container mx-auto text-center">
           <div className="space-y-6 max-w-3xl mx-auto">
             <h2 className="text-4xl font-bold text-white">
               Ready to Transform Your Study Experience?
             </h2>
-            <p className="text-xl text-blue-100">
+            <p className="text-xl text-purple-100">
               Join thousands of students who are already studying smarter with CheatPDF. 
               Start your free account today and see the difference AI can make.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/sign-up">
-                <Button size="lg" variant="secondary" className="px-8 py-6 text-lg bg-white text-blue-600 hover:bg-gray-100">
+                <Button size="lg" variant="secondary" className="px-8 py-6 text-lg font-semibold bg-white text-pruple-600 hover:bg-gray-100">
                   Start Your Free Account
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="px-8 py-6 text-lg border-white text-white hover:bg-white hover:text-blue-600">
+              <Button size="lg" className="px-8 py-6 text-lg border-white font-semibold text-white hover:bg-white hover:text-amber-600">
                 Contact Sales
               </Button>
             </div>
@@ -339,12 +361,7 @@ export default function LandingPage() {
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold">CheatPDF</span>
-              </div>
+              <AppLogo darkMode />
               <p className="text-gray-400">
                 AI-powered study assistant that helps students learn more effectively with their PDF materials.
               </p>
