@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mail, CheckCircle } from "lucide-react";
@@ -8,7 +9,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function VerifyRequestPage() {
+function VerifyRequestContent() {
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "your email";
@@ -92,5 +93,13 @@ export default function VerifyRequestPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyRequestPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyRequestContent />
+    </Suspense>
   );
 }

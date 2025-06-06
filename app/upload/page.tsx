@@ -16,15 +16,10 @@ interface UploadedFile {
 }
 
 export default function UploadPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [dragActive, setDragActive] = useState(false);
-
-  if (status === "unauthenticated") {
-    router.push("/auth/sign-in");
-    return null;
-  }
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -36,23 +31,7 @@ export default function UploadPage() {
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFiles(Array.from(e.dataTransfer.files));
-    }
-  }, []);
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      handleFiles(Array.from(e.target.files));
-    }
-  };
-
-  const handleFiles = (newFiles: File[]) => {
+  const handleFiles = useCallback((newFiles: File[]) => {
     const pdfFiles = newFiles.filter(file => file.type === "application/pdf");
     
     if (pdfFiles.length !== newFiles.length) {
@@ -72,6 +51,27 @@ export default function UploadPage() {
     uploadFiles.forEach(uploadFile => {
       uploadSingleFile(uploadFile);
     });
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFiles(Array.from(e.dataTransfer.files));
+    }
+  }, [handleFiles]);
+
+  if (status === "unauthenticated") {
+    router.push("/auth/sign-in");
+    return null;
+  }
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      handleFiles(Array.from(e.target.files));
+    }
   };
 
   const uploadSingleFile = async (uploadFile: UploadedFile) => {
@@ -101,7 +101,8 @@ export default function UploadPage() {
 
       if (response.ok) {
         const result = await response.json();
-        
+        console.log("File uploaded successfully:", result);
+        // Update file status to processing
         setFiles(prev => prev.map(f => 
           f.id === uploadFile.id 
             ? { ...f, status: "processing", progress: 100 }
@@ -125,7 +126,7 @@ export default function UploadPage() {
             : f
         ));
       }
-    } catch (error) {
+    } catch {
       setFiles(prev => prev.map(f => 
         f.id === uploadFile.id 
           ? { ...f, status: "error", error: "Network error" }

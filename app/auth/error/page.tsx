@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Home } from "lucide-react";
@@ -13,10 +14,10 @@ const errorMessages = {
   Default: "An error occurred during authentication.",
 };
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error") as keyof typeof errorMessages;
-  
+
   const errorMessage = errorMessages[error] || errorMessages.Default;
   const isAccessDenied = error === "AccessDenied";
 
@@ -89,5 +90,13 @@ export default function AuthErrorPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthErrorContent />
+    </Suspense>
   );
 }
