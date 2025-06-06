@@ -7,14 +7,15 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { 
-  Crown, CheckCircle, ArrowLeft, Clock, FileText, Brain,
-  Users, Zap, Shield, Globe, Star, Sparkles
+  Crown, CheckCircle, ArrowLeft, Clock, FileText,
+  Users, Shield, Star, Sparkles
 } from "lucide-react";
 
 export default function UpgradePage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -92,7 +93,7 @@ export default function UpgradePage() {
             <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Crown className="w-8 h-8 text-yellow-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">You're Already Pro!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">You&apos;re Already Pro!</h2>
             <p className="text-gray-600 mb-6">
               You have access to all CheatPDF Pro features. Continue enjoying unlimited documents, exam mode, and more.
             </p>
@@ -215,7 +216,7 @@ export default function UpgradePage() {
         {/* Features Comparison */}
         <div className="max-w-4xl mx-auto mb-16">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
-            What's Included in Pro
+            What&apos;s Included in Pro
           </h2>
           
           <div className="grid md:grid-cols-2 gap-8">
@@ -331,8 +332,8 @@ export default function UpgradePage() {
                 ))}
               </div>
               <p className="text-gray-700 mb-4">
-                "The exam mode is a game changer! I went from failing practice tests to acing my finals. 
-                The AI explanations helped me understand concepts I struggled with for months."
+                &quot;The exam mode is a game changer! I went from failing practice tests to acing my finals. 
+                The AI explanations helped me understand concepts I struggled with for months.&quot;
               </p>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
@@ -352,8 +353,8 @@ export default function UpgradePage() {
                 ))}
               </div>
               <p className="text-gray-700 mb-4">
-                "Being able to upload all my textbooks and lecture notes is incredible. 
-                CheatPDF Pro has become my personal AI tutor that's available 24/7."
+                &quot;Being able to upload all my textbooks and lecture notes is incredible. 
+                CheatPDF Pro has become my personal AI tutor that&apos;s available 24/7.&quot;
               </p>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
@@ -378,7 +379,7 @@ export default function UpgradePage() {
             <Card className="p-6">
               <h3 className="font-semibold text-gray-900 mb-2">Can I cancel anytime?</h3>
               <p className="text-gray-600">
-                Yes! You can cancel your subscription at any time. You'll continue to have Pro access until the end of your billing period.
+                Yes! You can cancel your subscription at any time. You&apos;ll continue to have Pro access until the end of your billing period.
               </p>
             </Card>
 

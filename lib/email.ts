@@ -106,7 +106,7 @@ export async function sendMagicLinkEmail(email: string, url: string) {
   `;
 
   const textTemplate = `
-Sign in to ${process.env.NEXT_PUBLIC_APP_NAME || "StudyApp"}
+Sign in to ${process.env.NEXT_PUBLIC_APP_NAME || "CheatPDF"}
 
 Click the link below to sign in to your account:
 ${url}
