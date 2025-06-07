@@ -439,7 +439,7 @@ export default function OnboardingPage() {
                     <SelectContent>
                       {Object.entries(EDUCATION_CONFIGS).map(([level, config]) => (
                         <SelectItem key={level} value={level}>
-                          <div className="flex flex-col">
+                          <div className="flex flex-col items-start">
                             <span>{level}</span>
                             <span className="text-xs text-gray-500">{config.description}</span>
                           </div>
@@ -465,8 +465,8 @@ export default function OnboardingPage() {
                               onClick={() => handleSubjectToggle(subject)}
                               className={`p-2 text-sm border rounded-lg transition-colors ${
                                 studentData.subjects.includes(subject)
-                                  ? "bg-blue-600 text-white border-blue-600"
-                                  : "bg-white text-gray-700 border-gray-200 hover:border-blue-600"
+                                  ? "bg-purple-600 text-white border-purple-600"
+                                  : "bg-white text-gray-700 border-gray-200 hover:border-purple-600"
                               }`}
                             >
                               {subject}
@@ -488,7 +488,7 @@ export default function OnboardingPage() {
                       <SelectContent>
                         {availableExams.map((exam) => (
                           <SelectItem key={exam} value={exam}>
-                            <div className="flex flex-col">
+                            <div className="flex flex-col items-start">
                               <span>{exam}</span>
                               {EXAM_CONFIGS[exam] && (
                                 <span className="text-xs text-gray-500">
@@ -513,7 +513,7 @@ export default function OnboardingPage() {
                       <SelectContent>
                         {availableGoals.map((goal) => (
                           <SelectItem key={goal.value} value={goal.value}>
-                            <div className="flex flex-col">
+                            <div className="flex flex-col items-start">
                               <span>{goal.label}</span>
                               <span className="text-xs text-gray-500">{goal.description}</span>
                             </div>
