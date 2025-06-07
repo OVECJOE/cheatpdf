@@ -500,7 +500,7 @@ export default function OnboardingPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center">
         <Skeleton className="w-64 h-64 rounded-full animate-pulse bg-gradient-to-r from-amber-200 to-purple-200" />
         <div className="mt-4 text-gray-600">Loading your session...</div>
         <div className="mt-2 text-sm text-gray-500">
