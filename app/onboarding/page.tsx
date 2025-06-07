@@ -325,7 +325,7 @@ export default function OnboardingPage() {
         </div>
 
         {/* Progress indicator */}
-        <div className="max-w-md mx-auto mb-8">
+        <div className="max-w-md mx-auto my-8">
           <div className="flex items-center justify-between">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
               step >= 1 ? "bg-amber-600 text-white" : "bg-gray-200 text-gray-600"
