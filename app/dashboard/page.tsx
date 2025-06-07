@@ -196,7 +196,12 @@ function DashboardContent() {
           variant="outline" 
           className="w-full justify-start"
           onClick={() => {
-            isPro ? router.push("/exam") : router.push("/upgrade");
+            if (isPro) {
+              router.push("/exam");
+            } else {
+              router.push("/upgrade");
+            }
+
             setMobileMenuOpen(false);
           }}
         >
