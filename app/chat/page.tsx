@@ -207,7 +207,7 @@ export default function ChatPage() {
 
   if (documents.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-amber-50">
         <header className="bg-white border-b">
           <div className="container mx-auto px-4 py-4">
             <Button 
@@ -223,8 +223,8 @@ export default function ChatPage() {
 
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-md mx-auto text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FileText className="w-8 h-8 text-blue-600" />
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FileText className="w-8 h-8 text-amber-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">No Documents Available</h2>
             <p className="text-gray-600 mb-6">
@@ -240,7 +240,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-amber-50 flex">
       {/* Sidebar */}
       <div className="w-80 bg-white border-r flex flex-col">
         {/* Header */}
@@ -321,7 +321,7 @@ export default function ChatPage() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-md">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Brain className="w-8 h-8 text-blue-600" />
+                <Brain className="w-8 h-8 text-amber-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 Ready to Chat with Your PDFs?
@@ -331,15 +331,15 @@ export default function ChatPage() {
               </p>
               <div className="grid grid-cols-1 gap-3 text-sm text-gray-600">
                 <div className="flex items-center space-x-2">
-                  <Sparkles className="w-4 h-4 text-blue-600" />
+                  <Sparkles className="w-4 h-4 text-amber-600" />
                   <span>Ask questions about your documents</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Sparkles className="w-4 h-4 text-blue-600" />
+                  <Sparkles className="w-4 h-4 text-amber-600" />
                   <span>Get instant, accurate answers</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Sparkles className="w-4 h-4 text-blue-600" />
+                  <Sparkles className="w-4 h-4 text-amber-600" />
                   <span>Learn faster with AI assistance</span>
                 </div>
               </div>
@@ -350,8 +350,8 @@ export default function ChatPage() {
             {/* Chat Header */}
             <div className="bg-white border-b p-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
                   <h2 className="font-semibold text-gray-900">{activeChat.title}</h2>
@@ -375,7 +375,7 @@ export default function ChatPage() {
                 activeChat.messages.map((msg) => (
                   <div key={msg.id} className={`flex space-x-3 ${msg.role === "user" ? "justify-end" : ""}`}>
                     {msg.role === "assistant" && (
-                      <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
                         <Bot className="w-4 h-4 text-white" />
                       </div>
                     )}
@@ -383,7 +383,7 @@ export default function ChatPage() {
                     <div className={`max-w-2xl ${msg.role === "user" ? "order-first" : ""}`}>
                       <Card className={`p-4 ${
                         msg.role === "user" 
-                          ? "bg-blue-600 text-white" 
+                          ? "bg-amber-600 text-white" 
                           : "bg-white border"
                       }`}>
                         <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -410,7 +410,7 @@ export default function ChatPage() {
                     </div>
                     
                     {msg.role === "user" && (
-                      <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-amber-200 rounded-lg flex items-center justify-center">
                         <User className="w-4 h-4 text-gray-600" />
                       </div>
                     )}
@@ -420,7 +420,7 @@ export default function ChatPage() {
               
               {loading && (
                 <div className="flex space-x-3">
-                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                   <Card className="p-4 bg-white border">
