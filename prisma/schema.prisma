@@ -50,6 +50,8 @@ model User {
   language      String    @default("en")
   educationLevel String?
   subjects      String[]  @default([])
+  studyGoals    String?
+  examType      String?
   company       String?
   role          String?
   onboardingCompleted Boolean @default(false)

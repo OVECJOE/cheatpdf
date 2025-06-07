@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/config/auth";
 import db from "@/lib/config/db";
-import { UserType } from "@prisma/client";
+import { User, UserType } from "@prisma/client";
+import { onboardingSchema } from "@/lib/validations";
 
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-
         if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, {
                 status: 401,
@@ -47,7 +47,6 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-
         if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, {
                 status: 401,
@@ -59,47 +58,30 @@ export async function POST(request: NextRequest) {
             userType,
             educationLevel,
             subjects,
-            company,
-            role,
-        } = body;
-
-        // Validate user type specific fields
-        if (userType === UserType.STUDENT) {
-            if (!educationLevel || !subjects || subjects.length === 0) {
-                return NextResponse.json(
-                    {
-                        error:
-                            "Education level and subjects are required for students",
-                    },
-                    { status: 400 },
-                );
-            }
-        } else if (userType === UserType.TALENT_SOURCER) {
-            if (!company || !role) {
-                return NextResponse.json(
-                    {
-                        error:
-                            "Company and role are required for talent sourcers",
-                    },
-                    { status: 400 },
-                );
-            }
-        }
+            studyGoals,
+            examType
+        } = onboardingSchema.parse(body);
 
         // Update user profile
-        const updatedUser = await db.user.update({
-            where: { id: session.user.id },
-            data: {
-                userType,
-                educationLevel: userType === UserType.STUDENT
-                    ? educationLevel
-                    : null,
-                subjects: userType === UserType.STUDENT ? subjects : [],
-                company: userType === UserType.TALENT_SOURCER ? company : null,
-                role: userType === UserType.TALENT_SOURCER ? role : null,
-                onboardingCompleted: true,
-            },
-        });
+        let updatedUser: User | null = null;
+        if (userType === UserType.STUDENT) {
+            updatedUser = await db.user.update({
+                where: { id: session.user.id },
+                data: {
+                    userType,
+                    educationLevel,
+                    subjects,
+                    studyGoals,
+                    examType,
+                    onboardingCompleted: true,
+                },
+            });
+        } else {
+            return NextResponse.json(
+                { error: "Talent sourcer onboarding coming soon" },
+                { status: 400 },
+            )
+        }
 
         return NextResponse.json({ user: updatedUser });
     } catch (error) {

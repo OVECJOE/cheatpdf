@@ -17,15 +17,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface Document {
   id: string;
-  filename: string;
-  uploadedAt: string;
-  status: string;
+  name: string;
+  fileName: string;
+  fileSize: number;
+  contentType: string;
+  vectorized: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count: {
+    chats: number;
+    exams: number;
+  };
 }
 
 interface Chat {
   id: string;
   title: string;
-  lastMessage: string;
+  lastMessage?: string;
   updatedAt: string;
 }
 
@@ -37,6 +45,18 @@ interface Exam {
   createdAt: string;
 }
 
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  country?: string;
+  language?: string;
+  userType: string;
+  subscriptionStatus: SubscriptionStatus;
+  createdAt: string;
+  isEmailVerified: boolean;
+}
+
 function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -46,8 +66,7 @@ function DashboardContent() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [chats, setChats] = useState<Chat[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -70,6 +89,11 @@ function DashboardContent() {
         fetch("/api/user/profile")
       ]);
 
+      // Check if requests were successful
+      if (!docsRes.ok || !chatsRes.ok || !examsRes.ok || !profileRes.ok) {
+        throw new Error("Failed to fetch dashboard data");
+      }
+
       const [docsData, chatsData, examsData, profileData] = await Promise.all([
         docsRes.json(),
         chatsRes.json(),
@@ -77,9 +101,10 @@ function DashboardContent() {
         profileRes.json()
       ]);
 
-      setDocuments(docsData);
-      setChats(chatsData);
-      setExams(examsData);
+      // Handle the response structure based on your API endpoints
+      setDocuments(docsData.documents || []);
+      setChats(chatsData.chats || []);
+      setExams(examsData.exams || []);
       setUserProfile(profileData);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -101,10 +126,23 @@ function DashboardContent() {
     );
   }
 
+  if (!userProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">Error loading user profile</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const isPro = userProfile.subscriptionStatus === SubscriptionStatus.ACTIVE;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-amber-50">
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4">
@@ -230,7 +268,7 @@ function DashboardContent() {
               <div>
                 <p className="text-2xl font-bold text-gray-900">
                   {exams.filter(e => e.score).length > 0 
-                    ? Math.round(exams.filter(e => e.score).reduce((acc, e) => acc + e.score!, 0) / exams.filter(e => e.score).length)
+                    ? Math.round(exams.filter(e => e.score).reduce((acc, e) => acc + (e.score || 0), 0) / exams.filter(e => e.score).length)
                     : "-"
                   }%
                 </p>
@@ -270,7 +308,7 @@ function DashboardContent() {
                   onClick={() => isPro ? router.push("/exam") : router.push("/upgrade")}
                 >
                   <Zap className="w-6 h-6" />
-                  <span>
+                  <span className="flex items-center">
                     {isPro ? "Practice Exam" : "Exam Mode"}
                     {!isPro && <Crown className="w-3 h-3 ml-1" />}
                   </span>
@@ -305,14 +343,14 @@ function DashboardContent() {
                           <FileText className="w-4 h-4 text-amber-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{doc.filename}</p>
+                          <p className="font-medium text-gray-900">{doc.name || doc.fileName}</p>
                           <p className="text-sm text-gray-600">
-                            Uploaded {new Date(doc.uploadedAt).toLocaleDateString()}
+                            Uploaded {new Date(doc.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
-                      <Badge variant={doc.status === "processed" ? "default" : "secondary"}>
-                        {doc.status}
+                      <Badge variant={doc.vectorized ? "default" : "secondary"}>
+                        {doc.vectorized ? "processed" : "processing"}
                       </Badge>
                     </div>
                   ))}
@@ -344,7 +382,9 @@ function DashboardContent() {
                   {chats.slice(0, 3).map((chat) => (
                     <div key={chat.id} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
                       <p className="font-medium text-gray-900 text-sm">{chat.title}</p>
-                      <p className="text-xs text-gray-600 truncate">{chat.lastMessage}</p>
+                      {chat.lastMessage && (
+                        <p className="text-xs text-gray-600 truncate">{chat.lastMessage}</p>
+                      )}
                     </div>
                   ))}
                 </div>

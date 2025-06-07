@@ -12,7 +12,6 @@ export const authOptions: NextAuthOptions = {
       from: process.env.EMAIL_FROM,
       // Custom send verification request using Resend
       sendVerificationRequest: async ({ identifier: email, url }) => {
-        console.log(`Verification url for ${email}: ${url}`);
         try {
           await sendMagicLinkEmail(email, url);
         } catch (error) {

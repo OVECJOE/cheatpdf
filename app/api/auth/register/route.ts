@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { default as prisma } from "@/lib/config/db";
-import { z } from "zod";
-
-const registerSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  name: z.string().min(1, "Name is required"),
-  country: z.string().optional(),
-  language: z.string().optional(),
-});
+import { registerSchema } from "@/lib/validations";
+import { ZodError } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,8 +25,8 @@ export async function POST(request: NextRequest) {
       data: {
         email,
         name,
-        country: country || null,
-        language: language || "en",
+        country,
+        language,
         onboardingCompleted: false,
       },
     });
@@ -45,9 +39,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Registration error:", error);
-    
-    if (error instanceof z.ZodError) {
+    if (error instanceof ZodError) {
       return NextResponse.json(
         { message: "Invalid input", errors: error.errors },
         { status: 400 }
