@@ -13,6 +13,7 @@ import {
   Plus, FileText, Brain, Zap, Crown, User, LogOut, BarChart3
 } from "lucide-react";
 import { SubscriptionStatus } from "@prisma/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Document {
   id: string;
@@ -393,9 +394,45 @@ function DashboardContent() {
   );
 }
 
+function DashboardSkeleton() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="space-y-6">
+        <Skeleton className="w-64 h-8" />
+        <Skeleton className="w-48 h-6" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-24" />
+          ))}
+        </div>
+        <Skeleton className="h-8 w-32" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-24" />
+          ))}
+        </div>
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<DashboardSkeleton />}>
       <DashboardContent />
     </Suspense>
   );

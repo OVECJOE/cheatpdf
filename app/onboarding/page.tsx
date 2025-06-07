@@ -23,6 +23,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { UserType } from "@prisma/client";
 import clsx from "clsx";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Types
 type EducationLevel =
@@ -500,7 +501,11 @@ export default function OnboardingPage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        Loading...
+        <Skeleton className="w-64 h-64 rounded-full animate-pulse bg-gradient-to-r from-amber-200 to-purple-200" />
+        <div className="mt-4 text-gray-600">Loading your session...</div>
+        <div className="mt-2 text-sm text-gray-500">
+          Please wait while we prepare your personalized onboarding experience.
+        </div>
       </div>
     );
   }
