@@ -355,20 +355,15 @@ export default function UploadPage() {
                 id="file-upload"
                 disabled={isLoading}
               />
-              <label htmlFor="file-upload">
-                <Button 
-                  className="cursor-pointer" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
+              <label htmlFor="file-upload" className="inline-flex items-center bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded cursor-pointer transition-colors">
+                {isLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Processing...
                     </>
                   ) : (
                     "Select PDF Files"
-                  )}
-                </Button>
+                )}
               </label>
               
               <p className="text-sm text-gray-500 mt-4">
