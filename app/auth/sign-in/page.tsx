@@ -10,6 +10,7 @@ import { Mail, CheckCircle, AlertCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function SignInContent() {
   const [step, setStep] = useState(1); // 1: email input, 2: magic link sent
@@ -131,7 +132,9 @@ function SignInContent() {
         </div>
 
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-left">
-          <h3 className="font-medium text-purple-900 mb-2">What&apos;s next?</h3>
+          <h3 className="font-medium text-purple-900 mb-2">
+            What&apos;s next?
+          </h3>
           <ol className="text-sm text-purple-800 space-y-1">
             <li>1. Check your inbox (and spam folder)</li>
             <li>2. Click the sign-in link in the email</li>
@@ -181,12 +184,12 @@ function SignInContent() {
       <div className="flex justify-center space-x-2">
         <div
           className={`w-2 h-2 rounded-full ${
-            step >= 1 ? "bg-blue-600" : "bg-gray-300"
+            step >= 1 ? "bg-purple-600" : "bg-gray-300"
           }`}
         />
         <div
           className={`w-2 h-2 rounded-full ${
-            step >= 2 ? "bg-blue-600" : "bg-gray-300"
+            step >= 2 ? "bg-purple-600" : "bg-gray-300"
           }`}
         />
       </div>
@@ -213,9 +216,30 @@ function SignInContent() {
   );
 }
 
+function SignInSkeleton() {
+  return (
+    <div className="max-w-md mx-auto p-4 space-y-6">
+      <div className="text-center space-y-2">
+        <Skeleton className="h-8 w-32 mx-auto" />
+        <Skeleton className="h-6 w-64 mx-auto" />
+      </div>
+
+      <Card className="p-6 space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </Card>
+
+      <div className="text-center">
+        <Skeleton className="h-6 w-48 mx-auto" />
+      </div>
+    </div>
+  );
+}
+
 export default function SignInPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<SignInSkeleton />}>
       <SignInContent />
     </Suspense>
   );

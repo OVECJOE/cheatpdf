@@ -44,7 +44,7 @@ export default function CountryLanguageForm({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div className="space-y-2">
         <Label htmlFor="country">Country</Label>
         <Select
@@ -76,9 +76,7 @@ export default function CountryLanguageForm({
             className="w-full"
             disabled={!availableLanguages.length}
           >
-            <SelectValue
-              placeholder="Select language"
-            />
+            <SelectValue placeholder="Select language" />
           </SelectTrigger>
           <SelectContent>
             {availableLanguages.map((language) => (

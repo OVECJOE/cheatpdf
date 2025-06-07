@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/session-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
-})
+});
 
 const geistMono = Geist_Mono({
   subsets: ["latin"],
@@ -17,7 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "CheatPDF - AI-Powered Study Assistant",
-  description: "Turn your PDFs into smart study partners. Chat with your documents, generate practice exams, and study smarter with AI.",
+  description:
+    "Turn your PDFs into smart study partners. Chat with your documents, generate practice exams, and study smarter with AI.",
 };
 
 export default function RootLayout({
@@ -30,6 +32,13 @@ export default function RootLayout({
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           {children}
+          <Toaster
+            position="bottom-center"
+            richColors
+            closeButton
+            expand
+            duration={3000}
+          />
         </Providers>
       </body>
     </html>

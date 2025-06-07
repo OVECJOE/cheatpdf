@@ -115,15 +115,15 @@ export default function SignUpPage() {
           selectedCountry={formData.country}
           selectedLanguage={formData.language}
         />
-        <div className="flex items-center space-x-2">
+        <div className="inline-block space-x-2">
           <input id="terms" type="checkbox" className="rounded" required />
-          <Label htmlFor="terms" className="text-sm text-gray-600">
+          <Label htmlFor="terms" className="text-sm text-gray-600 inline leading-relaxed">
             I agree to the{" "}
-            <Link href="/terms" className="text-blue-600 hover:text-blue-800">
+            <Link href="/terms" className="text-amber-600 hover:text-amber-800 underline">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" className="text-blue-600 hover:text-blue-800">
+            <Link href="/privacy" className="text-amber-600 hover:text-amber-800 underline">
               Privacy Policy
             </Link>
           </Label>
@@ -212,12 +212,12 @@ export default function SignUpPage() {
       <div className="flex justify-center space-x-2">
         <div
           className={`w-2 h-2 rounded-full ${
-            step >= 1 ? "bg-blue-600" : "bg-gray-300"
+            step >= 1 ? "bg-purple-600" : "bg-gray-300"
           }`}
         />
         <div
           className={`w-2 h-2 rounded-full ${
-            step >= 2 ? "bg-blue-600" : "bg-gray-300"
+            step >= 2 ? "bg-purple-600" : "bg-gray-300"
           }`}
         />
       </div>

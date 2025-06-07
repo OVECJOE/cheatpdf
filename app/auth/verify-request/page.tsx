@@ -8,6 +8,7 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 function VerifyRequestContent() {
   const [loading, setLoading] = useState(false);
@@ -23,8 +24,10 @@ function VerifyRequestContent() {
         email,
         redirect: false,
       });
-    } catch (error) {
-      console.error("Resend error:", error);
+    } catch {
+      toast("Failed to resend link. Please try again.", {
+        dismissible: true,
+      })
     } finally {
       setLoading(false);
     }
