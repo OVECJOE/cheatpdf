@@ -11,7 +11,7 @@ import Link from "next/link";
 import { 
   BookOpen, Upload, MessageCircle, Clock, TrendingUp,
   Plus, FileText, Brain, Zap, Crown, User, LogOut, BarChart3,
-  Menu, X
+  Menu
 } from "lucide-react";
 import { SubscriptionStatus } from "@prisma/client";
 import { Skeleton } from "@/components/ui/skeleton";
