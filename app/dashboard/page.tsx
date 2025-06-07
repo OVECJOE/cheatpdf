@@ -23,6 +23,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Document {
   id: string;
@@ -377,7 +378,7 @@ function DashboardContent() {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
           <Card className="p-4 md:p-6">
-            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4 md:gap-3">
               <div className="w-8 h-8 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto md:mx-0">
                 <FileText className="w-4 h-4 md:w-6 md:h-6 text-amber-600" />
               </div>
@@ -389,7 +390,7 @@ function DashboardContent() {
           </Card>
 
           <Card className="p-4 md:p-6">
-            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4 md:gap-3">
               <div className="w-8 h-8 md:w-12 md:h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto md:mx-0">
                 <MessageCircle className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
               </div>
@@ -401,7 +402,7 @@ function DashboardContent() {
           </Card>
 
           <Card className="p-4 md:p-6">
-            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4 md:gap-3">
               <div className="w-8 h-8 md:w-12 md:h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto md:mx-0">
                 <Clock className="w-4 h-4 md:w-6 md:h-6 text-purple-600" />
               </div>
@@ -413,7 +414,7 @@ function DashboardContent() {
           </Card>
 
           <Card className="p-4 md:p-6">
-            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4 md:gap-3">
               <div className="w-8 h-8 md:w-12 md:h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto md:mx-0">
                 <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-orange-600" />
               </div>
@@ -421,7 +422,14 @@ function DashboardContent() {
                 <p className="text-xl md:text-2xl font-bold text-gray-900">
                   {exams.filter(e => e.score).length > 0 
                     ? Math.round(exams.filter(e => e.score).reduce((acc, e) => acc + (e.score || 0), 0) / exams.filter(e => e.score).length)
-                    : "-"
+                    : (
+                      <Tooltip defaultOpen>
+                        <TooltipTrigger className="cursor-help">...</TooltipTrigger>
+                        <TooltipContent>
+                          No exams taken yet
+                        </TooltipContent>
+                      </Tooltip>
+                    )
                   }%
                 </p>
                 <p className="text-xs md:text-sm text-gray-600">Avg. Score</p>

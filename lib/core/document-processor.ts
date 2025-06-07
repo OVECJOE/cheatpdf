@@ -18,6 +18,7 @@ export class DocumentProcessor {
     public async processAndStoreDocument(buffer: Buffer, fileName: string, userId: string, contentType: string) {
         try {
             // Create a temporary file for PDF processing
+            console.log(buffer, fileName, userId, contentType);
             const tempFile = new File([buffer], fileName, { type: contentType });
             const loader = new PDFLoader(tempFile);
 
