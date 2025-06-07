@@ -502,7 +502,7 @@ export default function OnboardingPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <Skeleton className="w-64 h-64 rounded-full animate-pulse bg-gradient-to-r from-amber-200 to-purple-200" />
-        <div className="mt-4 text-gray-600">Loading your session...</div>
+        <div className="mt-4 text-gray-600 font-bold">Loading your session...</div>
         <div className="mt-2 text-sm text-gray-500 text-center">
           Please wait while we prepare your personalized onboarding experience.
         </div>
