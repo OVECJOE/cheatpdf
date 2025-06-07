@@ -9,7 +9,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { 
   Send, ArrowLeft, FileText, Bot, User, Loader2, 
-  MessageCircle, BookOpen, Brain, Sparkles 
+  MessageCircle, BookOpen, Brain, Sparkles, X, 
+  GraduationCap, Clock, CheckCircle
 } from "lucide-react";
 
 interface Message {
@@ -22,8 +23,9 @@ interface Message {
 
 interface Document {
   id: string;
-  filename: string;
-  status: string;
+  name: string;
+  fileName: string;
+  vectorized: boolean;
 }
 
 interface Chat {
@@ -33,11 +35,27 @@ interface Chat {
   messages: Message[];
 }
 
+interface ExamQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+}
+
+interface ExamState {
+  questions: ExamQuestion[];
+  currentQuestionIndex: number;
+  answers: number[];
+  isComplete: boolean;
+  score: number;
+}
+
 export default function ChatPage() {
   const { status } = useSession();
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+
   const [documents, setDocuments] = useState<Document[]>([]);
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
@@ -45,6 +63,11 @@ export default function ChatPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  
+  // Exam mode state
+  const [examMode, setExamMode] = useState(false);
+  const [examState, setExamState] = useState<ExamState | null>(null);
+  const [examLoading, setExamLoading] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -55,7 +78,6 @@ export default function ChatPage() {
     if (status === "authenticated") {
       fetchData();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, router]);
 
   useEffect(() => {
@@ -69,14 +91,24 @@ export default function ChatPage() {
         fetch("/api/chat")
       ]);
 
+      if (!docsRes.ok || !chatsRes.ok) {
+        console.error("Failed to fetch data");
+        return;
+      }
+
       const [docsData, chatsData] = await Promise.all([
         docsRes.json(),
         chatsRes.json()
       ]);
 
-      const processedDocs = docsData.filter((doc: Document) => doc.status === "processed");
+      // Handle the response structure from your API
+      const processedDocs = (docsData.documents || docsData || [])
+        .filter((doc: Document) => doc.vectorized === true);
+      
+      const userChats = chatsData.chats || chatsData || [];
+      
       setDocuments(processedDocs);
-      setChats(chatsData);
+      setChats(userChats);
 
       // Auto-select first document if available
       if (processedDocs.length > 0 && !selectedDocument) {
@@ -101,13 +133,15 @@ export default function ChatPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          action: "create",
           documentId: selectedDocument,
-          title: `Chat with ${documents.find(d => d.id === selectedDocument)?.filename}`
+          title: `Chat with ${documents.find(d => d.id === selectedDocument)?.fileName}`
         }),
       });
 
       if (response.ok) {
-        const newChat = await response.json();
+        const result = await response.json();
+        const newChat = result.chat;
         setChats(prev => [newChat, ...prev]);
         setActiveChat(newChat);
       }
@@ -136,9 +170,10 @@ export default function ChatPage() {
 
     try {
       const response = await fetch("/api/chat", {
-        method: "PUT",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          action: "message",
           chatId: activeChat.id,
           message: userMessage.content,
         }),
@@ -146,13 +181,13 @@ export default function ChatPage() {
 
       if (response.ok) {
         const result = await response.json();
-        
+
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
-          content: result.response,
+          content: result.response.content || result.response,
           role: "assistant",
           timestamp: new Date().toISOString(),
-          citations: result.citations || []
+          citations: result.response.citations || []
         };
 
         setActiveChat(prev => prev ? {
@@ -185,6 +220,78 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const startExam = async () => {
+    if (!selectedDocument) return;
+
+    setExamLoading(true);
+    try {
+      // This would be your exam generation API endpoint
+      const response = await fetch("/api/exam/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentId: selectedDocument,
+          questionCount: 10
+        }),
+      });
+
+      if (response.ok) {
+        const examData = await response.json();
+        setExamState({
+          questions: examData.questions,
+          currentQuestionIndex: 0,
+          answers: [],
+          isComplete: false,
+          score: 0
+        });
+        setExamMode(true);
+      }
+    } catch (error) {
+      console.error("Error generating exam:", error);
+    } finally {
+      setExamLoading(false);
+    }
+  };
+
+  const answerQuestion = (answerIndex: number) => {
+    if (!examState) return;
+
+    const newAnswers = [...examState.answers];
+    newAnswers[examState.currentQuestionIndex] = answerIndex;
+
+    setExamState({
+      ...examState,
+      answers: newAnswers
+    });
+  };
+
+  const nextQuestion = () => {
+    if (!examState) return;
+
+    if (examState.currentQuestionIndex < examState.questions.length - 1) {
+      setExamState({
+        ...examState,
+        currentQuestionIndex: examState.currentQuestionIndex + 1
+      });
+    } else {
+      // Complete exam
+      const score = examState.answers.reduce((acc, answer, index) => {
+        return acc + (answer === examState.questions[index].correctAnswer ? 1 : 0);
+      }, 0);
+
+      setExamState({
+        ...examState,
+        isComplete: true,
+        score
+      });
+    }
+  };
+
+  const closeExam = () => {
+    setExamMode(false);
+    setExamState(null);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -240,7 +347,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-amber-50 flex">
+    <div className="min-h-screen bg-amber-50 flex relative">
       {/* Sidebar */}
       <div className="w-80 bg-white border-r flex flex-col">
         {/* Header */}
@@ -267,21 +374,38 @@ export default function ChatPage() {
                 <SelectContent>
                   {documents.map((doc) => (
                     <SelectItem key={doc.id} value={doc.id}>
-                      {doc.filename}
+                      {doc.fileName}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <Button 
-              onClick={startNewChat} 
-              disabled={!selectedDocument}
-              className="w-full"
-            >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              New Chat
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                onClick={startNewChat} 
+                disabled={!selectedDocument}
+                variant="outline"
+                size="sm"
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                New Chat
+              </Button>
+
+              <Button 
+                onClick={startExam} 
+                disabled={!selectedDocument || examLoading}
+                size="sm"
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {examLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <GraduationCap className="w-4 h-4 mr-2" />
+                )}
+                Exam
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -379,7 +503,7 @@ export default function ChatPage() {
                         <Bot className="w-4 h-4 text-white" />
                       </div>
                     )}
-                    
+
                     <div className={`max-w-2xl ${msg.role === "user" ? "order-first" : ""}`}>
                       <Card className={`p-4 ${
                         msg.role === "user" 
@@ -387,7 +511,7 @@ export default function ChatPage() {
                           : "bg-white border"
                       }`}>
                         <p className="whitespace-pre-wrap">{msg.content}</p>
-                        
+
                         {msg.citations && msg.citations.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-gray-200">
                             <p className="text-xs text-gray-500 mb-1">Sources:</p>
@@ -401,14 +525,14 @@ export default function ChatPage() {
                           </div>
                         )}
                       </Card>
-                      
+
                       <p className={`text-xs mt-1 ${
                         msg.role === "user" ? "text-right text-gray-500" : "text-gray-500"
                       }`}>
                         {new Date(msg.timestamp).toLocaleTimeString()}
                       </p>
                     </div>
-                    
+
                     {msg.role === "user" && (
                       <div className="w-8 h-8 bg-amber-200 rounded-lg flex items-center justify-center">
                         <User className="w-4 h-4 text-gray-600" />
@@ -417,10 +541,10 @@ export default function ChatPage() {
                   </div>
                 ))
               )}
-              
+
               {loading && (
                 <div className="flex space-x-3">
-                  <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                   <Card className="p-4 bg-white border">
@@ -431,7 +555,7 @@ export default function ChatPage() {
                   </Card>
                 </div>
               )}
-              
+
               <div ref={messagesEndRef} />
             </div>
 
@@ -457,7 +581,7 @@ export default function ChatPage() {
                   )}
                 </Button>
               </div>
-              
+
               <p className="text-xs text-gray-500 mt-2">
                 Press Enter to send, Shift+Enter for new line
               </p>
@@ -465,6 +589,98 @@ export default function ChatPage() {
           </>
         )}
       </div>
+
+      {/* Exam Mode Sidebar */}
+      {examMode && (
+        <div className="absolute inset-y-0 right-0 w-96 bg-white border-l shadow-lg z-50 flex flex-col">
+          {/* Exam Header */}
+          <div className="p-4 border-b bg-purple-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <GraduationCap className="w-5 h-5 text-purple-600" />
+                <h3 className="font-semibold text-purple-900">Exam Mode</h3>
+              </div>
+              <Button variant="ghost" size="sm" onClick={closeExam}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {examState && !examState.isComplete && (
+              <div className="mt-2 flex items-center justify-between text-sm text-purple-700">
+                <span>Question {examState.currentQuestionIndex + 1} of {examState.questions.length}</span>
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-3 h-3" />
+                  <span>Active</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Exam Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {!examState ? (
+              <div className="text-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-600" />
+                <p className="text-gray-600">Generating exam questions...</p>
+              </div>
+            ) : examState.isComplete ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Exam Complete!</h3>
+                <p className="text-gray-600 mb-4">
+                  You scored {examState.score} out of {examState.questions.length}
+                </p>
+                <div className="text-2xl font-bold text-purple-600 mb-4">
+                  {Math.round((examState.score / examState.questions.length) * 100)}%
+                </div>
+                <Button onClick={closeExam} className="bg-purple-600 hover:bg-purple-700">
+                  Close Exam
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-purple-900 mb-3">
+                    {examState.questions[examState.currentQuestionIndex]?.question}
+                  </h4>
+                  
+                  <div className="space-y-2">
+                    {examState.questions[examState.currentQuestionIndex]?.options.map((option, index) => (
+                      <button
+                        key={index}
+                        onClick={() => answerQuestion(index)}
+                        className={`w-full p-3 text-left rounded-lg border transition-colors ${
+                          examState.answers[examState.currentQuestionIndex] === index
+                            ? "bg-purple-100 border-purple-300"
+                            : "bg-white border-gray-200 hover:bg-gray-50"
+                        }`}
+                      >
+                        <span className="font-medium text-purple-600 mr-2">
+                          {String.fromCharCode(65 + index)}.
+                        </span>
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  onClick={nextQuestion}
+                  disabled={examState.answers[examState.currentQuestionIndex] === undefined}
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                >
+                  {examState.currentQuestionIndex < examState.questions.length - 1
+                    ? "Next Question"
+                    : "Complete Exam"
+                  }
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
