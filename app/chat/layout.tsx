@@ -23,11 +23,11 @@ import {
 import AppLogo from "@/components/app-logo";
 
 interface Message {
-    id: string;
-    content: string;
-    role: "user" | "assistant";
-    createdAt: string;
-    citations?: string[];
+  id: string;
+  content: string;
+  role: "user" | "assistant";
+  createdAt: string;
+  citations?: string[];
 }
 
 interface Document {
@@ -61,9 +61,10 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
   const [examLoading, setExamLoading] = useState(false);
 
   // Get current chat ID from pathname
-  const currentChatId = pathname.startsWith('/chat/') && pathname !== '/chat' 
-    ? pathname.split('/')[2] 
-    : null;
+  const currentChatId =
+    pathname.startsWith("/chat/") && pathname !== "/chat"
+      ? pathname.split("/")[2]
+      : null;
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -74,7 +75,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
     if (status === "authenticated") {
       fetchData();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, router]);
 
   const fetchData = async () => {
@@ -215,7 +216,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
     );
   }
 
-  const currentChat = chats.find(chat => chat.id === currentChatId);
+  const currentChat = chats.find((chat) => chat.id === currentChatId);
 
   return (
     <div className="min-h-screen bg-amber-50 flex flex-col relative">
@@ -315,12 +316,21 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Choose a document" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent
+                      position="popper"
+                      align="start"
+                      className="max-w-full truncate"
+                    >
                       {documents.map((doc) => (
-                        <SelectItem key={doc.id} value={doc.id}>
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">{doc.fileName}</span>
-                          </div>
+                        <SelectItem
+                          key={doc.id}
+                          value={doc.id}
+                          disabled={!doc.vectorized}
+                          className="cursor-pointer"
+                        >
+                          <span className="font-medium">
+                            {doc.fileName}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -392,9 +402,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {children}
-        </div>
+        <div className="flex-1 flex flex-col min-w-0">{children}</div>
       </div>
     </div>
   );
