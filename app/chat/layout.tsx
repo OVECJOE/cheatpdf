@@ -232,7 +232,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
           </Button>
           <div>
             {currentChat?.title ? (
-              <h1 className="font-semibold text-gray-900 truncate max-w-[90%]">
+              <h1 className="font-semibold text-gray-900 truncate max-w-xs">
                 {currentChat.title}
               </h1>
             ) : (
