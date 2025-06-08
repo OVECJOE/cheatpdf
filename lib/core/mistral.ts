@@ -5,7 +5,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers'
 
 export const chatModel = new ChatMistralAI({
   apiKey: process.env.MISTRAL_API_KEY!,
-  model: 'mistral-large-latest',
+  model: 'open-mistral-nemo',
   temperature: 0.1,
 })
 
