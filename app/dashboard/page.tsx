@@ -503,7 +503,7 @@ function DashboardContent() {
                           <FileText className="w-4 h-4 text-amber-600" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-900 text-sm md:text-base truncate">
+                          <p className="font-medium text-gray-900 text-sm md:text-base truncate max-w-xs">
                             {doc.name || doc.fileName}
                           </p>
                           <p className="text-xs md:text-sm text-gray-600">
