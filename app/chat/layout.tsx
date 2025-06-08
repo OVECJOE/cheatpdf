@@ -240,7 +240,9 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
             )}
             <p className="text-xs text-gray-400">
               {currentChat
-                ? `Last updated on ${new Date(currentChat.messages[0].createdAt).toLocaleDateString()}`
+                ? currentChat.messages.length > 0
+                  ? `Last updated on ${new Date(currentChat.messages[0].createdAt).toLocaleDateString()}`
+                  : "No messages yet"
                 : "Select a document to start cheating."}
             </p>
           </div>
@@ -328,9 +330,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
                           disabled={!doc.vectorized}
                           className="cursor-pointer"
                         >
-                          <span className="font-medium">
-                            {doc.fileName}
-                          </span>
+                          <span className="font-medium">{doc.fileName}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
