@@ -84,9 +84,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ document }, { status: 201 })
   } catch (error) {
-    console.error('Error uploading document:', error)
     return NextResponse.json(
-      { error: 'Failed to upload document' },
+      { error: 'Failed to upload document: ' + (error as Error).message },
       { status: 500 }
     )
   }
