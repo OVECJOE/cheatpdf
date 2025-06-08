@@ -6,6 +6,8 @@ import db from "../config/db";
 
 export class DocumentProcessor {
     private textSplitter: RecursiveCharacterTextSplitter;
+    private readonly BATCH_SIZE = 10; // Adjust based on your token limits
+    private readonly MAX_TOKENS_PER_BATCH = 8000; // Conservative limit for Mistral
 
     constructor() {
         this.textSplitter = new RecursiveCharacterTextSplitter({
@@ -15,10 +17,76 @@ export class DocumentProcessor {
         })
     }
 
+    private async delay(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    private estimateTokens(text: string): number {
+        // Rough estimation: 1 token ≈ 4 characters for most models
+        return Math.ceil(text.length / 4);
+    }
+
+    private createBatches(documents: Document[]): Document[][] {
+        const batches: Document[][] = [];
+        let currentBatch: Document[] = [];
+        let currentTokenCount = 0;
+
+        for (const doc of documents) {
+            const docTokens = this.estimateTokens(doc.pageContent);
+            
+            // If adding this document would exceed limits, start a new batch
+            if (currentBatch.length >= this.BATCH_SIZE || 
+                currentTokenCount + docTokens > this.MAX_TOKENS_PER_BATCH) {
+                
+                if (currentBatch.length > 0) {
+                    batches.push(currentBatch);
+                    currentBatch = [];
+                    currentTokenCount = 0;
+                }
+            }
+
+            currentBatch.push(doc);
+            currentTokenCount += docTokens;
+        }
+
+        // Add the last batch if it has documents
+        if (currentBatch.length > 0) {
+            batches.push(currentBatch);
+        }
+
+        return batches;
+    }
+
+    private async processBatchWithRetry(
+        batch: Document[], 
+        userId: string, 
+        documentId: string, 
+        maxRetries: number = 3
+    ): Promise<void> {
+        let attempt = 0;
+        
+        while (attempt < maxRetries) {
+            try {
+                await vectorStore.addDocuments(batch, userId, documentId);
+                return; // Success, exit the retry loop
+            } catch (error) {
+                attempt++;
+                console.warn(`Batch processing attempt ${attempt} failed:`, error);
+                
+                if (attempt < maxRetries) {
+                    // Exponential backoff: wait 2^attempt seconds
+                    const waitTime = Math.pow(2, attempt) * 1000;
+                    await this.delay(waitTime);
+                } else {
+                    throw error; // Re-throw after all retries exhausted
+                }
+            }
+        }
+    }
+
     public async processAndStoreDocument(buffer: Buffer, fileName: string, userId: string, contentType: string) {
         try {
             // Create a temporary file for PDF processing
-            console.log(buffer, fileName, userId, contentType);
             const tempFile = new File([buffer], fileName, { type: contentType });
             const loader = new PDFLoader(tempFile);
 
@@ -40,19 +108,25 @@ export class DocumentProcessor {
                 }
             })
             
-            // Store in vector database
-            await vectorStore.addDocuments(splitDocs, userId, document.id);
+            // Process documents in batches
+            const batches = this.createBatches(splitDocs);
+
+            for (let i = 0; i < batches.length; i++) {
+                const batch = batches[i];
+                await this.processBatchWithRetry(batch, userId, document.id);
+                if (i < batches.length - 1) {
+                    await this.delay(500); // 500ms delay between batches
+                }
+            }
 
             // Update document status to vectorized
             await db.document.update({
                 where: { id: document.id },
                 data: { vectorized: true }
             })
-
             return document;
         } catch (error) {
-            console.error("Error processing document:", error);
-            throw new Error("Failed to process and store document");
+            throw new Error("Failed to process and store document: " + (error as Error).message);
         }
     }
 
@@ -70,19 +144,24 @@ export class DocumentProcessor {
             const docs = [new Document({ pageContent: document.content })];
             const splitDocs = await this.textSplitter.splitDocuments(docs);
 
-            // Store in vector database
-            await vectorStore.addDocuments(splitDocs, document.userId, document.id);
+            // Process documents in batches
+            const batches = this.createBatches(splitDocs);
+            for (let i = 0; i < batches.length; i++) {
+                const batch = batches[i];
+                await this.processBatchWithRetry(batch, document.userId, document.id);
+                if (i < batches.length - 1) {
+                    await this.delay(500);
+                }
+            }
 
             // Update document status to vectorized
             await db.document.update({
                 where: { id: document.id },
                 data: { vectorized: true }
             })
-
             return document;
         } catch (error) {
-            console.error("Error reprocessing document:", error);
-            throw new Error("Failed to reprocess document");
+            throw new Error("Failed to reprocess document: " + (error as Error).message);
         }
     }
 
@@ -105,8 +184,7 @@ export class DocumentProcessor {
 
             return true;
         } catch (error) {
-            console.error("Error deleting document:", error);
-            throw new Error("Failed to delete document");
+            throw new Error("Failed to delete document: " + (error as Error).message);
         }
     }
 
@@ -129,8 +207,7 @@ export class DocumentProcessor {
                 metadata: chunk.metadata || {},
             }))
         } catch (error) {
-            console.error("Error retrieving document chunks:", error);
-            throw new Error("Failed to retrieve document chunks");
+            throw new Error("Failed to retrieve document chunks: " + (error as Error).message);
         }
     }
 }

@@ -26,7 +26,7 @@ interface Message {
     id: string;
     content: string;
     role: "user" | "assistant";
-    timestamp: string;
+    createdAt: string;
     citations?: string[];
 }
 
@@ -195,7 +195,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
         </header>
 
         <div className="px-4 py-16">
-          <div className="max-w-md mx-auto text-center">
+          <div className="max-w-md mx-auto text-center border border-purple-200 bg-white rounded-lg p-8 shadow-md">
             <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <FileText className="w-8 h-8 text-amber-600" />
             </div>
@@ -231,16 +231,16 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
           </Button>
           <div>
             {currentChat?.title ? (
-              <h1 className="font-semibold text-gray-900">
+              <h1 className="font-semibold text-gray-900 truncate max-w-[90%]">
                 {currentChat.title}
               </h1>
             ) : (
               <AppLogo />
             )}
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-400">
               {currentChat
-                ? `${currentChat.messages?.length || 0} messages`
-                : "Select a document to start"}
+                ? `Last updated on ${new Date(currentChat.messages[0].createdAt).toLocaleDateString()}`
+                : "Select a document to start cheating."}
             </p>
           </div>
         </div>
@@ -261,7 +261,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
         )}
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* Sidebar - Mobile Overlay & Desktop Fixed */}
         <div
           className={`
@@ -278,7 +278,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
             />
           )}
 
-          <div className="relative z-50 bg-white h-full flex flex-col">
+          <div className="sticky top-0 z-50 bg-white h-full flex flex-col">
             {/* Sidebar Header */}
             <div className="p-4 border-b">
               <div className="flex items-center justify-between mb-4">

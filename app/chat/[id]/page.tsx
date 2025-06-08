@@ -264,7 +264,7 @@ export default function ChatDetailPage() {
                         : "text-gray-500"
                     }`}
                   >
-                    {new Date(msg.createdAt).toLocaleTimeString()}
+                    {new Date(msg.createdAt).toLocaleString()}
                   </p>
                 </div>
               </div>
