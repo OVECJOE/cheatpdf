@@ -63,7 +63,7 @@ export class ChatService {
             const chatHistory = chat.messages.reverse().map(msg => `${msg.role}: ${msg.content}`).join("\n");
 
             // Generate response
-            const chatChain = createChatChain(chat.user.language, chat.user.userType, chat.user.country ?? 'US');
+            const chatChain = createChatChain(chat.user);
             const response = await chatChain.invoke({
                 chatHistory,
                 context,
