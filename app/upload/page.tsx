@@ -304,7 +304,7 @@ export default function UploadPage() {
             </div>
             {hasUploading && (
               <div className="flex items-center space-x-2 text-xs text-gray-600">
-                <Loader2 className="w-2 h-2 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
                 <span>Uploading files...</span>
               </div>
             )}
