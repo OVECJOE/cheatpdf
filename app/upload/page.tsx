@@ -290,21 +290,21 @@ export default function UploadPage() {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-2 lg:flex-row items-center lg:items-center lg:space-x-4">
-              <Button 
-                variant="outline" 
+            <div className="flex items-center space-x-4">
+              {!hasUploading && <Button 
+                variant="outline"
                 size="sm" 
                 onClick={() => router.push("/dashboard")}
                 disabled={hasUploading}
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-4 h-4 mr-1" />
                 Back to Dashboard
-              </Button>
+              </Button>}
               <h1 className="text-xl font-semibold text-gray-900">Upload Documents</h1>
             </div>
             {hasUploading && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Loader2 className="w-4 h-4 animate-spin" />
+              <div className="flex items-center space-x-2 text-xs text-gray-600">
+                <Loader2 className="w-2 h-2 animate-spin" />
                 <span>Uploading files...</span>
               </div>
             )}
