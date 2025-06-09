@@ -290,7 +290,7 @@ export default function UploadPage() {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex flex-col-reverse lg:flex-row items-center lg:items-center space-x-4">
+            <div className="flex flex-col gap-2 lg:flex-row items-center lg:items-center lg:space-x-4">
               <Button 
                 variant="outline" 
                 size="sm" 
