@@ -459,7 +459,7 @@ export default function UploadPage() {
                       className="bg-green-600 hover:bg-green-700"
                       disabled={hasUploading}
                     >
-                      <CheckCircle className="w-4 h-4 mr-2" />
+                      <CheckCircle className="w-4 h-4 mr-1" />
                       Start Learning
                     </Button>
                   </div>
