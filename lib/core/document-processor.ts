@@ -88,30 +88,6 @@ export class DocumentProcessor {
         }
     }
 
-    private async cleanupFailedDocument(documentId: string): Promise<void> {
-        try {
-            // Clean up vector store data
-            await vectorStore.deleteDocuments(documentId);
-        } catch (vectorError) {
-            console.warn(
-                `Failed to cleanup vector data for document ${documentId}:`,
-                vectorError,
-            );
-        }
-
-        try {
-            // Clean up database record
-            await db.document.delete({
-                where: { id: documentId },
-            });
-        } catch (dbError) {
-            console.warn(
-                `Failed to cleanup database record for document ${documentId}:`,
-                dbError,
-            );
-        }
-    }
-
     public async processAndStoreDocument(
         buffer: Buffer,
         fileName: string,
@@ -129,20 +105,17 @@ export class DocumentProcessor {
 
             // Load and split the document
             const docs = await loader.load();
-
             if (!docs || docs.length === 0) {
                 throw new Error("Failed to extract content from PDF file");
             }
 
             const splitDocs = await this.textSplitter.splitDocuments(docs);
-
             if (!splitDocs || splitDocs.length === 0) {
                 throw new Error("Failed to process document content");
             }
 
             // Extract text content and store document in database
             const content = docs.map((doc) => doc.pageContent).join("\n");
-
             if (!content.trim()) {
                 throw new Error("Document appears to be empty or unreadable");
             }
@@ -158,12 +131,10 @@ export class DocumentProcessor {
                     vectorized: false,
                 },
             });
-
             documentId = document.id;
 
             // Process documents in batches
             const batches = this.createBatches(splitDocs);
-
             if (batches.length === 0) {
                 throw new Error(
                     "Failed to create document batches for processing",
@@ -182,12 +153,6 @@ export class DocumentProcessor {
                         await this.delay(500); // 500ms delay between batches
                     }
                 } catch (batchError) {
-                    console.error(
-                        `Failed to process batch ${
-                            i + 1
-                        }/${batches.length} for document ${document.id}:`,
-                        batchError,
-                    );
                     throw new Error(
                         `Document processing failed at batch ${i + 1}: ${
                             (batchError as Error).message
@@ -208,11 +173,87 @@ export class DocumentProcessor {
 
             // Cleanup failed document if it was created
             if (documentId) {
-                await this.cleanupFailedDocument(documentId);
+                await this.deleteDocument(documentId, userId);
             }
 
             throw new Error(
                 "Failed to process and store document: " +
+                    (error as Error).message,
+            );
+        }
+    }
+
+    public async deleteDocument(documentId: string, userId: string) {
+        try {
+            // Verify ownership
+            const document = await db.document.findFirst({
+                where: { id: documentId, userId },
+            });
+            if (!document) {
+                throw new Error("Document not found or access denied");
+            }
+
+            // Delete from vector store
+            await vectorStore.deleteDocuments(documentId);
+
+            // Delete from database (cascades to related records)
+            await db.document.delete({ where: { id: documentId } });
+
+            return true;
+        } catch (error) {
+            throw new Error(
+                "Failed to delete document: " + (error as Error).message,
+            );
+        }
+    }
+
+    public async getDocumentChunks(
+        documentId: string,
+        userId: string,
+        options?: {
+            includeMetadata?: boolean;
+            maxChunks?: number;
+            searchTerm?: string;
+        },
+    ) {
+        try {
+            const document = await db.document.findFirst({
+                where: { id: documentId, userId },
+            });
+
+            if (!document) {
+                throw new Error("Document not found or access denied");
+            }
+
+            const docs = [new Document({ pageContent: document.content })];
+            let chunks = await this.textSplitter.splitDocuments(docs);
+
+            // Filter by search term if provided
+            if (options?.searchTerm) {
+                chunks = chunks.filter((chunk) =>
+                    chunk.pageContent.toLowerCase().includes(
+                        options.searchTerm!.toLowerCase(),
+                    )
+                );
+            }
+
+            // Limit results if specified
+            if (options?.maxChunks) {
+                chunks = chunks.slice(0, options.maxChunks);
+            }
+
+            return chunks.map((chunk, index) => ({
+                id: index.toString(16),
+                content: chunk.pageContent,
+                metadata: options?.includeMetadata
+                    ? chunk.metadata || {}
+                    : undefined,
+                wordCount: chunk.pageContent.split(" ").length,
+                charCount: chunk.pageContent.length,
+            }));
+        } catch (error) {
+            throw new Error(
+                "Failed to retrieve document chunks: " +
                     (error as Error).message,
             );
         }
