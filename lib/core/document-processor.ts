@@ -6,7 +6,7 @@ import db from "../config/db";
 
 export class DocumentProcessor {
     private textSplitter: RecursiveCharacterTextSplitter;
-    private readonly BATCH_SIZE = 10; // Adjust based on your token limits
+    private readonly BATCH_SIZE = 10;
     private readonly MAX_TOKENS_PER_BATCH = 8000; // Conservative limit for Mistral
 
     constructor() {
