@@ -37,7 +37,7 @@ export class ChatService {
                     user: true,
                     messages: {
                         orderBy: { createdAt: 'desc' },
-                        take: 10, // Last 10 messages for context
+                        take: 20
                     }
                 }
             });
@@ -56,14 +56,14 @@ export class ChatService {
             })
 
             // Get relevant context from the vector store
-            const relevantDocs = await vectorStore.similaritySearch(content, userId, 5, chat.documentId);
+            const relevantDocs = await vectorStore.similaritySearch(content, userId, 20, chat.documentId);
             const context = relevantDocs.map(doc => doc.pageContent).join("\n\n");
 
             // Format chat history
             const chatHistory = chat.messages.reverse().map(msg => `${msg.role}: ${msg.content}`).join("\n");
 
             // Generate response
-            const chatChain = createChatChain(chat.user.language, chat.user.country ?? 'US');
+            const chatChain = createChatChain(chat.user.language, chat.user.userType, chat.user.country ?? 'US');
             const response = await chatChain.invoke({
                 chatHistory,
                 context,
