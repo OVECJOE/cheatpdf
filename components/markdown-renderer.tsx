@@ -16,10 +16,62 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
   content, 
   className = ''
 }) => {
-  // transform the content to ensure that Latex is properly rendered
   const transform = useCallback((): string => {
-    let text = content.replace(/\\\(([\s\S]+?)\\\)/g, (_match, expr) => `$${expr.trim()}$`);
-    text = text.replace(/\\\[\s*([\s\S]+?)\s*\\\]/g, (_m, expr) => `$$\n${expr.trim()}\n$$`);
+    let text = content;
+    // Only convert \( \) if it contains math-like content
+    // Look for mathematical symbols, Greek letters, operators, etc.
+    text = text.replace(/\\\(((?:[^\\()]|\\[a-zA-Z]+|\\\((?:[^\\()]|\\.)*\\\))*)\\\)/g, (match, expr) => {
+      const trimmed = expr.trim();
+      
+      // Check if the content looks like math (contains common math patterns)
+      const mathIndicators = [
+        /[α-ωΑ-Ω]/, // Greek letters
+        /\\[a-zA-Z]+/, // LaTeX commands
+        /\^[^$\s]/, // Superscripts
+        /_[^$\s]/, // Subscripts
+        /[∑∏∫∇∂]/, // Math symbols
+        /\\?[a-zA-Z]*\{[^}]*\}/, // Function calls like \sqrt{}, \frac{}, etc.
+        /[+\-*/=<>≤≥≠≡∈∉⊂⊃∪∩]/, // Mathematical operators
+        /\d+[a-zA-Z]/, // Variables with numbers
+        /[a-zA-Z]\s*[+\-*/=]\s*[a-zA-Z\d]/, // Simple algebraic expressions
+      ];
+      
+      const looksLikeMath = mathIndicators.some(pattern => pattern.test(trimmed));
+      
+      if (looksLikeMath) {
+        return `$${trimmed}$`;
+      }
+      
+      // If it doesn't look like math, leave it as is
+      return match;
+    });
+    
+    // Similar approach for display math \[ \]
+    text = text.replace(/\\\[\s*((?:[^\\[\]]|\\.)*?)\s*\\\]/g, (match, expr) => {
+      const trimmed = expr.trim();
+      
+      // Display math is more likely to be intentional, but still check
+      const mathIndicators = [
+        /[α-ωΑ-Ω]/, // Greek letters
+        /\\[a-zA-Z]+/, // LaTeX commands
+        /\^[^$\s]/, // Superscripts
+        /_[^$\s]/, // Subscripts
+        /[∑∏∫∇∂]/, // Math symbols
+        /\\?[a-zA-Z]*\{[^}]*\}/, // Function calls
+        /[+\-*/=<>≤≥≠≡∈∉⊂⊃∪∩]/, // Mathematical operators
+        /\\\\/,  // Line breaks in math mode
+        /&/, // Alignment in math mode
+      ];
+      
+      const looksLikeMath = mathIndicators.some(pattern => pattern.test(trimmed));
+      
+      if (looksLikeMath || trimmed.length > 20) { // Longer expressions more likely to be math
+        return `$$\n${trimmed}\n$$`;
+      }
+      
+      return match;
+    });
+    
     return text;
   }, [content]);
 
