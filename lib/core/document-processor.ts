@@ -1,5 +1,5 @@
-import {PDFLoader} from "@langchain/community/document_loaders/fs/pdf";
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { Document } from "@langchain/core/documents";
 import { vectorStore } from "./vector-store";
 import db from "../config/db";
@@ -13,12 +13,12 @@ export class DocumentProcessor {
         this.textSplitter = new RecursiveCharacterTextSplitter({
             chunkSize: 1000,
             chunkOverlap: 200,
-            separators: ['\n\n', '\n', ' ', ''],
-        })
+            separators: ["\n\n", "\n", " ", ""],
+        });
     }
 
     private async delay(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
     private estimateTokens(text: string): number {
@@ -33,11 +33,12 @@ export class DocumentProcessor {
 
         for (const doc of documents) {
             const docTokens = this.estimateTokens(doc.pageContent);
-            
+
             // If adding this document would exceed limits, start a new batch
-            if (currentBatch.length >= this.BATCH_SIZE || 
-                currentTokenCount + docTokens > this.MAX_TOKENS_PER_BATCH) {
-                
+            if (
+                currentBatch.length >= this.BATCH_SIZE ||
+                currentTokenCount + docTokens > this.MAX_TOKENS_PER_BATCH
+            ) {
                 if (currentBatch.length > 0) {
                     batches.push(currentBatch);
                     currentBatch = [];
@@ -58,21 +59,24 @@ export class DocumentProcessor {
     }
 
     private async processBatchWithRetry(
-        batch: Document[], 
-        userId: string, 
-        documentId: string, 
-        maxRetries: number = 3
+        batch: Document[],
+        userId: string,
+        documentId: string,
+        maxRetries: number = 3,
     ): Promise<void> {
         let attempt = 0;
-        
+
         while (attempt < maxRetries) {
             try {
                 await vectorStore.addDocuments(batch, userId, documentId);
-                return; // Success, exit the retry loop
+                return;
             } catch (error) {
                 attempt++;
-                console.warn(`Batch processing attempt ${attempt} failed:`, error);
-                
+                console.warn(
+                    `Batch processing attempt ${attempt} failed:`,
+                    error,
+                );
+
                 if (attempt < maxRetries) {
                     // Exponential backoff: wait 2^attempt seconds
                     const waitTime = Math.pow(2, attempt) * 1000;
@@ -84,18 +88,65 @@ export class DocumentProcessor {
         }
     }
 
-    public async processAndStoreDocument(buffer: Buffer, fileName: string, userId: string, contentType: string) {
+    private async cleanupFailedDocument(documentId: string): Promise<void> {
+        try {
+            // Clean up vector store data
+            await vectorStore.deleteDocuments(documentId);
+        } catch (vectorError) {
+            console.warn(
+                `Failed to cleanup vector data for document ${documentId}:`,
+                vectorError,
+            );
+        }
+
+        try {
+            // Clean up database record
+            await db.document.delete({
+                where: { id: documentId },
+            });
+        } catch (dbError) {
+            console.warn(
+                `Failed to cleanup database record for document ${documentId}:`,
+                dbError,
+            );
+        }
+    }
+
+    public async processAndStoreDocument(
+        buffer: Buffer,
+        fileName: string,
+        userId: string,
+        contentType: string,
+    ) {
+        let documentId: string | null = null;
+
         try {
             // Create a temporary file for PDF processing
-            const tempFile = new File([buffer], fileName, { type: contentType });
+            const tempFile = new File([buffer], fileName, {
+                type: contentType,
+            });
             const loader = new PDFLoader(tempFile);
 
             // Load and split the document
             const docs = await loader.load();
+
+            if (!docs || docs.length === 0) {
+                throw new Error("Failed to extract content from PDF file");
+            }
+
             const splitDocs = await this.textSplitter.splitDocuments(docs);
 
+            if (!splitDocs || splitDocs.length === 0) {
+                throw new Error("Failed to process document content");
+            }
+
             // Extract text content and store document in database
-            const content = docs.map(doc => doc.pageContent).join('\n');
+            const content = docs.map((doc) => doc.pageContent).join("\n");
+
+            if (!content.trim()) {
+                throw new Error("Document appears to be empty or unreadable");
+            }
+
             const document = await db.document.create({
                 data: {
                     name: fileName.replace(/\.[^/.]+$/, ""), // Remove file extension
@@ -104,110 +155,66 @@ export class DocumentProcessor {
                     contentType,
                     content,
                     userId,
-                    vectorized: false
-                }
-            })
-            
+                    vectorized: false,
+                },
+            });
+
+            documentId = document.id;
+
             // Process documents in batches
             const batches = this.createBatches(splitDocs);
 
+            if (batches.length === 0) {
+                throw new Error(
+                    "Failed to create document batches for processing",
+                );
+            }
+
             for (let i = 0; i < batches.length; i++) {
                 const batch = batches[i];
-                await this.processBatchWithRetry(batch, userId, document.id);
-                if (i < batches.length - 1) {
-                    await this.delay(500); // 500ms delay between batches
+                try {
+                    await this.processBatchWithRetry(
+                        batch,
+                        userId,
+                        document.id,
+                    );
+                    if (i < batches.length - 1) {
+                        await this.delay(500); // 500ms delay between batches
+                    }
+                } catch (batchError) {
+                    console.error(
+                        `Failed to process batch ${
+                            i + 1
+                        }/${batches.length} for document ${document.id}:`,
+                        batchError,
+                    );
+                    throw new Error(
+                        `Document processing failed at batch ${i + 1}: ${
+                            (batchError as Error).message
+                        }`,
+                    );
                 }
             }
 
             // Update document status to vectorized
             await db.document.update({
                 where: { id: document.id },
-                data: { vectorized: true }
-            })
-            return document;
-        } catch (error) {
-            throw new Error("Failed to process and store document: " + (error as Error).message);
-        }
-    }
-
-    public async reprocessDocument(documentId: string) {
-        try {
-            const document = await db.document.findUnique({ where: { id: documentId } })
-            if (!document) {
-                throw new Error("Document not found");
-            }
-
-            // Delete existing vectors
-            await vectorStore.deleteDocuments(document.id);
-
-            // Reprocess the content
-            const docs = [new Document({ pageContent: document.content })];
-            const splitDocs = await this.textSplitter.splitDocuments(docs);
-
-            // Process documents in batches
-            const batches = this.createBatches(splitDocs);
-            for (let i = 0; i < batches.length; i++) {
-                const batch = batches[i];
-                await this.processBatchWithRetry(batch, document.userId, document.id);
-                if (i < batches.length - 1) {
-                    await this.delay(500);
-                }
-            }
-
-            // Update document status to vectorized
-            await db.document.update({
-                where: { id: document.id },
-                data: { vectorized: true }
-            })
-            return document;
-        } catch (error) {
-            throw new Error("Failed to reprocess document: " + (error as Error).message);
-        }
-    }
-
-    public async deleteDocument(documentId: string, userId: string) {
-        try {
-            // Verify ownership
-            const document = await db.document.findFirst({
-                where: { id: documentId, userId }
+                data: { vectorized: true },
             });
 
-            if (!document) {
-                throw new Error("Document not found or access denied");
+            return document;
+        } catch (error) {
+            console.error("Document processing error:", error);
+
+            // Cleanup failed document if it was created
+            if (documentId) {
+                await this.cleanupFailedDocument(documentId);
             }
 
-            // Delete from vector store
-            await vectorStore.deleteDocuments(documentId);
-
-            // Delete from database (cascades to related records)
-            await db.document.delete({ where: { id: documentId } });
-
-            return true;
-        } catch (error) {
-            throw new Error("Failed to delete document: " + (error as Error).message);
-        }
-    }
-
-    async getDocumentChunks(documentId: string, userId: string) {
-        try {
-            const document = await db.document.findFirst({
-                where: { id: documentId, userId },
-            });
-            if (!document) {
-                throw new Error("Document not found or access denied");
-            }
-
-            // Split document content for preview
-            const docs = [new Document({ pageContent: document.content })];
-            const chunks = await this.textSplitter.splitDocuments(docs);
-
-            return chunks.map((chunk, index) => ({
-                id: index.toString(16),
-                content: chunk.pageContent,
-                metadata: chunk.metadata || {},
-            }))
-        } catch (error) {
-            throw new Error("Failed to retrieve document chunks: " + (error as Error).message);
+            throw new Error(
+                "Failed to process and store document: " +
+                    (error as Error).message,
+            );
         }
     }
 }
