@@ -19,51 +19,15 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
   const transform = useCallback((): string => {
     let text = content;
     
-    // Step 1: Temporarily replace escaped dollar signs
-    const escapedDollars: string[] = [];
-    text = text.replace(/\\\$/g, () => {
-      const index = escapedDollars.length;
-      escapedDollars.push('\\$');
-      return `__ESCAPED_DOLLAR_${index}__`;
-    });
-    
-    // Step 2: Convert LaTeX delimiters to $ notation  
+    // Convert LaTeX delimiters first
     text = text.replace(/\\\(([\s\S]+?)\\\)/g, (_match, expr) => `$${expr.trim()}$`);
     text = text.replace(/\\\[\s*([\s\S]+?)\s*\\\]/g, (_m, expr) => `$$\n${expr.trim()}\n$$`);
     
-    // Step 3: Protect code blocks from dollar sign replacement
-    const codeBlocks: string[] = [];
-    text = text.replace(/```[\s\S]*?```|`[^`\n]*`/g, (match) => {
-      const index = codeBlocks.length;
-      codeBlocks.push(match);
-      return `__CODE_BLOCK_${index}__`;
-    });
+    // Replace dollar signs in currency contexts
+    text = text.replace(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)\b/g, 'USD$1');
     
-    // Step 4: Replace standalone dollar signs with USD
-    // This pattern matches $ that are:
-    // - Not preceded by another $ (to avoid breaking $$...$$)
-    // - Not followed by another $ (to avoid breaking $$...$$)  
-    // - Not part of a math expression (between two $)
-    
-    // Split by existing math expressions to process non-math content
-    const parts = text.split(/(\$\$[\s\S]*?\$\$|\$[^$\n]*?\$)/);
-    
-    for (let i = 0; i < parts.length; i += 2) { // Process non-math parts (even indices)
-      // Replace standalone dollar signs in non-math content
-      parts[i] = parts[i].replace(/\$/g, 'USD');
-    }
-    
-    text = parts.join('');
-    
-    // Step 5: Restore code blocks
-    codeBlocks.forEach((block, index) => {
-      text = text.replace(`__CODE_BLOCK_${index}__`, block);
-    });
-    
-    // Step 6: Restore escaped dollar signs
-    escapedDollars.forEach((dollar, index) => {
-      text = text.replace(`__ESCAPED_DOLLAR_${index}__`, dollar);
-    });
+    // Replace other standalone dollar signs
+    text = text.replace(/(?<!\$)\$(?!\$)(?!\d)(?![a-zA-Z_])/g, 'USD');
     
     return text;
   }, [content]);
