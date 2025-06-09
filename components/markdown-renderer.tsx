@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import remarkGfm from 'remark-gfm'
@@ -16,6 +16,13 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
   content, 
   className = ''
 }) => {
+  // transform the content to ensure that Latex is properly rendered
+  const transform = useCallback((): string => {
+    let text = content.replace(/\\\(([\s\S]+?)\\\)/g, (_match, expr) => `$${expr.trim()}$`);
+    text = text.replace(/\\\[\s*([\s\S]+?)\s*\\\]/g, (_m, expr) => `$$\n${expr.trim()}\n$$`);
+    return text;
+  }, [content]);
+
   return (
     <div className={`max-w-none ${className}`}>
       <ReactMarkdown
@@ -50,7 +57,7 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
             colorIsTextColor: false,
             maxSize: Infinity,
             maxExpand: 1000,
-            globalGroup: false
+            globalGroup: false,
           }],
           [rehypeHighlight, {
             detect: true,
@@ -59,7 +66,6 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
         ]}
         // Enhanced parsing options for better math support
         skipHtml={false}
-        allowedElements={undefined}
         disallowedElements={['script']}
         unwrapDisallowed={true}
         components={{
@@ -110,16 +116,14 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
           ),
           
           // Enhanced code blocks with your theme colors
-          code: ({ node, className, children, ...props }) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          code: ({ inline, className, children, ...props }: any) => {
             const match = /language-(\w+)/.exec(className || '')
             const language = match ? match[1] : ''
             
-            if (node?.properties?.inlineCode) {
+            if (inline && !/katex/.test(className || '')) {
               return (
-                <code 
-                  className="bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded text-sm font-mono border border-amber-200"
-                  {...props}
-                >
+                <code className="bg-amber-50 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
                   {children}
                 </code>
               )
@@ -207,182 +211,8 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
           ),
         }}
       >
-        {content}
+        {transform()}
       </ReactMarkdown>
-      
-      {/* Enhanced math-specific styles for complex equations */}
-      <style jsx>{`
-        /* KaTeX display math styling - optimized for complex equations */
-        :global(.katex-display) {
-          margin: 1.5rem 0 !important;
-          padding: 1.25rem !important;
-          background-color: #fffbeb !important;
-          border: 1px solid #fcd34d !important;
-          border-radius: 0.5rem !important;
-          overflow-x: auto !important;
-          overflow-y: visible !important;
-          font-size: 1.1em !important;
-          line-height: 1.6 !important;
-          box-shadow: 0 2px 4px rgba(245, 158, 11, 0.1) !important;
-          position: relative !important;
-        }
-        
-        /* Enhanced spacing for complex fractions and multi-line equations */
-        :global(.katex-display .katex) {
-          white-space: nowrap !important;
-          min-height: 2.5em !important;
-        }
-        
-        /* Better rendering for fractions */
-        :global(.katex .frac-line) {
-          border-bottom-width: 0.08em !important;
-        }
-        
-        /* Improved matrix and array spacing */
-        :global(.katex .arraycolsep) {
-          width: 0.8em !important;
-        }
-        
-        /* Enhanced delimiter sizing for complex expressions */
-        :global(.katex .delimsizing) {
-          line-height: 1 !important;
-        }
-        
-        /* Better vertical alignment for sub/superscripts */
-        :global(.katex .vlist-t) {
-          display: inline-table !important;
-          table-layout: fixed !important;
-        }
-        
-        /* KaTeX inline math styling with better readability */
-        :global(.katex:not(.katex-display)) {
-          background-color: #fffbeb !important;
-          padding: 0.2rem 0.4rem !important;
-          border-radius: 0.25rem !important;
-          border: 1px solid #fde68a !important;
-          font-size: 1.05em !important;
-          line-height: 1.4 !important;
-          vertical-align: baseline !important;
-          margin: 0 0.1em !important;
-        }
-        
-        /* Enhanced function name styling */
-        :global(.katex .mord.mathnormal) {
-          font-style: italic !important;
-        }
-        
-        :global(.katex .mop) {
-          font-family: "KaTeX_Main", "Times New Roman", serif !important;
-          font-style: normal !important;
-        }
-        
-        /* Better integral, sum, product symbols */
-        :global(.katex .mop.op-symbol) {
-          font-size: 1.3em !important;
-          vertical-align: -0.15em !important;
-        }
-        
-        /* Improved root symbol rendering */
-        :global(.katex .sqrt > .vlist-t) {
-          border-left: 0.08em solid !important;
-        }
-        
-        /* Enhanced bracket and parentheses scaling */
-        :global(.katex .delimsizing.mult .delim-size1) {
-          font-size: 1.2em !important;
-        }
-        
-        :global(.katex .delimsizing.mult .delim-size2) {
-          font-size: 1.44em !important;
-        }
-        
-        :global(.katex .delimsizing.mult .delim-size3) {
-          font-size: 1.73em !important;
-        }
-        
-        :global(.katex .delimsizing.mult .delim-size4) {
-          font-size: 2.07em !important;
-        }
-        
-        /* Better spacing for limits and operators */
-        :global(.katex .mop.op-limits > .vlist-t) {
-          text-align: center !important;
-        }
-        
-        /* Enhanced table/matrix borders */
-        :global(.katex .arraycolsep) {
-          width: 1em !important;
-        }
-        
-        :global(.katex .arraycolsep.small) {
-          width: 0.3em !important;
-        }
-        
-        /* Improved accent positioning */
-        :global(.katex .accent-body) {
-          position: relative !important;
-        }
-        
-        /* Code highlighting adjustments */
-        :global(pre code.hljs) {
-          background: transparent !important;
-          padding: 0 !important;
-        }
-        
-        /* Mobile responsiveness for math with better scaling */
-        @media (max-width: 768px) {
-          :global(.katex-display) {
-            font-size: 1em !important;
-            padding: 1rem !important;
-            margin: 1rem 0 !important;
-            border-radius: 0.375rem !important;
-          }
-          
-          :global(.katex:not(.katex-display)) {
-            font-size: 1em !important;
-            padding: 0.15rem 0.3rem !important;
-          }
-          
-          /* Ensure complex equations don't break mobile layout */
-          :global(.katex-display .katex) {
-            min-width: 100% !important;
-            font-size: 0.9em !important;
-          }
-        }
-        
-        @media (max-width: 480px) {
-          :global(.katex-display) {
-            font-size: 0.85em !important;
-            padding: 0.75rem !important;
-          }
-          
-          :global(.katex-display .katex) {
-            font-size: 0.8em !important;
-          }
-        }
-        
-        /* High DPI display improvements */
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-          :global(.katex) {
-            -webkit-font-smoothing: antialiased !important;
-            -moz-osx-font-smoothing: grayscale !important;
-          }
-        }
-        
-        /* Print styles for math equations */
-        @media print {
-          :global(.katex-display) {
-            background-color: transparent !important;
-            border: 1px solid #000 !important;
-            break-inside: avoid !important;
-          }
-          
-          :global(.katex:not(.katex-display)) {
-            background-color: transparent !important;
-            border: none !important;
-          }
-        }
-      `}</style>
     </div>
   )
 }
