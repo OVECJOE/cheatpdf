@@ -77,7 +77,7 @@ export class ChatService {
                 chatHistory,
                 context,
                 question: content,
-            }, { maxConcurrency: 5, runId: chatId });
+            }, { runId: chatId });
 
             // Save assistant response
             await db.message.create({
