@@ -1,6 +1,6 @@
 import { MessageRole, SubscriptionStatus, UserType } from "@prisma/client";
 import { createChatChain, createSourcingStrategyChain } from "../core/mistral";
-import { vectorStore } from '../core/vector-store';
+import { vectorStore } from "../core/vector-store";
 import db from "@/lib/config/db";
 
 export class ChatService {
@@ -9,7 +9,7 @@ export class ChatService {
             // Verify document ownership
             const document = await db.document.findFirst({
                 where: { id: documentId, userId },
-            })
+            });
             if (!document) {
                 throw new Error("Document not found or access denied");
             }
@@ -19,8 +19,8 @@ export class ChatService {
                     title,
                     userId,
                     documentId,
-                }
-            })
+                },
+            });
         } catch (error) {
             console.error("Error creating chat:", error);
             throw new Error("Failed to create chat");
@@ -36,10 +36,10 @@ export class ChatService {
                     document: true,
                     user: true,
                     messages: {
-                        orderBy: { createdAt: 'desc' },
-                        take: 20
-                    }
-                }
+                        orderBy: { createdAt: "desc" },
+                        take: 20,
+                    },
+                },
             });
 
             if (!chat) {
@@ -51,16 +51,25 @@ export class ChatService {
                 data: {
                     chatId,
                     role: MessageRole.USER,
-                    content
-                }
-            })
+                    content,
+                },
+            });
 
             // Get relevant context from the vector store
-            const relevantDocs = await vectorStore.similaritySearch(content, userId, 20, chat.documentId);
-            const context = relevantDocs.map(doc => doc.pageContent).join("\n\n");
+            const relevantDocs = await vectorStore.similaritySearch(
+                content,
+                userId,
+                20,
+                chat.documentId,
+            );
+            const context = relevantDocs.map((doc) => doc.pageContent).join(
+                "\n\n",
+            );
 
             // Format chat history
-            const chatHistory = chat.messages.reverse().map(msg => `${msg.role}: ${msg.content}`).join("\n");
+            const chatHistory = chat.messages.reverse().map((msg) =>
+                `${msg.role}: ${msg.content}`
+            ).join("\n");
 
             // Generate response
             const chatChain = createChatChain(chat.user);
@@ -68,7 +77,7 @@ export class ChatService {
                 chatHistory,
                 context,
                 question: content,
-            })
+            }, { maxConcurrency: 5, runId: chatId });
 
             // Save assistant response
             await db.message.create({
@@ -76,7 +85,7 @@ export class ChatService {
                     chatId,
                     role: MessageRole.ASSISTANT,
                     content: response,
-                }
+                },
             });
 
             return response;
@@ -92,13 +101,13 @@ export class ChatService {
                 where: { id: chatId, userId },
                 include: {
                     messages: {
-                        orderBy: { createdAt: 'asc' }
+                        orderBy: { createdAt: "asc" },
                     },
                     document: {
-                        select: { id: true, name: true }
-                    }
-                }
-            })
+                        select: { id: true, name: true },
+                    },
+                },
+            });
 
             if (!chat) {
                 throw new Error("Chat not found or access denied");
@@ -120,12 +129,12 @@ export class ChatService {
                         select: { id: true, name: true },
                     },
                     messages: {
-                        orderBy: { createdAt: 'desc' },
+                        orderBy: { createdAt: "desc" },
                         take: 1, // Last message for preview
-                    }
+                    },
                 },
-                orderBy: { createdAt: 'desc' },
-            })
+                orderBy: { createdAt: "desc" },
+            });
         } catch (error) {
             console.error("Error fetching user chats:", error);
             throw new Error("Failed to fetch user chats");
@@ -153,12 +162,16 @@ export class ChatService {
         }
     }
 
-    public async createSourcingStrategy(userId: string, documentId: string, requirements: string) {
+    public async createSourcingStrategy(
+        userId: string,
+        documentId: string,
+        requirements: string,
+    ) {
         try {
             // Verify user is a talent sourcer with active subscription
             const user = await db.user.findUnique({
                 where: { id: userId },
-                include: { documents: { where: { id: documentId } } }
+                include: { documents: { where: { id: documentId } } },
             });
 
             if (!user) {
@@ -170,7 +183,9 @@ export class ChatService {
             }
 
             if (user.subscriptionStatus !== SubscriptionStatus.ACTIVE) {
-                throw new Error("Sourcing mode requires an active subscription");
+                throw new Error(
+                    "Sourcing mode requires an active subscription",
+                );
             }
 
             if (user.documents.length === 0) {
@@ -184,7 +199,7 @@ export class ChatService {
             const strategy = await sourcingChain.invoke({
                 talentProfiles: document.content,
                 requirements,
-            })
+            });
 
             // Create a special chat for sourcing strategy
             const chat = await db.chat.create({
@@ -192,7 +207,7 @@ export class ChatService {
                     title: `Sourcing Strategy for ${document.name}`,
                     userId,
                     documentId: document.id,
-                }
+                },
             });
 
             // Save the strategy as assistant message
@@ -201,7 +216,7 @@ export class ChatService {
                     chatId: chat.id,
                     role: MessageRole.ASSISTANT,
                     content: strategy,
-                }
+                },
             });
 
             return { chat, strategy };
