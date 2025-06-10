@@ -101,7 +101,7 @@ export class DocumentProcessor {
             const tempFile = new File([buffer], fileName, {
                 type: contentType,
             });
-            const loader = new PDFLoader(tempFile, { splitPages: true });
+            const loader = new PDFLoader(tempFile);
 
             // Load and split the document
             const docs = await loader.load();
