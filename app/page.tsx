@@ -14,7 +14,6 @@ import {
   Shield,
   Globe,
   Menu,
-  X,
  WalletCards 
 } from "lucide-react";
 import AppLogo from "@/components/app-logo";
@@ -71,9 +70,6 @@ export default function LandingPage() {
               <SheetContent side="right" className="p-4">
                 <div className="flex justify-between items-center mb-4">
                   <AppLogo />
-                  <Button variant="ghost" size="icon">
-                    <X className="w-6 h-6" />
-                  </Button>
                 </div>
                 <nav className="space-y-4">
                   <a
