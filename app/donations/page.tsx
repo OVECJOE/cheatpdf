@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,8 +111,7 @@ const DonationPage = () => {
         toast.error(data.error || "Failed to create donation");
       }
     } catch (error) {
-      console.error("Donation error:", error);
-      toast.error("Failed to process donation");
+      toast.error(`Failed to process donation: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsLoading(false);
     }
