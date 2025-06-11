@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { 
-  Book, Crown, CheckCircle, ArrowLeft, Clock, FileText,
+  BookOpen, Crown, CheckCircle, ArrowLeft, Clock, FileText,
   Users, Shield, Star, Sparkles, Loader2, Settings
 } from "lucide-react";
 
@@ -223,7 +223,7 @@ export default function UpgradePage() {
             
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Book className="w-5 h-5 text-white" />
+                <BookOpen className="w-5 h-5 text-white" />
               </div>
               <span className="text-lg sm:text-xl font-bold text-gray-900">CheatPDF</span>
             </div>
