@@ -21,6 +21,8 @@ import {
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import CountryLanguageForm from "@/components/country-language";
 
 const DonationPage = () => {
   const [formData, setFormData] = useState({
@@ -111,72 +113,32 @@ const DonationPage = () => {
         toast.error(data.error || "Failed to create donation");
       }
     } catch (error) {
-      toast.error(`Failed to process donation: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(
+        `Failed to process donation: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const countries = [
-    "United States",
-    "Canada",
-    "United Kingdom",
-    "Germany",
-    "France",
-    "Spain",
-    "Italy",
-    "Netherlands",
-    "Sweden",
-    "Norway",
-    "Denmark",
-    "Australia",
-    "New Zealand",
-    "Japan",
-    "South Korea",
-    "Singapore",
-    "India",
-    "Brazil",
-    "Mexico",
-    "Argentina",
-    "Nigeria",
-    "South Africa",
-    "Kenya",
-    "Egypt",
-    "Any Country",
-  ];
-
-  const languages = [
-    "English",
-    "Spanish",
-    "French",
-    "German",
-    "Italian",
-    "Portuguese",
-    "Dutch",
-    "Swedish",
-    "Norwegian",
-    "Danish",
-    "Japanese",
-    "Korean",
-    "Chinese",
-    "Hindi",
-    "Arabic",
-    "Russian",
-    "Turkish",
-    "Any Language",
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
       {/* Hero Section */}
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           <div className="space-y-6">
-            <div className="flex justify-center">
-              <Heart className="w-16 h-16 text-red-500 fill-current" />
-            </div>
+            <Badge
+              variant="outline"
+              className="text-amber-600 border-amber-600 text-xs sm:text-sm"
+            >
+              <Heart className="inline-block mr-1" />
+              Your Donation Matters
+            </Badge>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
-              Help Students Study Smarter
+              Help Students{" "}
+              <span className="bg-gradient-to-r from-amber-600 to-purple-600 bg-clip-text text-transparent">
+                Study Smarter
+              </span>
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Your donation provides pro access to students who can&apos;t
@@ -186,8 +148,10 @@ const DonationPage = () => {
 
             <div className="grid md:grid-cols-3 gap-6 mt-12">
               <Card className="p-6 text-center">
-                <Users className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-blue-600">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-purple-600">
                   {isStatsLoading
                     ? "..."
                     : donationStats.totalStudentsHelped.toLocaleString()}
@@ -196,7 +160,9 @@ const DonationPage = () => {
               </Card>
 
               <Card className="p-6 text-center">
-                <DollarSign className="w-12 h-12 text-green-600 mx-auto mb-4" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                </div>
                 <h3 className="text-2xl font-bold text-green-600">
                   $
                   {isStatsLoading
@@ -207,7 +173,9 @@ const DonationPage = () => {
               </Card>
 
               <Card className="p-6 text-center">
-                <TrendingUp className="w-12 h-12 text-purple-600 mx-auto mb-4" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+                </div>
                 <h3 className="text-2xl font-bold text-purple-600">
                   {isStatsLoading ? "..." : donationStats.currentMonthStudents}
                 </h3>
@@ -330,51 +298,15 @@ const DonationPage = () => {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="targetCountry">
-                    Target Country (Optional)
-                  </Label>
-                  <Select
-                    onValueChange={(value) =>
-                      handleInputChange("targetCountry", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Any Country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countries.map((country) => (
-                        <SelectItem key={country} value={country}>
-                          {country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="targetLanguage">
-                    Target Language (Optional)
-                  </Label>
-                  <Select
-                    onValueChange={(value) =>
-                      handleInputChange("targetLanguage", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Any Language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {languages.map((language) => (
-                        <SelectItem key={language} value={language}>
-                          {language}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              <CountryLanguageForm
+                onSelectionChange={(field: string, value: string) =>
+                  field === "country"
+                    ? handleInputChange("targetCountry", value)
+                    : handleInputChange("targetLanguage", value)
+                }
+                selectedCountry={formData.targetCountry}
+                selectedLanguage={formData.targetLanguage}
+              />
 
               <div>
                 <Label htmlFor="studentsToHelp">
@@ -421,9 +353,9 @@ const DonationPage = () => {
               </div>
 
               {/* Donation Summary */}
-              <Card className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+              <Card className="p-6 bg-gradient-to-r from-amber-50 to-purple-50 border-purple-200">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <CheckCircle className="w-5 h-5 text-purple-600" />
                   Donation Summary
                 </h3>
                 <div className="space-y-2 text-sm">
@@ -458,7 +390,7 @@ const DonationPage = () => {
               <Button
                 onClick={handleDonate}
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-6 text-lg"
+                className="w-full bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-700 hover:to-purple-700 py-6 text-lg"
               >
                 {isLoading
                   ? "Creating Donation..."
