@@ -14,7 +14,10 @@ declare global {
 
             STRIPE_SECRET_KEY: string;
             STRIPE_WEBHOOK_SECRET: string;
-            STRIPE_PRICE_ID: string;
+            STRIPE_DONATION_PRICE_ID: string;
+            NEXT_STRIPE_MONTHLY_PRICE_ID: string;
+            NEXT_STRIPE_QUARTERLY_PRICE_ID: string;
+            NEXT_STRIPE_BIANNUAL_PRICE_ID: string;
 
             RESEND_API_KEY: string;
             EMAIL_FROM: string;

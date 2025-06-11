@@ -50,6 +50,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Only 3 documents allowed for free users
+    const userDocumentsCount = await db.document.count({
+      where: { userId: session.user.id },
+    })
+    if (userDocumentsCount >= 5) {
+      return NextResponse.json(
+        { error: 'Free users can only upload up to 5 documents' },
+        { status: 403 }
+      )
+    }
+
     const formData = await request.formData()
     const file = formData.get('file');
     if (!(file instanceof File)) {

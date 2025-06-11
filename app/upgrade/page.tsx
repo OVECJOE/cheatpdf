@@ -3,12 +3,24 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { 
-  BookOpen, Crown, CheckCircle, ArrowLeft, Clock, FileText,
-  Users, Shield, Star, Sparkles, Loader2, Settings
+import {
+  BookOpen,
+  Crown,
+  CheckCircle,
+  ArrowLeft,
+  Clock,
+  FileText,
+  Users,
+  Shield,
+  Star,
+  Sparkles,
+  Loader2,
+  Settings,
 } from "lucide-react";
 
 interface UserProfile {
@@ -25,13 +37,56 @@ interface SubscriptionStatus {
   currentPeriodEnd?: string;
 }
 
+type PricingPlan = "monthly" | "quarterly" | "biannually";
+
+interface PricingOption {
+  id: PricingPlan;
+  name: string;
+  priceId: string;
+  originalPrice: number;
+  period: string;
+  savings?: string;
+  popular?: boolean;
+}
+
+const pricingOptions: PricingOption[] = [
+  {
+    id: "monthly",
+    name: "Monthly",
+    priceId: process.env.NEXT_STRIPE_MONTHLY_PRICE_ID,
+    originalPrice: 2,
+    period: "/month",
+    popular: false,
+  },
+  {
+    id: "quarterly",
+    name: "Every 3 Months",
+    priceId: process.env.NEXT_STRIPE_QUARTERLY_PRICE_ID,
+    originalPrice: 4,
+    period: "/3 months",
+    savings: "Save 33%",
+    popular: true,
+  },
+  {
+    id: "biannually",
+    name: "Every 6 Months",
+    priceId: process.env.NEXT_STRIPE_BIANNUAL_PRICE_ID,
+    originalPrice: 6,
+    period: "/6 months",
+    savings: "Save 50%",
+    popular: false,
+  },
+];
+
 export default function UpgradePage() {
   const { status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] =
+    useState<SubscriptionStatus | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState<PricingPlan>("quarterly");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -47,7 +102,7 @@ export default function UpgradePage() {
   const fetchUserData = async () => {
     try {
       setProfileLoading(true);
-      
+
       // Fetch user profile
       const profileResponse = await fetch("/api/user/profile");
       if (profileResponse.ok) {
@@ -62,23 +117,29 @@ export default function UpgradePage() {
         setSubscriptionStatus(subscriptionData.status);
       }
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      toast.error((error as Error).message || "Failed to load user data");
     } finally {
       setProfileLoading(false);
     }
   };
 
   const handleUpgrade = async () => {
+    const selectedOption = pricingOptions.find(
+      (option) => option.id === selectedPlan
+    );
+    if (!selectedOption) return;
+
     setLoading(true);
-    
+
     try {
       const response = await fetch("/api/subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "create-checkout",
-          successUrl: `${window.location.origin}/dashboard?upgraded=true`,
-          cancelUrl: `${window.location.origin}/upgrade?cancelled=true`,
+          priceId: selectedOption.priceId,
+          successUrl: `${window.location.origin}/dashboard`,
+          cancelUrl: `${window.location.origin}/upgrade`,
         }),
       });
 
@@ -91,12 +152,12 @@ export default function UpgradePage() {
         }
       } else {
         const errorData = await response.json();
-        console.error("Failed to create checkout session:", errorData);
-        alert(errorData.error || "Something went wrong. Please try again.");
+        toast.error(errorData.error || "Something went wrong. Please try again.");
       }
-    } catch (error) {
-      console.error("Error creating checkout session:", error);
-      alert("Something went wrong. Please try again.");
+    } catch {
+      toast.error(
+        "Failed to create checkout session. Please try again later."
+      );
     } finally {
       setLoading(false);
     }
@@ -104,7 +165,7 @@ export default function UpgradePage() {
 
   const handleManageSubscription = async () => {
     setLoading(true);
-    
+
     try {
       const response = await fetch("/api/subscription", {
         method: "POST",
@@ -124,12 +185,10 @@ export default function UpgradePage() {
         }
       } else {
         const errorData = await response.json();
-        console.error("Failed to create portal session:", errorData);
-        alert(errorData.error || "Something went wrong. Please try again.");
+        toast.error(errorData.error || "Something went wrong. Please try again.");
       }
-    } catch (error) {
-      console.error("Error creating portal session:", error);
-      alert("Something went wrong. Please try again.");
+    } catch {
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -146,16 +205,21 @@ export default function UpgradePage() {
     );
   }
 
-  const isPro = subscriptionStatus?.status === "active" || userProfile?.subscriptionStatus === "active";
+  const isPro =
+    subscriptionStatus?.status === "active" ||
+    userProfile?.subscriptionStatus === "active";
+  const currentOption = pricingOptions.find(
+    (option) => option.id === selectedPlan
+  )!;
 
   if (isPro) {
     return (
       <div className="min-h-screen bg-amber-50">
         <header className="bg-white border-b border-amber-200">
           <div className="container mx-auto px-4 py-4">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => router.push("/dashboard")}
               className="border-amber-300 text-amber-700 hover:bg-amber-100"
             >
@@ -170,18 +234,21 @@ export default function UpgradePage() {
             <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
               <Crown className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">You&apos;re Already Pro!</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+              You&apos;re Already Pro!
+            </h2>
             <p className="text-gray-600 mb-8 text-sm sm:text-base">
-              You have access to all CheatPDF Pro features. Continue enjoying unlimited documents, exam mode, and more.
+              You have access to all CheatPDF Pro features. Continue enjoying
+              unlimited documents, exam mode, and more.
             </p>
             <div className="space-y-3">
-              <Button 
+              <Button
                 onClick={() => router.push("/dashboard")}
                 className="w-full bg-gradient-to-r from-amber-500 to-purple-600 hover:from-amber-600 hover:to-purple-700 text-white"
               >
                 Go to Dashboard
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={handleManageSubscription}
                 disabled={loading}
@@ -202,6 +269,11 @@ export default function UpgradePage() {
             </div>
           </div>
         </div>
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton={false}
+        />
       </div>
     );
   }
@@ -211,21 +283,23 @@ export default function UpgradePage() {
       <header className="bg-white/80 backdrop-blur-sm border-b border-amber-200 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => router.push("/dashboard")}
               className="border-amber-300 text-amber-700 hover:bg-amber-100"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Button>
-            
+
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg sm:text-xl font-bold text-gray-900">CheatPDF</span>
+              <span className="text-lg sm:text-xl font-bold text-gray-900">
+                CheatPDF
+              </span>
             </div>
           </div>
         </div>
@@ -237,18 +311,22 @@ export default function UpgradePage() {
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Crown className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500" />
             <Badge className="bg-gradient-to-r from-amber-400 to-purple-500 text-white text-sm sm:text-lg px-3 py-1 sm:px-4 sm:py-2">
-              Limited Time: 50% Off First Month
+              Limited Time: Up to 33% Off
             </Badge>
           </div>
-          
+
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
             Unlock Your Full
-            <span className="bg-gradient-to-r from-amber-600 to-purple-600 bg-clip-text text-transparent"> Study Potential</span>
+            <span className="bg-gradient-to-r from-amber-600 to-purple-600 bg-clip-text text-transparent">
+              {" "}
+              Study Potential
+            </span>
           </h1>
-          
+
           <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto mb-6 sm:mb-8 leading-relaxed">
-            Get unlimited access to all CheatPDF features for just $5/month. 
-            Generate practice exams, upload unlimited documents, and study smarter with AI.
+            Get unlimited access to all CheatPDF features with flexible billing
+            options. Generate practice exams, upload unlimited documents, and
+            study smarter with AI.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-8 text-sm text-gray-600">
@@ -267,29 +345,70 @@ export default function UpgradePage() {
           </div>
         </div>
 
-        {/* Pricing Card */}
-        <div className="max-w-md mx-auto mb-12 sm:mb-16">
+        {/* Pricing Card with Tabs */}
+        <div className="max-w-lg mx-auto mb-12 sm:mb-16">
           <Card className="p-6 sm:p-8 border-2 border-amber-500 shadow-xl relative bg-white">
-            <Badge className="absolute -top-3 left-4 bg-amber-500 text-white text-sm sm:text-lg px-3 py-1 sm:px-4">
-              Most Popular
-            </Badge>
-            
+            {currentOption.popular && (
+              <Badge className="absolute -top-3 left-4 bg-amber-500 text-white text-sm sm:text-lg px-3 py-1 sm:px-4">
+                Most Popular
+              </Badge>
+            )}
+
+            {/* Pricing Tabs */}
+            <div className="mb-6">
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                {pricingOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setSelectedPlan(option.id)}
+                    className={`flex-1 text-center py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                      selectedPlan === option.id
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <div>{option.name}</div>
+                    {option.savings && (
+                      <div className="text-xs text-green-600 font-medium mt-1">
+                        {option.savings}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="text-center space-y-4 sm:space-y-6">
               <div>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900">CheatPDF Pro</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  CheatPDF Pro
+                </h3>
                 <p className="text-gray-600">Everything you need to excel</p>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center justify-center space-x-2">
-                  <span className="text-xl sm:text-2xl text-gray-400 line-through">$5</span>
-                  <span className="text-4xl sm:text-5xl font-bold text-gray-900">$2.50</span>
-                  <span className="text-gray-600">/month</span>
+                  <span className="text-xl sm:text-2xl text-gray-400 line-through">
+                    ${Math.round(currentOption.originalPrice * 1.12)}
+                  </span>
+                  <span className="text-4xl sm:text-5xl font-bold text-gray-900">
+                    ${currentOption.originalPrice}
+                  </span>
+                  <span className="text-gray-600">{currentOption.period}</span>
                 </div>
-                <p className="text-sm text-green-600 font-medium">50% off for first month</p>
+                {currentOption.savings && (
+                  <p className="text-sm text-green-600 font-medium">
+                    {currentOption.savings}
+                  </p>
+                )}
+                {selectedPlan === "monthly" && (
+                  <p className="text-sm text-green-600 font-medium">
+                    50% off for first month
+                  </p>
+                )}
               </div>
 
-              <Button 
+              <Button
                 onClick={handleUpgrade}
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-amber-500 to-purple-600 hover:from-amber-600 hover:to-purple-700 py-4 sm:py-6 text-base sm:text-lg font-semibold text-white shadow-lg"
@@ -319,27 +438,37 @@ export default function UpgradePage() {
           <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-8">
             What&apos;s Included in Pro
           </h2>
-          
+
           <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
             {/* Free Features */}
             <Card className="p-4 sm:p-6 bg-white">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Free Plan</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+                Free Plan
+              </h3>
               <ul className="space-y-3">
                 <li className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Chat with PDFs (unlimited)</span>
+                  <span className="text-sm sm:text-base">
+                    Chat with PDFs (unlimited)
+                  </span>
                 </li>
                 <li className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Upload up to 3 documents</span>
+                  <span className="text-sm sm:text-base">
+                    Upload up to 5 documents
+                  </span>
                 </li>
                 <li className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Basic summarization</span>
+                  <span className="text-sm sm:text-base">
+                    Basic summarization
+                  </span>
                 </li>
                 <li className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">Multi-language support</span>
+                  <span className="text-sm sm:text-base">
+                    Multi-language support
+                  </span>
                 </li>
               </ul>
             </Card>
@@ -348,32 +477,46 @@ export default function UpgradePage() {
             <Card className="p-4 sm:p-6 border-2 border-amber-500 bg-gradient-to-br from-amber-50 to-purple-50">
               <div className="flex items-center space-x-2 mb-4">
                 <Crown className="w-5 h-5 text-amber-600" />
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Pro Plan</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
+                  Pro Plan
+                </h3>
               </div>
               <ul className="space-y-3">
                 <li className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium text-sm sm:text-base">Everything in Free</span>
+                  <span className="font-medium text-sm sm:text-base">
+                    Everything in Free
+                  </span>
                 </li>
                 <li className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium text-sm sm:text-base">Unlimited document uploads</span>
+                  <span className="font-medium text-sm sm:text-base">
+                    Unlimited document uploads
+                  </span>
                 </li>
                 <li className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium text-sm sm:text-base">Exam Mode with detailed explanations</span>
+                  <span className="font-medium text-sm sm:text-base">
+                    Exam Mode with detailed explanations
+                  </span>
                 </li>
                 <li className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium text-sm sm:text-base">Sourcer Mode (for professionals)</span>
+                  <span className="font-medium text-sm sm:text-base">
+                    Sourcer Mode (for professionals)
+                  </span>
                 </li>
                 <li className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium text-sm sm:text-base">Advanced AI features</span>
+                  <span className="font-medium text-sm sm:text-base">
+                    Advanced AI features
+                  </span>
                 </li>
                 <li className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium text-sm sm:text-base">Priority support</span>
+                  <span className="font-medium text-sm sm:text-base">
+                    Priority support
+                  </span>
                 </li>
               </ul>
             </Card>
@@ -385,15 +528,18 @@ export default function UpgradePage() {
           <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-8 sm:mb-12">
             Pro Features That Make a Difference
           </h2>
-          
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <Card className="p-4 sm:p-6 text-center bg-white hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">Timed Practice Exams</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
+                Timed Practice Exams
+              </h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                Generate realistic practice exams from your documents. Get detailed explanations for wrong answers after completion.
+                Generate realistic practice exams from your documents. Get
+                detailed explanations for wrong answers after completion.
               </p>
             </Card>
 
@@ -401,9 +547,12 @@ export default function UpgradePage() {
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-amber-600" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">Unlimited Documents</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
+                Unlimited Documents
+              </h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                Upload as many study materials as you need. No limits on the number of PDFs you can process and chat with.
+                Upload as many study materials as you need. No limits on the
+                number of PDFs you can process and chat with.
               </p>
             </Card>
 
@@ -411,9 +560,12 @@ export default function UpgradePage() {
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">Sourcer Mode</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
+                Sourcer Mode
+              </h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                For professionals: analyze candidate profiles and create AI-powered sourcing strategies to find top talent.
+                For professionals: analyze candidate profiles and create
+                AI-powered sourcing strategies to find top talent.
               </p>
             </Card>
           </div>
@@ -424,17 +576,21 @@ export default function UpgradePage() {
           <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-8 sm:mb-12">
             What Students Say About CheatPDF
           </h2>
-          
+
           <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
             <Card className="p-4 sm:p-6 bg-white">
               <div className="flex items-center space-x-1 mb-4">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
+                  <Star
+                    key={i}
+                    className="w-4 h-4 text-amber-400 fill-current"
+                  />
                 ))}
               </div>
               <p className="text-sm sm:text-base text-gray-700 mb-4 leading-relaxed">
-                &quot;The exam mode is a game changer! I went from failing practice tests to acing my finals. 
-                The AI explanations helped me understand concepts I struggled with for months.&quot;
+                &quot;The exam mode is a game changer! I went from failing
+                practice tests to acing my finals. The AI explanations helped me
+                understand concepts I struggled with for months.&quot;
               </p>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
@@ -450,12 +606,16 @@ export default function UpgradePage() {
             <Card className="p-4 sm:p-6 bg-white">
               <div className="flex items-center space-x-1 mb-4">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
+                  <Star
+                    key={i}
+                    className="w-4 h-4 text-amber-400 fill-current"
+                  />
                 ))}
               </div>
               <p className="text-sm sm:text-base text-gray-700 mb-4 leading-relaxed">
-                &quot;Being able to upload all my textbooks and lecture notes is incredible. 
-                CheatPDF has become my personal AI tutor that&apos;s available 24/7.&quot;
+                &quot;Being able to upload all my textbooks and lecture notes is
+                incredible. CheatPDF has become my personal AI tutor that&apos;s
+                available 24/7.&quot;
               </p>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
@@ -475,33 +635,47 @@ export default function UpgradePage() {
           <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-8 sm:mb-12">
             Frequently Asked Questions
           </h2>
-          
+
           <div className="space-y-4 sm:space-y-6">
             <Card className="p-4 sm:p-6 bg-white">
-              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Can I cancel anytime?</h3>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">
+                Can I cancel anytime?
+              </h3>
               <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                Yes! You can cancel your subscription at any time. You&apos;ll continue to have Pro access until the end of your billing period.
+                Yes! You can cancel your subscription at any time. You&apos;ll
+                continue to have Pro access until the end of your billing
+                period.
               </p>
             </Card>
 
             <Card className="p-4 sm:p-6 bg-white">
-              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">How does the 50% discount work?</h3>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">
+                How do the different billing options work?
+              </h3>
               <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                New Pro subscribers get 50% off their first month. After that, the subscription continues at the regular $5/month price.
+                Choose monthly for flexibility, quarterly to save 20%, or
+                bi-annually to save 33%. All plans include the same Pro features
+                with different billing frequencies.
               </p>
             </Card>
 
             <Card className="p-4 sm:p-6 bg-white">
-              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">What payment methods do you accept?</h3>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">
+                What payment methods do you accept?
+              </h3>
               <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                We accept all major credit cards and debit cards through our secure payment processor, Stripe.
+                We accept all major credit cards and debit cards through our
+                secure payment processor, Stripe.
               </p>
             </Card>
 
             <Card className="p-4 sm:p-6 bg-white">
-              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Is my data secure?</h3>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">
+                Is my data secure?
+              </h3>
               <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                Absolutely. Your documents and data are encrypted and stored securely. We never share your information with third parties.
+                Absolutely. Your documents and data are encrypted and stored
+                securely. We never share your information with third parties.
               </p>
             </Card>
           </div>
@@ -516,7 +690,7 @@ export default function UpgradePage() {
             <p className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8 leading-relaxed">
               Join thousands of students who are studying smarter with CheatPDF
             </p>
-            <Button 
+            <Button
               onClick={handleUpgrade}
               disabled={loading}
               className="bg-gradient-to-r from-amber-500 to-purple-600 hover:from-amber-600 hover:to-purple-700 px-8 sm:px-12 py-4 sm:py-6 text-lg sm:text-xl font-semibold text-white shadow-lg"
@@ -528,16 +702,23 @@ export default function UpgradePage() {
                 </>
               ) : (
                 <>
-                  Start Your Pro Journey @ $2.50/mo
+                  Start Your Pro Journey @ ${currentOption.originalPrice}
+                  {currentOption.period}
                 </>
               )}
             </Button>
             <p className="text-xs sm:text-sm text-gray-500 mt-4">
-              50% off first month • Then $5/month • Cancel anytime
+              {currentOption.savings && `${currentOption.savings} • `}Cancel
+              anytime
             </p>
           </div>
         </div>
       </div>
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton={false}
+      />
     </div>
   );
 }
