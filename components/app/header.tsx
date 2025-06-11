@@ -36,7 +36,7 @@ export default function AppHeader() {
           >
             Sign In
           </Link>
-          <Link href="/donations">
+          <Link href="/donate">
             <Button>Donate</Button>
           </Link>
         </nav>
@@ -78,7 +78,7 @@ export default function AppHeader() {
                 >
                   Sign In
                 </Link>
-                <Link href="/donations">
+                <Link href="/donate">
                   <Button className="w-full">Donate</Button>
                 </Link>
               </nav>

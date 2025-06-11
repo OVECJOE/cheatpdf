@@ -39,23 +39,14 @@ class DonationService {
         payment_method_types: ["card"],
         line_items: [
           {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: `CheatPDF Student Sponsorship`,
-                description: `Help ${data.studentsToHelp} student${
-                  data.studentsToHelp > 1 ? "s" : ""
-                } access CheatPDF Pro`,
-              },
-              unit_amount: Math.round(data.amount * 100), // Convert to cents
-            },
+            price: process.env.STRIPE_DONATION_PRICE_ID,
             quantity: 1,
           },
         ],
         mode: "payment",
         success_url:
           `${process.env.NEXT_PUBLIC_BASE_URL}/donate/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/donate?cancelled=true`,
+        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/donate`,
         customer_email: data.donorEmail,
         metadata: {
           donationId: donation.id,
