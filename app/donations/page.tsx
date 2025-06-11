@@ -93,6 +93,12 @@ const DonationPage = () => {
     }
 
     setIsLoading(true);
+    console.log(
+      JSON.stringify({
+        ...formData,
+        amount: calculateDonationAmount(),
+      })
+    );
     try {
       const response = await fetch("/api/donations", {
         method: "POST",
@@ -160,7 +166,9 @@ const DonationPage = () => {
                       ? "..."
                       : donationStats.totalStudentsHelped.toLocaleString()}
                   </h3>
-                  <p className="text-gray-600 text-sm font-medium">Students Helped</p>
+                  <p className="text-gray-600 text-sm font-medium">
+                    Students Helped
+                  </p>
                 </div>
               </Card>
 
@@ -175,7 +183,9 @@ const DonationPage = () => {
                       ? "..."
                       : donationStats.totalDonations.toLocaleString()}
                   </h3>
-                  <p className="text-gray-600 text-sm font-medium">Total Donated</p>
+                  <p className="text-gray-600 text-sm font-medium">
+                    Total Donated
+                  </p>
                 </div>
               </Card>
 
@@ -189,7 +199,9 @@ const DonationPage = () => {
                       ? "..."
                       : donationStats.currentMonthStudents}
                   </h3>
-                  <p className="text-gray-600 text-sm font-medium">Helped This Month</p>
+                  <p className="text-gray-600 text-sm font-medium">
+                    Helped This Month
+                  </p>
                 </div>
               </Card>
             </div>

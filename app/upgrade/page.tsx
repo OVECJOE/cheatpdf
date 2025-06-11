@@ -700,7 +700,7 @@ export default function UpgradePage() {
                 </>
               ) : (
                 <>
-                  Start Your Pro Journey @ ${currentOption.originalPrice}
+                  Start Your Pro Journey @ ${currentOption.discountedPrice}
                   {currentOption.period}
                 </>
               )}
