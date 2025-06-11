@@ -43,11 +43,16 @@ export default function UpgradePage() {
     setLoading(true);
     
     try {
+      const successUrl = `${window.location.origin}/dashboard?upgraded=true`;
+      const cancelUrl = `${window.location.origin}/upgrade?canceled=true`;
+
       const response = await fetch("/api/subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID,
+          action: "create-checkout",
+          successUrl,
+          cancelUrl,
         }),
       });
 
@@ -55,11 +60,43 @@ export default function UpgradePage() {
         const { url } = await response.json();
         window.location.href = url;
       } else {
-        console.error("Failed to create checkout session");
-        alert("Something went wrong. Please try again.");
+        const errorData = await response.json();
+        console.error("Failed to create checkout session:", errorData);
+        alert(`Something went wrong: ${errorData.error || 'Please try again.'}`);
       }
     } catch (error) {
       console.error("Error creating checkout session:", error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setLoading(true);
+    
+    try {
+      const returnUrl = `${window.location.origin}/dashboard`;
+
+      const response = await fetch("/api/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create-portal",
+          returnUrl,
+        }),
+      });
+
+      if (response.ok) {
+        const { url } = await response.json();
+        window.location.href = url;
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to create portal session:", errorData);
+        alert(`Something went wrong: ${errorData.error || 'Please try again.'}`);
+      }
+    } catch (error) {
+      console.error("Error creating portal session:", error);
       alert("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -70,11 +107,11 @@ export default function UpgradePage() {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  const isPro = userProfile?.subscription?.status === "active";
+  const isPro = userProfile?.subscriptionStatus === "active";
 
   if (isPro) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-amber-50">
         <header className="bg-white border-b">
           <div className="container mx-auto px-4 py-4">
             <Button 
@@ -90,16 +127,26 @@ export default function UpgradePage() {
 
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-md mx-auto text-center">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Crown className="w-8 h-8 text-yellow-600" />
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Crown className="w-8 h-8 text-amber-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">You&apos;re Already Pro!</h2>
             <p className="text-gray-600 mb-6">
               You have access to all CheatPDF Pro features. Continue enjoying unlimited documents, exam mode, and more.
             </p>
-            <Button onClick={() => router.push("/dashboard")}>
-              Go to Dashboard
-            </Button>
+            <div className="space-y-3">
+              <Button onClick={() => router.push("/dashboard")} className="w-full bg-amber-600 hover:bg-amber-700">
+                Go to Dashboard
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleManageSubscription}
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? "Loading..." : "Manage Subscription"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -107,7 +154,7 @@ export default function UpgradePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
       <header className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -121,7 +168,7 @@ export default function UpgradePage() {
             </Button>
             
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-amber-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <Crown className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold text-gray-900">CheatPDF Pro</span>
@@ -134,15 +181,15 @@ export default function UpgradePage() {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <Crown className="w-8 h-8 text-yellow-500" />
-            <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-lg px-4 py-2">
+            <Crown className="w-8 h-8 text-amber-500" />
+            <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-lg px-4 py-2">
               Limited Time: 50% Off First Month
             </Badge>
           </div>
           
           <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
             Unlock Your Full
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> Study Potential</span>
+            <span className="bg-gradient-to-r from-amber-600 to-purple-600 bg-clip-text text-transparent"> Study Potential</span>
           </h1>
           
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
@@ -152,7 +199,7 @@ export default function UpgradePage() {
 
           <div className="flex items-center justify-center space-x-8 text-sm text-gray-600">
             <div className="flex items-center space-x-2">
-              <Star className="w-4 h-4 text-yellow-400 fill-current" />
+              <Star className="w-4 h-4 text-amber-400 fill-current" />
               <span>Used by 10,000+ students</span>
             </div>
             <div className="flex items-center space-x-2">
@@ -168,8 +215,8 @@ export default function UpgradePage() {
 
         {/* Pricing Card */}
         <div className="max-w-md mx-auto mb-16">
-          <Card className="p-8 border-2 border-blue-600 shadow-xl relative">
-            <Badge className="absolute -top-3 left-4 bg-blue-600 text-lg px-4 py-1">
+          <Card className="p-8 border-2 border-amber-600 shadow-xl relative">
+            <Badge className="absolute -top-3 left-4 bg-amber-600 text-lg px-4 py-1">
               Most Popular
             </Badge>
             
@@ -191,7 +238,7 @@ export default function UpgradePage() {
               <Button 
                 onClick={handleUpgrade}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-lg"
+                className="w-full bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-700 hover:to-purple-700 py-6 text-lg"
               >
                 {loading ? (
                   <>
@@ -244,9 +291,9 @@ export default function UpgradePage() {
             </Card>
 
             {/* Pro Features */}
-            <Card className="p-6 border-2 border-blue-600 bg-blue-50">
+            <Card className="p-6 border-2 border-amber-600 bg-amber-50">
               <div className="flex items-center space-x-2 mb-4">
-                <Crown className="w-5 h-5 text-blue-600" />
+                <Crown className="w-5 h-5 text-amber-600" />
                 <h3 className="text-xl font-semibold text-gray-900">Pro Plan</h3>
               </div>
               <ul className="space-y-3">
@@ -297,8 +344,8 @@ export default function UpgradePage() {
             </Card>
 
             <Card className="p-6 text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-8 h-8 text-blue-600" />
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-8 h-8 text-amber-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Unlimited Documents</h3>
               <p className="text-gray-600">
@@ -310,7 +357,7 @@ export default function UpgradePage() {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Sourcer Mode</h3>
+              <h3 className="text-xl font-semibront text-gray-900 mb-3">Sourcer Mode</h3>
               <p className="text-gray-600">
                 For professionals: analyze candidate profiles and create AI-powered sourcing strategies to find top talent.
               </p>
@@ -328,7 +375,7 @@ export default function UpgradePage() {
             <Card className="p-6">
               <div className="flex items-center space-x-1 mb-4">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                  <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
                 ))}
               </div>
               <p className="text-gray-700 mb-4">
@@ -336,7 +383,7 @@ export default function UpgradePage() {
                 The AI explanations helped me understand concepts I struggled with for months.&quot;
               </p>
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-medium">SM</span>
                 </div>
                 <div>
@@ -349,7 +396,7 @@ export default function UpgradePage() {
             <Card className="p-6">
               <div className="flex items-center space-x-1 mb-4">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                  <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
                 ))}
               </div>
               <p className="text-gray-700 mb-4">
@@ -418,7 +465,7 @@ export default function UpgradePage() {
             <Button 
               onClick={handleUpgrade}
               disabled={loading}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-12 py-6 text-xl"
+              className="bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-700 hover:to-purple-700 px-12 py-6 text-xl"
             >
               {loading ? (
                 <>
