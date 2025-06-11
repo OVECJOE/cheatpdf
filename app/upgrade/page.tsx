@@ -225,7 +225,7 @@ export default function UpgradePage() {
               <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <Crown className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg sm:text-xl font-bold text-gray-900">CheatPDF Pro</span>
+              <span className="text-lg sm:text-xl font-bold text-gray-900">CheatPDF</span>
             </div>
           </div>
         </div>
@@ -282,8 +282,8 @@ export default function UpgradePage() {
               
               <div className="space-y-2">
                 <div className="flex items-center justify-center space-x-2">
-                  <span className="text-xl sm:text-2xl text-gray-400 line-through">$10</span>
-                  <span className="text-4xl sm:text-5xl font-bold text-gray-900">$5</span>
+                  <span className="text-xl sm:text-2xl text-gray-400 line-through">$5</span>
+                  <span className="text-4xl sm:text-5xl font-bold text-gray-900">$2</span>
                   <span className="text-gray-600">/month</span>
                 </div>
                 <p className="text-sm text-green-600 font-medium">50% off for first month</p>
@@ -422,7 +422,7 @@ export default function UpgradePage() {
         {/* Testimonials */}
         <div className="max-w-4xl mx-auto mb-12 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-8 sm:mb-12">
-            What Students Say About Pro
+            What Students Say About CheatPDF
           </h2>
           
           <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
@@ -455,7 +455,7 @@ export default function UpgradePage() {
               </div>
               <p className="text-sm sm:text-base text-gray-700 mb-4 leading-relaxed">
                 &quot;Being able to upload all my textbooks and lecture notes is incredible. 
-                CheatPDF Pro has become my personal AI tutor that&apos;s available 24/7.&quot;
+                CheatPDF has become my personal AI tutor that&apos;s available 24/7.&quot;
               </p>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
@@ -514,7 +514,7 @@ export default function UpgradePage() {
               Ready to Supercharge Your Studies?
             </h2>
             <p className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8 leading-relaxed">
-              Join thousands of students who are studying smarter with CheatPDF Pro
+              Join thousands of students who are studying smarter with CheatPDF
             </p>
             <Button 
               onClick={handleUpgrade}
