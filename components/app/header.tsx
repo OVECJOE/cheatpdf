@@ -12,24 +12,24 @@ export default function AppHeader() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
-          <a
-            href="#features"
+          <Link
+            href="/#features"
             className="text-gray-500 font-medium hover:text-gray-800"
           >
             Features
-          </a>
-          <a
-            href="#pricing"
+          </Link>
+          <Link
+            href="/#pricing"
             className="text-gray-500 font-medium hover:text-gray-800"
           >
             Pricing
-          </a>
-          <a
-            href="#how-it-works"
+          </Link>
+          <Link
+            href="/#how-it-works"
             className="text-gray-500 font-medium hover:text-gray-800"
           >
             How it Works
-          </a>
+          </Link>
           <Link
             href="/dashboard"
             className="text-gray-500 font-medium hover:text-gray-800"
@@ -54,24 +54,24 @@ export default function AppHeader() {
                 <AppLogo />
               </div>
               <nav className="space-y-4">
-                <a
-                  href="#features"
+                <Link
+                  href="/#features"
                   className="block text-gray-700 font-medium hover:text-gray-900"
                 >
                   Features
-                </a>
-                <a
-                  href="#pricing"
+                </Link>
+                <Link
+                  href="/#pricing"
                   className="block text-gray-700 font-medium hover:text-gray-900"
                 >
                   Pricing
-                </a>
-                <a
-                  href="#how-it-works"
+                </Link>
+                <Link
+                  href="/#how-it-works"
                   className="block text-gray-700 font-medium hover:text-gray-900"
                 >
                   How it Works
-                </a>
+                </Link>
                 <Link
                   href="/dashboard"
                   className="block text-gray-700 font-medium hover:text-gray-900"
