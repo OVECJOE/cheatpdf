@@ -154,13 +154,13 @@ const DonationPage = () => {
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto">
                   <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                 </div>
-                <div className="text-center mt-4">
-                  <h3 className="text-3xl font-bold text-purple-600">
+                <div className="text-center mt-4 space-y-1">
+                  <h3 className="text-3xl font-bold text-blue-600">
                     {isStatsLoading
                       ? "..."
                       : donationStats.totalStudentsHelped.toLocaleString()}
                   </h3>
-                  <p className="text-gray-600">Students Helped</p>
+                  <p className="text-gray-600 text-sm font-medium">Students Helped</p>
                 </div>
               </Card>
 
@@ -168,14 +168,14 @@ const DonationPage = () => {
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto">
                   <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                 </div>
-                <div className="text-center mt-4">
+                <div className="text-center mt-4 space-y-1">
                   <h3 className="text-3xl font-bold text-green-600">
                     $
                     {isStatsLoading
                       ? "..."
                       : donationStats.totalDonations.toLocaleString()}
                   </h3>
-                  <p className="text-gray-600">Total Donated</p>
+                  <p className="text-gray-600 text-sm font-medium">Total Donated</p>
                 </div>
               </Card>
 
@@ -183,13 +183,13 @@ const DonationPage = () => {
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto">
                   <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                 </div>
-                <div className="text-center mt-4">
+                <div className="text-center mt-4 space-y-1">
                   <h3 className="text-3xl font-bold text-purple-600">
                     {isStatsLoading
                       ? "..."
                       : donationStats.currentMonthStudents}
                   </h3>
-                  <p className="text-gray-600">Helped This Month</p>
+                  <p className="text-gray-600 text-sm font-medium">Helped This Month</p>
                 </div>
               </Card>
             </div>
