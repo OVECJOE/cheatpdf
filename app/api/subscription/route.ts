@@ -7,6 +7,7 @@ import {
   upgradeToProSchema,
   validateSubscriptionPOSTAction,
 } from "@/lib/validations";
+import { ZodError } from "zod";
 
 export async function GET() {
   try {
@@ -89,13 +90,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
     console.error("Error handling subscription request:", error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error
-          ? error.message
-          : "Failed to process subscription request",
-      },
-      { status: 500 },
-    );
+    let errorMessage = "Failed to process subscription request";
+    if (error instanceof ZodError) {
+      errorMessage = error.errors.map((e) => e.message).join(", ");
+    }
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
