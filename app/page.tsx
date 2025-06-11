@@ -14,7 +14,6 @@ import {
   Shield,
   Globe,
   Menu,
- WalletCards 
 } from "lucide-react";
 import AppLogo from "@/components/app-logo";
 import Image from "next/image";
@@ -54,7 +53,6 @@ export default function LandingPage() {
               Sign In
             </Link>
             <Link href="/donations">
-              <WalletCards className="w-5 h-5 text-gray-500 inline-block" />
               <Button>Donate</Button>
             </Link>
           </nav>
@@ -97,7 +95,6 @@ export default function LandingPage() {
                     Sign In
                   </Link>
                   <Link href="/donations">
-                    <WalletCards className="w-5 h-5 text-gray-700 inline-block mr-2" />
                     <Button className="w-full">Donate</Button>
                   </Link>
                 </nav>
