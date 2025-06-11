@@ -93,12 +93,6 @@ const DonationPage = () => {
     }
 
     setIsLoading(true);
-    console.log(
-      JSON.stringify({
-        ...formData,
-        amount: calculateDonationAmount(),
-      })
-    );
     try {
       const response = await fetch("/api/donations", {
         method: "POST",

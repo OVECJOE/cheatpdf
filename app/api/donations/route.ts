@@ -6,9 +6,7 @@ import { ZodError } from "zod";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
     const validatedData = await createDonationSchema.parseAsync(body);
-    
     const checkoutSession = await donationService.createDonationCheckout(validatedData);
     
     return NextResponse.json({ url: checkoutSession.url });
