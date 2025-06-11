@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { 
-  Crown, CheckCircle, ArrowLeft, Clock, FileText,
+  Book, Crown, CheckCircle, ArrowLeft, Clock, FileText,
   Users, Shield, Star, Sparkles, Loader2, Settings
 } from "lucide-react";
 
@@ -223,7 +223,7 @@ export default function UpgradePage() {
             
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Crown className="w-5 h-5 text-white" />
+                <Book className="w-5 h-5 text-white" />
               </div>
               <span className="text-lg sm:text-xl font-bold text-gray-900">CheatPDF</span>
             </div>
@@ -283,7 +283,7 @@ export default function UpgradePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-center space-x-2">
                   <span className="text-xl sm:text-2xl text-gray-400 line-through">$5</span>
-                  <span className="text-4xl sm:text-5xl font-bold text-gray-900">$2</span>
+                  <span className="text-4xl sm:text-5xl font-bold text-gray-900">$2.50</span>
                   <span className="text-gray-600">/month</span>
                 </div>
                 <p className="text-sm text-green-600 font-medium">50% off for first month</p>
@@ -528,8 +528,7 @@ export default function UpgradePage() {
                 </>
               ) : (
                 <>
-                  <Crown className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-                  Start Your Pro Journey - $2.50/mo
+                  Start Your Pro Journey @ $2.50/mo
                 </>
               )}
             </Button>
