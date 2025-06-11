@@ -48,7 +48,7 @@ export default function LandingPage() {
               How it Works
             </a>
             <Link
-              href="/auth/sign-in"
+              href="/dashboard"
               className="text-gray-500 font-medium hover:text-gray-800"
             >
               Sign In
@@ -93,7 +93,7 @@ export default function LandingPage() {
                     How it Works
                   </a>
                   <Link
-                    href="/auth/sign-in"
+                    href="/dashboard"
                     className="block text-gray-700 font-medium hover:text-gray-900"
                   >
                     Sign In
