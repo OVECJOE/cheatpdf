@@ -1,4 +1,4 @@
-import AppLogo from "@/components/app-logo";
+import AppLogo from "@/components/app/logo";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";

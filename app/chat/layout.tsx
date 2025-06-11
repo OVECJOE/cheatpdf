@@ -20,7 +20,7 @@ import {
   Menu,
   Plus,
 } from "lucide-react";
-import AppLogo from "@/components/app-logo";
+import AppLogo from "@/components/app/logo";
 
 interface Message {
   id: string;

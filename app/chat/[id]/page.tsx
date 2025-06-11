@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { Send, Bot, User, Loader2, BookOpen } from "lucide-react";
-import AppLogo from "@/components/app-logo";
+import AppLogo from "@/components/app/logo";
 import MarkdownRenderer from "@/components/markdown-renderer";
 
 interface Message {

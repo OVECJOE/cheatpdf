@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import CountryLanguageForm from "@/components/country-language";
+import AppHeader from "@/components/app/header";
 
 const DonationPage = () => {
   const [formData, setFormData] = useState({
@@ -123,6 +124,8 @@ const DonationPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+      <AppHeader />
+
       {/* Hero Section */}
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-4xl text-center">
