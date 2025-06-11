@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -44,6 +43,7 @@ interface PricingOption {
   name: string;
   priceId: string;
   originalPrice: number;
+  discountedPrice: number;
   period: string;
   savings?: string;
   popular?: boolean;
@@ -54,7 +54,8 @@ const pricingOptions: PricingOption[] = [
     id: "monthly",
     name: "Monthly",
     priceId: process.env.NEXT_STRIPE_MONTHLY_PRICE_ID,
-    originalPrice: 2,
+    originalPrice: 3,
+    discountedPrice: 2,
     period: "/month",
     popular: false,
   },
@@ -62,7 +63,8 @@ const pricingOptions: PricingOption[] = [
     id: "quarterly",
     name: "Every 3 Months",
     priceId: process.env.NEXT_STRIPE_QUARTERLY_PRICE_ID,
-    originalPrice: 4,
+    originalPrice: 6,
+    discountedPrice: 4,
     period: "/3 months",
     savings: "Save 33%",
     popular: true,
@@ -71,7 +73,8 @@ const pricingOptions: PricingOption[] = [
     id: "biannually",
     name: "Every 6 Months",
     priceId: process.env.NEXT_STRIPE_BIANNUAL_PRICE_ID,
-    originalPrice: 6,
+    originalPrice: 12,
+    discountedPrice: 6,
     period: "/6 months",
     savings: "Save 50%",
     popular: false,
@@ -86,7 +89,7 @@ export default function UpgradePage() {
   const [subscriptionStatus, setSubscriptionStatus] =
     useState<SubscriptionStatus | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<PricingPlan>("quarterly");
+  const [selectedPlan, setSelectedPlan] = useState<PricingPlan>("monthly");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -269,11 +272,6 @@ export default function UpgradePage() {
             </div>
           </div>
         </div>
-        <Toaster
-          position="top-right"
-          richColors
-          closeButton={false}
-        />
       </div>
     );
   }
@@ -389,10 +387,10 @@ export default function UpgradePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-center space-x-2">
                   <span className="text-xl sm:text-2xl text-gray-400 line-through">
-                    ${Math.round(currentOption.originalPrice * 1.12)}
+                    ${Math.round(currentOption.originalPrice)}
                   </span>
                   <span className="text-4xl sm:text-5xl font-bold text-gray-900">
-                    ${currentOption.originalPrice}
+                    ${currentOption.discountedPrice}
                   </span>
                   <span className="text-gray-600">{currentOption.period}</span>
                 </div>
@@ -714,11 +712,6 @@ export default function UpgradePage() {
           </div>
         </div>
       </div>
-      <Toaster
-        position="top-right"
-        richColors
-        closeButton={false}
-      />
     </div>
   );
 }
