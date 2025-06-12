@@ -53,7 +53,7 @@ const pricingOptions: PricingOption[] = [
   {
     id: "monthly",
     name: "Monthly",
-    priceId: process.env.NEXT_STRIPE_MONTHLY_PRICE_ID,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID,
     originalPrice: 3,
     discountedPrice: 2,
     period: "/month",
@@ -62,7 +62,7 @@ const pricingOptions: PricingOption[] = [
   {
     id: "quarterly",
     name: "Every 3 Months",
-    priceId: process.env.NEXT_STRIPE_QUARTERLY_PRICE_ID,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_QUARTERLY_PRICE_ID,
     originalPrice: 6,
     discountedPrice: 4,
     period: "/3 months",
@@ -72,7 +72,7 @@ const pricingOptions: PricingOption[] = [
   {
     id: "biannually",
     name: "Every 6 Months",
-    priceId: process.env.NEXT_STRIPE_BIANNUAL_PRICE_ID,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_BIANNUAL_PRICE_ID,
     originalPrice: 12,
     discountedPrice: 6,
     period: "/6 months",
