@@ -351,7 +351,7 @@ export default function LandingPage() {
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
                     <span className="text-sm sm:text-base">
-                      Upload up to 3 documents
+                      Upload up to 5 documents
                     </span>
                   </li>
                   <li className="flex items-center gap-2">
@@ -390,7 +390,7 @@ export default function LandingPage() {
                 </div>
                 <div className="space-y-2">
                   <span className="text-3xl sm:text-4xl font-bold text-gray-900">
-                    $5
+                    $2
                   </span>
                   <span className="text-sm sm:text-base text-gray-600">
                     /month
