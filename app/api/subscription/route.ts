@@ -78,7 +78,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    console.error("Error handling subscription request:", error);
     let errorMessage = "Failed to process subscription request";
     if (error instanceof ZodError) {
       errorMessage = error.errors.map((e) => e.message).join(", ");
