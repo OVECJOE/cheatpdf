@@ -133,8 +133,6 @@ export default function UpgradePage() {
     if (!selectedOption) return;
 
     setLoading(true);
-
-    console.log("Selected option:", selectedOption);
     try {
       const response = await fetch("/api/subscription", {
         method: "POST",
