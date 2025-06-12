@@ -134,13 +134,8 @@ export default function UpgradePage() {
 
     setLoading(true);
 
+    console.log("Selected option:", selectedOption);
     try {
-      console.log(JSON.stringify({
-          action: "create-checkout",
-          priceId: selectedOption.priceId,
-          successUrl: `${window.location.origin}/dashboard`,
-          cancelUrl: `${window.location.origin}/upgrade`,
-        }));
       const response = await fetch("/api/subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
