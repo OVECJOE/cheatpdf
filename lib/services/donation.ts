@@ -44,8 +44,7 @@ class DonationService {
           },
         ],
         mode: "payment",
-        success_url:
-          `${process.env.NEXT_PUBLIC_BASE_URL}/donate/success?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/donate/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/donate`,
         customer_email: data.donorEmail,
         metadata: {
@@ -64,8 +63,10 @@ class DonationService {
       });
 
       return session;
-    } catch {
-      throw new Error("Failed to create donation checkout");
+    } catch (error) {
+      throw new Error(
+        "Failed to create checkout session: " + (error as Error).message
+      );
     }
   }
 
@@ -107,8 +108,7 @@ class DonationService {
         where: { id: donationId },
         data: { status: "FAILED" },
       });
-    } catch {
-    }
+    } catch {}
   }
 
   private async assignBeneficiaries(donation: Donation) {
@@ -119,10 +119,7 @@ class DonationService {
         // Add more criteria as needed
       };
 
-      if (
-        donation.targetCountry &&
-        donation.targetCountry !== "Any Country"
-      ) {
+      if (donation.targetCountry && donation.targetCountry !== "Any Country") {
         whereClause.country = donation.targetCountry;
       }
 
@@ -291,7 +288,7 @@ class DonationService {
 
   async getEligibleStudentsCount(
     targetCountry?: string,
-    targetLanguage?: string,
+    targetLanguage?: string
   ) {
     try {
       const whereClause: Record<string, string> = {
@@ -379,18 +376,17 @@ class DonationService {
       // Update users back to FREE tier
       for (const beneficiary of expiredBeneficiaries) {
         // Check if user has other active beneficiaries
-        const otherActiveBeneficiaries = await db.studentBeneficiary
-          .count({
-            where: {
-              userId: beneficiary.userId,
-              expiresAt: {
-                gt: now,
-              },
-              id: {
-                not: beneficiary.id,
-              },
+        const otherActiveBeneficiaries = await db.studentBeneficiary.count({
+          where: {
+            userId: beneficiary.userId,
+            expiresAt: {
+              gt: now,
             },
-          });
+            id: {
+              not: beneficiary.id,
+            },
+          },
+        });
 
         // Only downgrade if no other active sponsorships
         if (otherActiveBeneficiaries === 0) {
@@ -447,7 +443,7 @@ class DonationService {
 
   async calculateDonationAmount(
     studentsToHelp: number,
-    donationFrequency: DonationFrequency,
+    donationFrequency: DonationFrequency
   ) {
     try {
       // Base monthly cost per student
