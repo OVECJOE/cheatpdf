@@ -1,8 +1,8 @@
 import Link from "next/link";
 import AppLogo from "./logo";
 import { Button } from "../ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
-import { Menu } from "lucide-react";
+// import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+// import { Menu } from "lucide-react";
 
 export default function AppHeader() {
   return (
@@ -11,22 +11,22 @@ export default function AppHeader() {
         <AppLogo />
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
+        <nav className="flex items-center space-x-6">
           <Link
             href="/#features"
-            className="text-gray-500 font-medium hover:text-gray-800"
+            className="text-gray-500 font-medium hover:text-gray-800 hidden md:block"
           >
             Features
           </Link>
           <Link
             href="/#pricing"
-            className="text-gray-500 font-medium hover:text-gray-800"
+            className="text-gray-500 font-medium hover:text-gray-800 hidden md:block"
           >
             Pricing
           </Link>
           <Link
             href="/#how-it-works"
-            className="text-gray-500 font-medium hover:text-gray-800"
+            className="text-gray-500 font-medium hover:text-gray-800 hidden md:block"
           >
             How it Works
           </Link>
@@ -42,7 +42,7 @@ export default function AppHeader() {
         </nav>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden">
+        {/* <div className="md:hidden">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -84,7 +84,7 @@ export default function AppHeader() {
               </nav>
             </SheetContent>
           </Sheet>
-        </div>
+        </div> */}
       </div>
     </header>
   );
