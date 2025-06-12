@@ -38,24 +38,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { priceId, action, successUrl, cancelUrl, returnUrl } = body;
     const {
       action: validatedAction,
-    } = await validateSubscriptionPOSTAction.parseAsync({ action });
+    } = await validateSubscriptionPOSTAction.parseAsync({
+      action: body.action,
+    });
 
     if (validatedAction === "create-checkout") {
-      const { error, data } = await upgradeToProSchema.safeParseAsync({
+      const { priceId, successUrl, cancelUrl } = body;
+      const data = await upgradeToProSchema.parseAsync({
         priceId,
         successUrl,
         cancelUrl,
       });
-
-      if (error) {
-        return NextResponse.json(
-          { error: error.errors.map((e) => e.message).join(", ") },
-          { status: 400 },
-        );
-      }
 
       const session_stripe = await subscriptionService.createCheckoutSession(
         session.user.id,
@@ -67,17 +62,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ url: session_stripe.url });
     }
 
-    if (action === "create-portal") {
-      const { error, data } = await manageSubscriptionSchema.safeParseAsync({
+    if (validatedAction === "create-portal") {
+      const { returnUrl } = body;
+      const data = await manageSubscriptionSchema.parseAsync({
         returnUrl,
       });
-
-      if (error) {
-        return NextResponse.json(
-          { error: error.errors.map((e) => e.message).join(", ") },
-          { status: 400 },
-        );
-      }
 
       const portalSession = await subscriptionService.createPortalSession(
         session.user.id,
