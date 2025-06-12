@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
 import { donationService } from "@/lib/services/donation";
 import Stripe from "stripe";
 
@@ -10,9 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
-    const headersList = await headers();
-    const signature = headersList.get("stripe-signature");
-
+    const signature = request.headers.get("stripe-signature");
     if (!signature) {
       return NextResponse.json(
         { error: "Missing Stripe signature" },
@@ -28,20 +25,19 @@ export async function POST(request: NextRequest) {
 
     switch (event.type) {
       case "checkout.session.completed":
-        await donationService.handleSuccessfulDonation(event.data.object);
+        donationService.handleSuccessfulDonation(event.data.object);
         break;
       case "checkout.session.expired":
-        await donationService.handleFailedDonation(event.data.object);
+        donationService.handleFailedDonation(event.data.object);
         break;
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
 
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ received: true }, { status: 200 });
   } catch (error) {
-    console.error("Donation webhook error:", error);
     return NextResponse.json(
-      { error: "Webhook handler failed" },
+      { error: "Webhook handler failed: " + (error as Error).message },
       { status: 400 }
     );
   }

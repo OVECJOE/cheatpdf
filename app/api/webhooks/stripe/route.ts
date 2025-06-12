@@ -5,7 +5,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.text()
     const signature = request.headers.get('stripe-signature')
-
     if (!signature) {
       return NextResponse.json(
         { error: 'Missing stripe-signature header' },
@@ -13,12 +12,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await subscriptionService.handleWebhook(body, signature)
-    return NextResponse.json(result)
+    subscriptionService.handleWebhook(body, signature)
+    return NextResponse.json({ received: true }, { status: 200 })
   } catch (error) {
-    console.error('Webhook error:', error)
     return NextResponse.json(
-      { error: 'Webhook handler failed' },
+      { error: 'Webhook handler failed' + (error as Error).message },
       { status: 400 }
     )
   }
