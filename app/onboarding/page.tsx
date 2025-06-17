@@ -15,13 +15,10 @@ import { useState, useMemo } from "react";
 import {
   BookOpen,
   GraduationCap,
-  Users,
   ArrowRight,
-  CheckCircle,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { UserType } from "@prisma/client";
 import clsx from "clsx";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -199,353 +196,102 @@ const EDUCATION_CONFIGS: Record<EducationLevel, EducationConfig> = {
     exams: ["Custom Assessments", "Self-Evaluation"],
     goals: [
       "understand-concepts",
-      "retention",
       "time-management",
-      "improve-grades",
+      "retention",
+      "problem-solving",
     ],
-    description: "Flexible learning path",
+    description: "Flexible learning approach",
   },
 };
 
-const SUBJECT_CONFIGS: Record<string, SubjectConfig> = {
-  Mathematics: {
-    category: "STEM",
-    relatedExams: ["SAT/ACT", "GRE/GMAT", "AP Exams"],
-    suggestedGoals: ["problem-solving", "understand-concepts"],
-  },
-  "Computer Science": {
-    category: "STEM",
-    relatedExams: ["Technical Interviews", "Certification Exams"],
-    suggestedGoals: ["problem-solving", "career-prep"],
-  },
-  Engineering: {
-    category: "STEM",
-    relatedExams: ["PE Exam", "FE Exam"],
-    suggestedGoals: ["problem-solving", "career-prep"],
-  },
-  Medicine: {
-    category: "Professional",
-    relatedExams: ["Medical Boards", "MCAT"],
-    suggestedGoals: ["exam-prep", "retention"],
-  },
-  Law: {
-    category: "Professional",
-    relatedExams: ["Bar Exam", "LSAT"],
-    suggestedGoals: ["exam-prep", "understand-concepts"],
-  },
-  Business: {
-    category: "Professional",
-    relatedExams: ["CPA", "MBA Exams"],
-    suggestedGoals: ["career-prep", "understand-concepts"],
-  },
-  History: {
-    category: "Liberal Arts",
-    relatedExams: ["AP History", "Comprehensive Exams"],
-    suggestedGoals: ["retention", "understand-concepts"],
-  },
-  Literature: {
-    category: "Liberal Arts",
-    relatedExams: ["AP Literature", "Comprehensive Exams"],
-    suggestedGoals: ["understand-concepts", "retention"],
-  },
-  Psychology: {
-    category: "Social Sciences",
-    relatedExams: ["Psychology Boards", "Research Defense"],
-    suggestedGoals: ["research-skills", "understand-concepts"],
-  },
-  Economics: {
-    category: "Social Sciences",
-    relatedExams: ["Economics Comprehensive", "Professional Certification"],
-    suggestedGoals: ["problem-solving", "understand-concepts"],
-  },
+const STUDY_GOAL_LABELS: Record<StudyGoal, string> = {
+  "improve-grades": "Improve Grades",
+  "exam-prep": "Exam Preparation",
+  "understand-concepts": "Understand Concepts",
+  "time-management": "Time Management",
+  "retention": "Better Retention",
+  "problem-solving": "Problem Solving",
+  "research-skills": "Research Skills",
+  "career-prep": "Career Preparation",
 };
 
-const EXAM_CONFIGS: Record<string, ExamConfig> = {
-  "SAT/ACT": {
-    category: "standardized",
-    difficulty: 3,
-    timeframe: "medium",
-    subjects: ["Mathematics", "Language Arts", "Science"],
-  },
-  "GRE/GMAT": {
-    category: "standardized",
-    difficulty: 4,
-    timeframe: "long",
-    subjects: ["Mathematics", "Language Arts", "Logic"],
-  },
-  "AP Exams": {
-    category: "academic",
-    difficulty: 3,
-    timeframe: "medium",
-    subjects: ["Subject-Specific"],
-  },
-  "Medical Boards": {
-    category: "professional",
-    difficulty: 5,
-    timeframe: "long",
-    subjects: ["Medicine", "Clinical Skills"],
-  },
-  "Bar Exam": {
-    category: "professional",
-    difficulty: 5,
-    timeframe: "long",
-    subjects: ["Law", "Legal Practice"],
-  },
-  "Final Exams": {
-    category: "academic",
-    difficulty: 2,
-    timeframe: "short",
-    subjects: ["Course-Specific"],
-  },
-  Midterms: {
-    category: "academic",
-    difficulty: 2,
-    timeframe: "short",
-    subjects: ["Course-Specific"],
-  },
-};
-
-const GOAL_CONFIGS: Record<
-  StudyGoal,
-  { label: string; priority: number; description: string }
-> = {
-  "improve-grades": {
-    label: "Improve grades",
-    priority: 1,
-    description: "Boost your academic performance",
-  },
-  "exam-prep": {
-    label: "Exam preparation",
-    priority: 2,
-    description: "Ace your upcoming tests",
-  },
-  "understand-concepts": {
-    label: "Better understanding",
-    priority: 3,
-    description: "Deepen your knowledge",
-  },
-  "time-management": {
-    label: "Time management",
-    priority: 4,
-    description: "Study more efficiently",
-  },
-  retention: {
-    label: "Information retention",
-    priority: 5,
-    description: "Remember what you learn",
-  },
-  "problem-solving": {
-    label: "Problem-solving skills",
-    priority: 6,
-    description: "Tackle complex challenges",
-  },
-  "research-skills": {
-    label: "Research methodology",
-    priority: 7,
-    description: "Develop research capabilities",
-  },
-  "career-prep": {
-    label: "Career preparation",
-    priority: 8,
-    description: "Prepare for your profession",
-  },
+const STUDY_GOAL_DESCRIPTIONS: Record<StudyGoal, string> = {
+  "improve-grades": "Focus on achieving better academic performance",
+  "exam-prep": "Prepare for specific tests and examinations",
+  "understand-concepts": "Deepen comprehension of subject matter",
+  "time-management": "Optimize study time and schedule",
+  "retention": "Improve long-term memory and recall",
+  "problem-solving": "Enhance analytical and critical thinking skills",
+  "research-skills": "Develop academic research capabilities",
+  "career-prep": "Build skills for professional advancement",
 };
 
 export default function OnboardingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(1);
-  const [userType, setUserType] = useState<UserType>();
+
+  const [step, setStep] = useState(1);
   const [studentData, setStudentData] = useState<StudentData>({
     educationLevel: "",
     subjects: [],
     studyGoals: "",
     examType: "",
   });
-  const [loading, setLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Smart computed values based on user selections
-  const availableSubjects = useMemo((): string[] => {
-    if (!studentData.educationLevel) return [];
-
-    const config = EDUCATION_CONFIGS[studentData.educationLevel];
-    const baseSubjects = [...config.subjects];
-
-    // Add subjects from other categories if user has shown interest
-    if (studentData.subjects.length > 0) {
-      const userCategories = new Set(
-        studentData.subjects
-          .map((subject) => SUBJECT_CONFIGS[subject]?.category)
-          .filter(Boolean)
-      );
-
-      // Add related subjects from same categories
-      Object.entries(SUBJECT_CONFIGS).forEach(([subject, subjectConfig]) => {
-        if (
-          userCategories.has(subjectConfig.category) &&
-          !baseSubjects.includes(subject)
-        ) {
-          baseSubjects.push(subject);
-        }
-      });
+  // Smart suggestions based on selections
+  const smartSuggestions = useMemo(() => {
+    if (!studentData.educationLevel || studentData.educationLevel === "Other") {
+      return {
+        subjects: [],
+        exams: [],
+        goals: [],
+      };
     }
 
-    return Array.from(new Set(baseSubjects)).sort();
-  }, [studentData.educationLevel, studentData.subjects]);
-
-  const availableExams = useMemo((): string[] => {
-    if (!studentData.educationLevel) return [];
-
     const config = EDUCATION_CONFIGS[studentData.educationLevel];
-    const baseExams = [...config.exams];
-
-    // Add exams related to selected subjects
-    studentData.subjects.forEach((subject) => {
-      const subjectConfig = SUBJECT_CONFIGS[subject];
-      if (subjectConfig) {
-        baseExams.push(...subjectConfig.relatedExams);
-      }
-    });
-
-    return Array.from(new Set(baseExams)).sort();
-  }, [studentData.educationLevel, studentData.subjects]);
-
-  const availableGoals = useMemo((): Array<{
-    value: StudyGoal;
-    label: string;
-    description: string;
-    priority: number;
-  }> => {
-    if (!studentData.educationLevel) return [];
-
-    const config = EDUCATION_CONFIGS[studentData.educationLevel];
-    const goalSet = new Set(config.goals);
-
-    // Add goals based on selected subjects
-    studentData.subjects.forEach((subject) => {
-      const subjectConfig = SUBJECT_CONFIGS[subject];
-      if (subjectConfig) {
-        subjectConfig.suggestedGoals.forEach((goal) => goalSet.add(goal));
-      }
-    });
-
-    // Prioritize exam prep if exam is selected
-    if (studentData.examType && studentData.examType !== "") {
-      goalSet.add("exam-prep");
-    }
-
-    return Array.from(goalSet)
-      .map((goal) => ({
-        value: goal,
-        label: GOAL_CONFIGS[goal].label,
-        description: GOAL_CONFIGS[goal].description,
-        priority: GOAL_CONFIGS[goal].priority,
-      }))
-      .sort((a, b) => a.priority - b.priority);
-  }, [studentData.educationLevel, studentData.subjects, studentData.examType]);
-
-  const contextualizedExamLabel = useMemo((): string => {
-    if (!studentData.examType) return "What exams are you preparing for?";
-
-    const examConfig = EXAM_CONFIGS[studentData.examType];
-    if (!examConfig) return "What exams are you preparing for?";
-
-    const timeframeText =
-      examConfig.timeframe === "short"
-        ? "soon"
-        : examConfig.timeframe === "medium"
-          ? "this semester"
-          : "this year";
-    return `Preparing for ${studentData.examType} ${timeframeText}?`;
-  }, [studentData.examType]);
-
-  const smartSubjectGroups = useMemo((): Array<{
-    category: string;
-    subjects: string[];
-  }> => {
-    const groups: Record<string, string[]> = {};
-
-    availableSubjects.forEach((subject) => {
-      const config = SUBJECT_CONFIGS[subject];
-      const category = config?.category || "Other";
-
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(subject);
-    });
-
-    return Object.entries(groups)
-      .map(([category, subjects]) => ({ category, subjects: subjects.sort() }))
-      .sort((a, b) => a.category.localeCompare(b.category));
-  }, [availableSubjects]);
-
-  const completionProgress = useMemo((): number => {
-    const fields = [
-      studentData.educationLevel,
-      studentData.subjects.length > 0,
-      studentData.studyGoals,
-      studentData.examType,
-    ];
-    return (fields.filter(Boolean).length / fields.length) * 100;
-  }, [studentData]);
-
-  const isFormValid = useMemo((): boolean => {
-    return !!(
-      studentData.educationLevel &&
-      studentData.subjects.length > 0 &&
-      studentData.studyGoals
-    );
-  }, [studentData]);
-
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <Skeleton className="w-32 h-32 rounded-full animate-pulse bg-gradient-to-r from-amber-200 to-purple-200" />
-        <div className="mt-4 text-gray-600 font-bold">Loading your session...</div>
-        <div className="mt-2 text-sm text-gray-500 text-center">
-          Please wait while we prepare your personalized onboarding experience.
-        </div>
-      </div>
-    );
-  }
-
-  if (status === "unauthenticated") {
-    router.push("/auth/sign-in");
-    return null;
-  }
-
-  const handleUserTypeSelect = (type: UserType): void => {
-    setUserType(type);
-    setStep(2);
-  };
+    return {
+      subjects: config.subjects,
+      exams: config.exams,
+      goals: config.goals,
+    };
+  }, [studentData.educationLevel]);
 
   const handleStudentDataChange = (
     field: keyof StudentData,
     value: string | string[]
   ): void => {
-    setStudentData((prev) => ({ ...prev, [field]: value }));
+    setStudentData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   const handleSubjectToggle = (subject: string): void => {
-    const current = studentData.subjects;
-    const newSubjects = current.includes(subject)
-      ? current.filter((s) => s !== subject)
-      : [...current, subject];
-    handleStudentDataChange("subjects", newSubjects);
+    setStudentData((prev) => ({
+      ...prev,
+      subjects: prev.subjects.includes(subject)
+        ? prev.subjects.filter((s) => s !== subject)
+        : [...prev.subjects, subject],
+    }));
   };
 
   const completeOnboarding = async (): Promise<void> => {
-    setLoading(true);
+    if (!session?.user?.id) return;
 
+    setIsLoading(true);
     try {
+      const payload = {
+        educationLevel: studentData.educationLevel,
+        subjects: studentData.subjects,
+        studyGoals: studentData.studyGoals,
+        examType: studentData.examType,
+      };
+
       const response = await fetch("/api/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userType,
-          ...studentData,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -554,334 +300,320 @@ export default function OnboardingPage() {
         console.error("Onboarding failed");
       }
     } catch (error) {
-      console.error("Onboarding error:", error);
+      console.error("Error completing onboarding:", error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="space-y-4 max-w-md w-full px-4">
+          <Skeleton className="h-12 w-full bg-muted" />
+          <Skeleton className="h-8 w-3/4 bg-muted" />
+          <Skeleton className="h-32 w-full bg-muted" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    router.push("/auth/sign-in");
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-r from-amber-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900">CheatPDF</span>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to CheatPDF, {session?.user?.name}!
-          </h1>
-          <p className="text-gray-600">
-            Let&apos;s personalize your study experience
-          </p>
-        </div>
-
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Progress indicator */}
-        <div className="max-w-md mx-auto my-8">
-          <div className="flex items-center justify-between">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step >= 1
-                  ? "bg-amber-600 text-white"
-                  : "bg-gray-200 text-gray-600"
-              }`}
-            >
-              {step > 1 ? <CheckCircle className="w-5 h-5" /> : "1"}
-            </div>
-            <div
-              className={`flex-1 h-1 mx-2 ${step >= 2 ? "bg-amber-600" : "bg-gray-200"}`}
-            />
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step >= 2
-                  ? "bg-amber-600 text-white"
-                  : "bg-gray-200 text-gray-600"
-              }`}
-            >
-              {step > 2 ? <CheckCircle className="w-5 h-5" /> : "2"}
-            </div>
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-foreground">
+              Welcome to CheatPDF!
+            </h1>
+            <Badge variant="outline" className="border-primary/30 text-primary">
+              Step {step} of 2
+            </Badge>
           </div>
-          {step === 2 && (
-            <div className="mt-2">
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>Setup Progress</span>
-                <span>{Math.round(completionProgress)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
-                <div
-                  className="bg-amber-600 h-1 rounded-full transition-all duration-300"
-                  style={{ width: `${completionProgress}%` }}
-                />
-              </div>
-            </div>
-          )}
+          <div className="w-full bg-muted rounded-full h-2">
+            <div
+              className="gradient-brand h-2 rounded-full transition-all duration-500"
+              style={{ width: `${(step / 2) * 100}%` }}
+            />
+          </div>
         </div>
 
-        <div className="max-w-2xl mx-auto">
-          {step === 1 && (
-            <Card className="p-8">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  What brings you to CheatPDF?
-                </h2>
-                <p className="text-gray-600">
-                  Choose your primary use case to get personalized features
-                </p>
-              </div>
+        {/* Step 1: Student Details */}
+        {step === 1 && (
+          <Card className="p-8 bg-card border-border transition-all duration-300 hover:shadow-lg">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-semibold text-foreground mb-3">
+                Let's personalize your study experience
+              </h2>
+              <p className="text-muted-foreground">
+                We'll suggest the best features and content for your needs
+              </p>
+            </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <button
-                  onClick={() => handleUserTypeSelect(UserType.STUDENT)}
-                  className="p-6 border-2 border-gray-200 rounded-lg hover:border-amber-600 hover:bg-amber-50 transition-colors text-left group"
+            <div className="space-y-8">
+              {/* Education Level */}
+              <div>
+                <Label className="text-base font-medium text-foreground mb-4 block">
+                  What's your current education level?
+                </Label>
+                <Select
+                  value={studentData.educationLevel}
+                  onValueChange={(value: EducationLevel) =>
+                    handleStudentDataChange("educationLevel", value)
+                  }
                 >
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200">
-                      <GraduationCap className="w-6 h-6 text-amber-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Student
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Study smarter with AI
-                      </p>
-                    </div>
-                  </div>
-                  <ul className="space-y-2 text-sm text-gray-600">
-                    <li>• Chat with your study materials</li>
-                    <li>• Generate practice exams</li>
-                    <li>• Get instant explanations</li>
-                    <li>• Track your progress</li>
-                  </ul>
-                  <Badge className="mt-4">Most Popular</Badge>
-                </button>
-
-                <button
-                  onClick={() => handleUserTypeSelect(UserType.TALENT_SOURCER)}
-                  className="p-6 border-2 border-gray-200 rounded-lg hover:border-purple-600 hover:bg-purple-50 transition-colors text-left group"
-                >
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200">
-                      <Users className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Talent Sourcer
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Find top talent efficiently
-                      </p>
-                    </div>
-                  </div>
-                  <ul className="space-y-2 text-sm text-gray-600">
-                    <li>• Analyze candidate profiles</li>
-                    <li>• Create sourcing strategies</li>
-                    <li>• Automate outreach planning</li>
-                    <li>• Track recruitment metrics</li>
-                  </ul>
-                  <Badge variant="secondary" className="mt-4">
-                    Premium Feature
-                  </Badge>
-                </button>
-              </div>
-            </Card>
-          )}
-
-          {step === 2 && userType === UserType.STUDENT && (
-            <Card className="p-8">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Tell us about your studies
-                </h2>
-                <p className="text-gray-600">
-                  {studentData.educationLevel
-                    ? EDUCATION_CONFIGS[studentData.educationLevel].description
-                    : "Help us personalize your learning experience"}
-                </p>
+                  <SelectTrigger className="w-full bg-background border-border text-foreground">
+                    <SelectValue placeholder="Select your education level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(EDUCATION_CONFIGS).map(([level, config]) => (
+                      <SelectItem key={level} value={level}>
+                        <div>
+                          <div className="font-medium">{level}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {config.description}
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Education Level</Label>
+              {/* Study Goals */}
+              {studentData.educationLevel && (
+                <div>
+                  <Label className="text-base font-medium text-foreground mb-4 block">
+                    What's your primary study goal?
+                  </Label>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {smartSuggestions.goals.map((goal) => (
+                      <button
+                        key={goal}
+                        onClick={() => handleStudentDataChange("studyGoals", goal)}
+                        className={clsx(
+                          "p-4 rounded-lg border-2 transition-all duration-300 text-left hover:shadow-sm",
+                          studentData.studyGoals === goal
+                            ? "border-primary bg-primary/5"
+                            : "border-border bg-background hover:border-primary/50"
+                        )}
+                      >
+                        <div className="font-medium text-foreground mb-1">
+                          {STUDY_GOAL_LABELS[goal]}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {STUDY_GOAL_DESCRIPTIONS[goal]}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Subject Areas */}
+              {studentData.educationLevel && (
+                <div>
+                  <Label className="text-base font-medium text-foreground mb-4 block">
+                    Which subjects are you focusing on? (Optional)
+                  </Label>
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    {smartSuggestions.subjects.map((subject) => (
+                      <button
+                        key={subject}
+                        onClick={() => handleSubjectToggle(subject)}
+                        className={clsx(
+                          "p-3 rounded-lg border-2 transition-all duration-300 text-sm font-medium",
+                          studentData.subjects.includes(subject)
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border bg-background text-foreground hover:border-primary/50"
+                        )}
+                      >
+                        {subject}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upcoming Exams */}
+              {studentData.educationLevel && smartSuggestions.exams.length > 0 && (
+                <div>
+                  <Label className="text-base font-medium text-foreground mb-4 block">
+                    Do you have any upcoming exams? (Optional)
+                  </Label>
                   <Select
-                    onValueChange={(value: EducationLevel) =>
-                      handleStudentDataChange("educationLevel", value)
+                    value={studentData.examType}
+                    onValueChange={(value) =>
+                      handleStudentDataChange("examType", value)
                     }
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your education level" />
+                    <SelectTrigger className="w-full bg-background border-border text-foreground">
+                      <SelectValue placeholder="Select an exam type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(EDUCATION_CONFIGS).map(
-                        ([level, config]) => (
-                          <SelectItem key={level} value={level}>
-                            <div className="flex flex-col items-start">
-                              <span>{level}</span>
-                              <span className="text-xs text-gray-500">
-                                {config.description}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        )
-                      )}
+                      <SelectItem value="">No specific exam</SelectItem>
+                      {smartSuggestions.exams.map((exam) => (
+                        <SelectItem key={exam} value={exam}>
+                          {exam}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
+              )}
+            </div>
 
-                {studentData.educationLevel && (
-                  <div className="space-y-2">
-                    <Label>Primary Study Subjects</Label>
-                    <p className="text-xs text-gray-500 mb-3">
-                      Select subjects relevant to your{" "}
-                      {studentData.educationLevel.toLowerCase()} studies
-                    </p>
-                    {smartSubjectGroups.map((group) => (
-                      <div key={group.category} className="space-y-2">
-                        <h4 className="text-sm font-medium text-gray-700">
-                          {group.category}
-                        </h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {group.subjects.map((subject) => (
-                            <button
-                              key={subject}
-                              onClick={() => handleSubjectToggle(subject)}
-                              className={clsx(
-                                "p-2 text-sm border rounded-lg transition-colors bg-white text-gray-700",
-                                studentData.subjects.includes(subject)
-                                  ? "border-purple-600 text-purple-600 font-medium"
-                                  : "border-amber-100 hover:border-amber-200"
-                              )}
-                            >
-                              {subject}
-                            </button>
-                          ))}
-                        </div>
+            <div className="mt-8 flex justify-between">
+              <Button
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="border-border text-foreground hover:bg-muted transition-all duration-300"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={() => setStep(2)}
+                disabled={!studentData.educationLevel || !studentData.studyGoals}
+                className="gradient-brand text-white hover:opacity-90 transition-all duration-300"
+              >
+                Continue
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Step 2: Summary & Completion */}
+        {step === 2 && (
+          <Card className="p-8 bg-card border-border transition-all duration-300 hover:shadow-lg">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-semibold text-foreground mb-3">
+                You're all set!
+              </h2>
+              <p className="text-muted-foreground">
+                Here's what we've set up for your CheatPDF experience
+              </p>
+            </div>
+
+            <div className="space-y-6 mb-8">
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
+                <h3 className="font-semibold text-foreground mb-4">Your Profile</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Account Type:</span>
+                    <span className="font-medium text-foreground">Student</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Education Level:</span>
+                    <span className="font-medium text-foreground">
+                      {studentData.educationLevel}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Primary Goal:</span>
+                    <span className="font-medium text-foreground">
+                      {studentData.studyGoals
+                        ? STUDY_GOAL_LABELS[studentData.studyGoals]
+                        : "Not specified"}
+                    </span>
+                  </div>
+                  {studentData.subjects.length > 0 && (
+                    <div>
+                      <span className="text-muted-foreground">Focus Subjects:</span>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {studentData.subjects.map((subject) => (
+                          <Badge
+                            key={subject}
+                            variant="secondary"
+                            className="bg-primary/10 text-primary border-primary/20"
+                          >
+                            {subject}
+                          </Badge>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
-
-                {availableExams.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Upcoming Exam Type (Optional)</Label>
-                    <Select
-                      onValueChange={(value: string) =>
-                        handleStudentDataChange("examType", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={contextualizedExamLabel} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableExams.map((exam) => (
-                          <SelectItem key={exam} value={exam}>
-                            <div className="flex flex-col items-start">
-                              <span>{exam}</span>
-                              {EXAM_CONFIGS[exam] && (
-                                <span className="text-xs text-gray-500">
-                                  {EXAM_CONFIGS[exam].timeframe} term •{" "}
-                                  {EXAM_CONFIGS[exam].category}
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {availableGoals.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Primary Study Goal</Label>
-                    <Select
-                      onValueChange={(value: StudyGoal) =>
-                        handleStudentDataChange("studyGoals", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="What's your main study goal?" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableGoals.map((goal) => (
-                          <SelectItem key={goal.value} value={goal.value}>
-                            <div className="flex flex-col items-start">
-                              <span>{goal.label}</span>
-                              <span className="text-xs text-gray-500">
-                                {goal.description}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                <div className="flex gap-4 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep(1)}
-                    className="flex-1"
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    onClick={completeOnboarding}
-                    className="flex-1"
-                    disabled={!isFormValid || loading}
-                  >
-                    {loading ? "Setting up..." : "Complete Setup"}
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
+                    </div>
+                  )}
+                  {studentData.examType && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Upcoming Exam:</span>
+                      <span className="font-medium text-foreground">
+                        {studentData.examType}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </Card>
-          )}
 
-          {step === 2 && userType === UserType.TALENT_SOURCER && (
-            <Card className="p-8">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Talent Sourcer Setup
-                </h2>
-                <p className="text-gray-600">
-                  Configure your recruitment preferences
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                <div className="p-4 border border-purple-200 rounded-lg bg-purple-50">
-                  <h3 className="font-semibold text-purple-900 mb-2">
-                    Premium Feature
-                  </h3>
-                  <p className="text-sm text-purple-700 mb-4">
-                    Sourcer mode is available with a Pro subscription
-                    ($5/month). You&apos;ll be able to upload candidate profiles
-                    and get AI-powered sourcing strategies.
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => router.push("/dashboard?upgrade=true")}
-                      className="bg-purple-600 hover:bg-purple-700"
-                    >
-                      Upgrade to Pro
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleUserTypeSelect(UserType.STUDENT)}
-                    >
-                      Use Student Mode Instead
-                    </Button>
+              <div className="bg-muted/50 border border-border rounded-lg p-6">
+                <h3 className="font-semibold text-foreground mb-4">
+                  Recommended Features
+                </h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2" />
+                    <div>
+                      <div className="font-medium text-foreground">Document Chat</div>
+                      <div className="text-sm text-muted-foreground">
+                        Ask questions about your study materials
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2" />
+                    <div>
+                      <div className="font-medium text-foreground">Practice Exams</div>
+                      <div className="text-sm text-muted-foreground">
+                        Generate quizzes from your documents
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2" />
+                    <div>
+                      <div className="font-medium text-foreground">Study Plans</div>
+                      <div className="text-sm text-muted-foreground">
+                        Personalized learning schedules
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2" />
+                    <div>
+                      <div className="font-medium text-foreground">Progress Tracking</div>
+                      <div className="text-sm text-muted-foreground">
+                        Monitor your learning progress
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </Card>
-          )}
-        </div>
+            </div>
+
+            <div className="flex justify-between">
+              <Button
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="border-border text-foreground hover:bg-muted transition-all duration-300"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={completeOnboarding}
+                disabled={isLoading}
+                className="gradient-brand text-white hover:opacity-90 transition-all duration-300"
+              >
+                {isLoading ? "Setting up your account..." : "Get Started with CheatPDF"}
+                {!isLoading && <ArrowRight className="w-4 h-4 ml-2" />}
+              </Button>
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );

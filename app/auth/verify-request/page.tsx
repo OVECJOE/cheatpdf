@@ -37,28 +37,28 @@ function VerifyRequestContent() {
     <div className="max-w-md mx-auto p-4 space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold text-gray-900">Check your email</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
+        <p className="text-muted-foreground">
           We&apos;ve sent you a secure sign-in link
         </p>
       </div>
 
-      <Card className="p-6">
+      <Card className="p-6 bg-card border-border transition-all duration-300 hover:shadow-lg">
         <div className="text-center space-y-4">
           <div className="flex justify-center">
             <CheckCircle className="w-16 h-16 text-green-500" />
           </div>
 
           <div className="space-y-2">
-            <p className="text-gray-600">A sign-in link has been sent to:</p>
-            <p className="font-medium text-gray-900">{email}</p>
+            <p className="text-muted-foreground">A sign-in link has been sent to:</p>
+            <p className="font-medium text-foreground">{email}</p>
           </div>
 
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-left">
-            <h3 className="font-medium text-purple-900 mb-2">
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 text-left">
+            <h3 className="font-medium text-foreground mb-2">
               What&apos;s next?
             </h3>
-            <ol className="text-sm text-purple-800 space-y-1">
+            <ol className="text-sm text-muted-foreground space-y-1">
               <li>1. Check your inbox (and spam folder)</li>
               <li>2. Click the sign-in link in the email</li>
               <li>3. You&apos;ll be automatically signed in</li>
@@ -71,7 +71,7 @@ function VerifyRequestContent() {
                 variant="outline"
                 onClick={handleResendLink}
                 disabled={loading}
-                className="w-full"
+                className="w-full border-border text-foreground hover:bg-muted transition-all duration-300"
               >
                 <Mail className="w-4 h-4 mr-2" />
                 {loading ? "Sending..." : "Resend link"}
@@ -81,13 +81,13 @@ function VerifyRequestContent() {
             <div className="space-y-2">
               <Link
                 href="/auth/sign-in"
-                className="block text-sm text-gray-500 hover:text-gray-700"
+                className="block text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
               >
                 ← Use a different email
               </Link>
               <Link
                 href="/auth/sign-up"
-                className="block text-sm text-amber-600 hover:text-amber-800 font-semibold hover:underline"
+                className="block text-sm text-brand-amber hover:text-primary/80 font-semibold transition-colors duration-200"
               >
                 Don&apos;t have an account? Sign up
               </Link>

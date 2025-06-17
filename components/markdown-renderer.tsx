@@ -89,46 +89,46 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
         components={{
           // Custom heading renderer with better spacing
           h1: ({ children }) => (
-            <h1 className="text-2xl font-bold mb-4 mt-6 text-gray-900 border-b border-gray-200 pb-2 first:mt-0">
+            <h1 className="text-2xl font-bold mb-4 mt-6 text-foreground border-b border-border pb-2 first:mt-0">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-xl font-semibold mb-3 mt-5 text-gray-800 first:mt-0">
+            <h2 className="text-xl font-semibold mb-3 mt-5 text-foreground first:mt-0">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-lg font-medium mb-2 mt-4 text-gray-700 first:mt-0">
+            <h3 className="text-lg font-medium mb-2 mt-4 text-foreground first:mt-0">
               {children}
             </h3>
           ),
           h4: ({ children }) => (
-            <h4 className="text-base font-medium mb-2 mt-3 text-gray-700">
+            <h4 className="text-base font-medium mb-2 mt-3 text-foreground">
               {children}
             </h4>
           ),
 
           // Enhanced paragraph styling - maintains your theme
           p: ({ children }) => (
-            <p className="mb-3 leading-relaxed text-gray-700 [&:has(.katex-display)]:mb-4">
+            <p className="mb-3 leading-relaxed text-foreground [&:has(.katex-display)]:mb-4">
               {children}
             </p>
           ),
 
           // Better list styling
           ul: ({ children }) => (
-            <ul className="mb-4 ml-5 space-y-1 list-disc marker:text-amber-600">
+            <ul className="mb-4 ml-5 space-y-1 list-disc marker:text-primary">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="mb-4 ml-5 space-y-1 list-decimal marker:text-amber-600">
+            <ol className="mb-4 ml-5 space-y-1 list-decimal marker:text-primary">
               {children}
             </ol>
           ),
           li: ({ children }) => (
-            <li className="text-gray-700 leading-relaxed pl-1">{children}</li>
+            <li className="text-foreground leading-relaxed pl-1">{children}</li>
           ),
 
           // Enhanced code blocks with your theme colors
@@ -140,7 +140,7 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
             if (inline && !/katex/.test(className || "")) {
               return (
                 <code
-                  className="bg-amber-50 px-1.5 py-0.5 rounded text-sm font-mono"
+                  className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground"
                   {...props}
                 >
                   {children}
@@ -151,15 +151,15 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
             return (
               <div className="mb-4">
                 {language && (
-                  <div className="bg-amber-600 text-white px-3 py-1.5 text-xs font-mono rounded-t-md uppercase tracking-wide">
+                  <div className="bg-primary text-primary-foreground px-3 py-1.5 text-xs font-mono rounded-t-md uppercase tracking-wide">
                     {language}
                   </div>
                 )}
                 <pre
-                  className={`bg-amber-50 border border-amber-200 ${language ? "rounded-b-md border-t-0" : "rounded-md"} overflow-x-auto`}
+                  className={`bg-muted border border-border ${language ? "rounded-b-md border-t-0" : "rounded-md"} overflow-x-auto`}
                 >
                   <code
-                    className="block p-3 text-sm font-mono leading-relaxed text-gray-800"
+                    className="block p-3 text-sm font-mono leading-relaxed text-foreground"
                     {...props}
                   >
                     {children}
@@ -172,50 +172,42 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
           // Enhanced table styling with your theme
           table: ({ children }) => (
             <div className="mb-4 overflow-x-auto">
-              <table className="min-w-full border-collapse bg-white rounded-md overflow-hidden shadow-sm ring-1 ring-amber-200">
+              <table className="min-w-full border-collapse bg-card rounded-md overflow-hidden shadow-sm ring-1 ring-border">
                 {children}
               </table>
             </div>
           ),
           thead: ({ children }) => (
-            <thead className="bg-amber-50">{children}</thead>
+            <thead className="bg-muted">{children}</thead>
           ),
           th: ({ children }) => (
-            <th className="border-b border-amber-200 px-4 py-3 text-left font-semibold text-gray-900 text-sm bg-amber-50">
+            <th className="border-b border-border px-4 py-3 text-left font-semibold text-foreground text-sm bg-muted">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="border-b border-amber-100 px-4 py-3 text-gray-700 text-sm">
+            <td className="border-b border-border px-4 py-3 text-foreground text-sm">
               {children}
             </td>
           ),
           tr: ({ children }) => (
-            <tr className="hover:bg-amber-50/50 transition-colors duration-200">
+            <tr className="hover:bg-muted/50 transition-colors duration-200">
               {children}
             </tr>
           ),
 
           // Blockquote styling with your theme
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-amber-400 pl-4 py-2 mb-4 bg-amber-50/50 italic text-gray-700 rounded-r-md">
-              {children}
+            <blockquote className="border-l-4 border-primary pl-4 py-2 mb-4 bg-muted/30 rounded-r-md">
+              <div className="text-foreground italic">{children}</div>
             </blockquote>
           ),
 
-          // Strong and em styling
-          strong: ({ children }) => (
-            <strong className="font-semibold text-gray-900">{children}</strong>
-          ),
-          em: ({ children }) => (
-            <em className="italic text-gray-800">{children}</em>
-          ),
-
-          // Link styling with your theme
-          a: ({ href, children }) => (
+          // Enhanced link styling
+          a: ({ children, href }) => (
             <a
               href={href}
-              className="text-amber-600 hover:text-amber-800 underline decoration-amber-300 hover:decoration-amber-500 transition-all duration-200 underline-offset-2"
+              className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -223,8 +215,16 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
             </a>
           ),
 
-          // Horizontal rule
-          hr: () => <hr className="my-6 border-0 border-t border-amber-300" />,
+          // Horizontal rule styling
+          hr: () => <hr className="my-6 border-border" />,
+
+          // Strong and emphasis styling
+          strong: ({ children }) => (
+            <strong className="font-semibold text-foreground">{children}</strong>
+          ),
+          em: ({ children }) => (
+            <em className="italic text-foreground">{children}</em>
+          ),
         }}
       >
         {transform()}

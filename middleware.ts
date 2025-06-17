@@ -1,35 +1,78 @@
 // middleware.ts
 import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
+import { SubscriptionStatus } from "@prisma/client";
+
+// Define route patterns for better organization
+const PUBLIC_ROUTES = [
+  "/",
+  "/auth",
+  "/api/auth", 
+  "/api/webhooks", // Allow webhook endpoints
+  "/terms",
+  "/privacy",
+  "/support",
+  "/donate", // Allow donation page for everyone
+];
+
+const PREMIUM_ROUTES = [
+  "/dashboard/exams",
+];
+
+const ONBOARDING_REQUIRED_ROUTES = [
+  "/dashboard",
+];
 
 export default withAuth(
-  function middleware() {
-    // Additional middleware logic can go here
-    // For example, role-based access control
+  async function middleware(req) {
+    const { pathname } = req.nextUrl;
+    const token = req.nextauth.token;
+
+    // Skip middleware for public routes (shouldn't reach here due to authorized callback)
+    if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+      return NextResponse.next();
+    }
+
+    // Ensure we have a token (user is authenticated)
+    if (!token) {
+      return NextResponse.redirect(new URL("/auth/sign-in", req.url));
+    }
+
+    // Check onboarding completion for dashboard routes
+    if (ONBOARDING_REQUIRED_ROUTES.some(route => pathname.startsWith(route))) {
+      if (!token.onboardingCompleted) {
+        return NextResponse.redirect(new URL("/onboarding", req.url));
+      }
+    }
+
+    // Premium feature protection
+    if (PREMIUM_ROUTES.some(route => pathname.startsWith(route))) {
+      const subscriptionStatus = token.subscriptionStatus as SubscriptionStatus;
+      
+      if (subscriptionStatus !== SubscriptionStatus.ACTIVE) {
+        // Add query parameter to indicate which feature they tried to access
+        const upgradeUrl = new URL("/dashboard/upgrade", req.url);
+        upgradeUrl.searchParams.set("feature", "exams");
+        upgradeUrl.searchParams.set("redirect", pathname);
+        
+        return NextResponse.redirect(upgradeUrl);
+      }
+    }
+
+    // All checks passed, continue to the requested page
+    return NextResponse.next();
   },
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        // Public routes that don't require authentication
-        const publicRoutes = [
-          "/",
-          "/auth/sign-in",
-          "/auth/sign-up",
-          "/auth/verify-request",
-          "/auth/error",
-          "/api/auth",
-          "/terms",
-          "/privacy",
-          "/support",
-        ];
-
         const { pathname } = req.nextUrl;
 
-        // Allow public routes
-        if (publicRoutes.some(route => pathname.startsWith(route))) {
+        // Always allow public routes
+        if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
           return true;
         }
 
-        // Require authentication for all other routes
+        // For all other routes, require authentication
         return !!token;
       },
     },
@@ -48,7 +91,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - public files
      */
-    "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\..*$).*)",
   ],
 };

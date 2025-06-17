@@ -1,5 +1,5 @@
-import { MessageRole, SubscriptionStatus, UserType } from "@prisma/client";
-import { createChatChain, createSourcingStrategyChain } from "../core/mistral";
+import { MessageRole } from "@prisma/client";
+import { createChatChain } from "../core/mistral";
 import { vectorStore } from "../core/vector-store";
 import db from "@/lib/config/db";
 
@@ -162,69 +162,7 @@ export class ChatService {
         }
     }
 
-    public async createSourcingStrategy(
-        userId: string,
-        documentId: string,
-        requirements: string,
-    ) {
-        try {
-            // Verify user is a talent sourcer with active subscription
-            const user = await db.user.findUnique({
-                where: { id: userId },
-                include: { documents: { where: { id: documentId } } },
-            });
 
-            if (!user) {
-                throw new Error("User not found");
-            }
-
-            if (user.userType !== UserType.TALENT_SOURCER) {
-                throw new Error("Only talent sourcers can use this feature");
-            }
-
-            if (user.subscriptionStatus !== SubscriptionStatus.ACTIVE) {
-                throw new Error(
-                    "Sourcing mode requires an active subscription",
-                );
-            }
-
-            if (user.documents.length === 0) {
-                throw new Error("No documents found for sourcing strategy");
-            }
-
-            const document = user.documents[0];
-
-            // Generate sourcing strategy
-            const sourcingChain = createSourcingStrategyChain(user.language);
-            const strategy = await sourcingChain.invoke({
-                talentProfiles: document.content,
-                requirements,
-            });
-
-            // Create a special chat for sourcing strategy
-            const chat = await db.chat.create({
-                data: {
-                    title: `Sourcing Strategy for ${document.name}`,
-                    userId,
-                    documentId: document.id,
-                },
-            });
-
-            // Save the strategy as assistant message
-            await db.message.create({
-                data: {
-                    chatId: chat.id,
-                    role: MessageRole.ASSISTANT,
-                    content: strategy,
-                },
-            });
-
-            return { chat, strategy };
-        } catch (error) {
-            console.error("Error creating sourcing strategy:", error);
-            throw new Error("Failed to create sourcing strategy");
-        }
-    }
 }
 
 export const chatService = new ChatService();

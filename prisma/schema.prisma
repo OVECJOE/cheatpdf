@@ -249,7 +249,6 @@ model DonationStats {
 
 enum UserType {
   STUDENT
-  TALENT_SOURCER
 }
 
 enum SubscriptionStatus {

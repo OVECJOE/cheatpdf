@@ -63,25 +63,17 @@ export async function POST(request: NextRequest) {
         } = onboardingSchema.parse(body);
 
         // Update user profile
-        let updatedUser: User | null = null;
-        if (userType === UserType.STUDENT) {
-            updatedUser = await db.user.update({
-                where: { id: session.user.id },
-                data: {
-                    userType,
-                    educationLevel,
-                    subjects,
-                    studyGoals,
-                    examType,
-                    onboardingCompleted: true,
-                },
-            });
-        } else {
-            return NextResponse.json(
-                { error: "Talent sourcer onboarding coming soon" },
-                { status: 400 },
-            )
-        }
+        const updatedUser = await db.user.update({
+            where: { id: session.user.id },
+            data: {
+                userType,
+                educationLevel,
+                subjects,
+                studyGoals,
+                examType,
+                onboardingCompleted: true,
+            },
+        });
 
         return NextResponse.json({ user: updatedUser });
     } catch (error) {

@@ -106,24 +106,31 @@ const DonationSuccess = () => {
 
   if (error || !donation) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+      <div className="min-h-screen bg-background">
         <AppHeader />
         <div className="container mx-auto max-w-2xl px-4 py-16">
-          <Card className="p-8 text-center">
+          <Card className="p-8 text-center bg-card border-border transition-all duration-300 hover:shadow-lg">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-red-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            <h1 className="text-2xl font-bold text-foreground mb-4">
               Unable to Load Donation
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-muted-foreground mb-6">
               {error || "We couldn't find your donation details."}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button onClick={() => router.push("/donate")}>
+              <Button 
+                onClick={() => router.push("/donate")}
+                className="gradient-brand text-white hover:opacity-90 transition-all duration-300"
+              >
                 Make Another Donation
               </Button>
-              <Button variant="outline" onClick={() => router.push("/")}>
+              <Button 
+                variant="outline" 
+                onClick={() => router.push("/")}
+                className="border-border text-foreground hover:bg-muted transition-all duration-300"
+              >
                 Go Home
               </Button>
             </div>
@@ -138,7 +145,7 @@ const DonationSuccess = () => {
   const targetLanguage = donation.metadata.targetLanguage || "Any Language";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+    <div className="min-h-screen bg-background">
       <AppHeader />
 
       {/* Success Hero Section */}
@@ -157,16 +164,16 @@ const DonationSuccess = () => {
               Donation Successful
             </Badge>
 
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
               Thank You for Your{" "}
-              <span className="bg-gradient-to-r from-amber-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="gradient-brand bg-clip-text text-transparent">
                 Generosity!
               </span>
             </h1>
 
-            <p className="text-lg text-gray-600">
-              Your donation of <strong>${donation.amount}</strong> will help{" "}
-              <strong>
+            <p className="text-lg text-muted-foreground">
+              Your donation of <strong className="text-brand-amber">${donation.amount}</strong> will help{" "}
+              <strong className="text-brand-amber">
                 {studentsCount} student{studentsCount !== 1 ? "s" : ""}
               </strong>{" "}
               access premium study tools and succeed academically.
@@ -178,140 +185,135 @@ const DonationSuccess = () => {
       {/* Donation Summary */}
       <section className="py-8 px-4">
         <div className="container mx-auto max-w-xl">
-          <Card className="p-6 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50">
-            <h2 className="text-xl font-bold mb-4 text-center">
+          <Card className="p-6 bg-primary/5 border-primary/20 transition-all duration-300 hover:shadow-lg">
+            <h2 className="text-xl font-bold mb-4 text-center text-foreground">
               Donation Summary
             </h2>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-purple-600" />
-                  <span className="text-gray-600">Amount</span>
+                  <DollarSign className="w-4 h-4 text-primary" />
+                  <span className="text-muted-foreground">Amount</span>
                 </div>
-                <span className="font-semibold">${donation.amount}</span>
+                <span className="font-semibold text-foreground">${donation.amount}</span>
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-purple-600" />
-                  <span className="text-gray-600">Students Helped</span>
+                  <Users className="w-4 h-4 text-primary" />
+                  <span className="text-muted-foreground">Students Helped</span>
                 </div>
-                <span className="font-semibold">{studentsCount}</span>
+                <span className="font-semibold text-foreground">{studentsCount}</span>
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-purple-600" />
-                  <span className="text-gray-600">Frequency</span>
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <span className="text-muted-foreground">Frequency</span>
                 </div>
-                <span className="font-semibold">
-                  {getDonationFrequencyText(
-                    donation.metadata.donationFrequency
-                  )}
+                <span className="font-semibold text-foreground">
+                  {getDonationFrequencyText(donation.metadata.donationFrequency)}
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-purple-600" />
-                  <span className="text-gray-600">Target Region</span>
+                  <Globe className="w-4 h-4 text-primary" />
+                  <span className="text-muted-foreground">Target Region</span>
                 </div>
-                <span className="font-semibold">{targetCountry}</span>
+                <div className="text-right">
+                  <div className="font-semibold text-foreground">{targetCountry}</div>
+                  {targetLanguage !== "Any Language" && (
+                    <div className="text-sm text-muted-foreground">
+                      {targetLanguage}
+                    </div>
+                  )}
+                </div>
               </div>
-
-              {targetLanguage !== "Any Language" && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-purple-600" />
-                    <span className="text-gray-600">Language</span>
-                  </div>
-                  <span className="font-semibold">{targetLanguage}</span>
-                </div>
-              )}
             </div>
           </Card>
         </div>
       </section>
 
-      {/* Share Section */}
+      {/* Impact Section */}
       <section className="py-8 px-4">
-        <div className="container mx-auto max-w-xl text-center">
-          <h2 className="text-2xl font-bold mb-4">Share Your Impact</h2>
-          <p className="text-gray-600 mb-6">
-            Help us reach more donors by sharing your good deed on social media!
-          </p>
-
-          <Button
-            onClick={handleShare}
-            size="lg"
-            className="bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-700 hover:to-purple-700"
-          >
-            <Share2 className="w-4 h-4 mr-2" />
-            Share Your Donation
-          </Button>
+        <div className="container mx-auto max-w-2xl">
+          <Card className="p-6 bg-card border-border transition-all duration-300 hover:shadow-lg">
+            <div className="text-center space-y-4">
+              <h2 className="text-xl font-bold text-foreground">Your Impact</h2>
+              <div className="space-y-3">
+                <div className="flex items-center justify-center gap-2">
+                  <Heart className="w-5 h-5 text-red-500" />
+                  <span className="text-muted-foreground">
+                    You've helped {studentsCount} student{studentsCount !== 1 ? "s" : ""} access AI study tools
+                  </span>
+                </div>
+                <div className="bg-muted/50 border border-border rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">
+                    Your donation will provide full access to premium features like 
+                    unlimited document chats, exam generation, and personalized study plans.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
       </section>
 
-      {/* Next Steps */}
-      <section className="py-12 px-4 bg-white">
+      {/* Action Buttons */}
+      <section className="py-8 px-4">
+        <div className="container mx-auto max-w-2xl">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              onClick={handleShare}
+              className="flex items-center gap-2 gradient-brand text-white hover:opacity-90 transition-all duration-300"
+            >
+              <Share2 className="w-4 h-4" />
+              Share Your Impact
+            </Button>
+
+            <Link href="/donate">
+              <Button 
+                variant="outline"
+                className="w-full sm:w-auto border-border text-foreground hover:bg-muted transition-all duration-300"
+              >
+                Donate Again
+              </Button>
+            </Link>
+
+            <Link href="/dashboard">
+              <Button 
+                variant="outline"
+                className="w-full sm:w-auto border-border text-foreground hover:bg-muted transition-all duration-300"
+              >
+                Go to Dashboard
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer Message */}
+      <section className="py-8 px-4">
         <div className="container mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl font-bold mb-6">What Happens Next?</h2>
-
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <Card className="p-4">
-              <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <h3 className="font-semibold mb-1">Immediate Impact</h3>
-              <p className="text-sm text-gray-600">
-                Students matching your criteria will receive instant pro access
-              </p>
-            </Card>
-
-            <Card className="p-4">
-              <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <h3 className="font-semibold mb-1">Ongoing Support</h3>
-              <p className="text-sm text-gray-600">
-                Your{" "}
-                {getDonationFrequencyText(
-                  donation.metadata.donationFrequency
-                ).toLowerCase()}{" "}
-                donation continues helping students
-              </p>
-            </Card>
-          </div>
-
-          <div className="space-y-4">
-            <p className="text-gray-600">
-              We&apos;ll send updates about the impact of your donation to{" "}
-              <span className="font-medium">{donation.donorEmail}</span>
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/">
-                <Button variant="outline">Return to CheatPDF</Button>
-              </Link>
-              <Link href="/donate">
-                <Button className="bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-700 hover:to-purple-700">
-                  <Heart className="w-4 h-4 mr-2" />
-                  Help More Students
-                </Button>
-              </Link>
-            </div>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            A confirmation email has been sent to{" "}
+            <span className="font-medium text-foreground">{donation.donorEmail}</span>.
+            You can manage your donations anytime from your email.
+          </p>
         </div>
       </section>
     </div>
   );
 };
 
+// Loading component for Suspense
 const DonationLoading = () => (
-  <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-    <AppHeader />
-    <div className="container mx-auto max-w-2xl px-4 py-16">
-      <Card className="p-8 text-center">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading your donation details...</p>
-      </Card>
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="text-center space-y-4">
+      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
+      <p className="text-muted-foreground">Loading donation details...</p>
     </div>
   </div>
 );

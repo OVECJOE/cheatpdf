@@ -123,7 +123,7 @@ const DonationPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+    <div className="min-h-screen bg-background">
       <AppHeader />
 
       {/* Hero Section */}
@@ -132,25 +132,25 @@ const DonationPage = () => {
           <div className="space-y-6">
             <Badge
               variant="outline"
-              className="text-amber-600 border-amber-600 text-xs sm:text-sm"
+              className="text-brand-amber border-primary/30 text-xs sm:text-sm"
             >
               <Heart className="inline-block mr-1" />
               Your Donation Matters
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground">
               Help Students{" "}
-              <span className="bg-gradient-to-r from-amber-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="gradient-brand bg-clip-text text-transparent">
                 Study Smarter
               </span>
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Your donation provides pro access to students who can&apos;t
               afford it, giving them the tools they need to succeed
               academically.
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mt-12">
-              <Card className="p-6 text-center">
+              <Card className="p-6 text-center bg-card border-border transition-all duration-300 hover:shadow-lg">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto">
                   <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                 </div>
@@ -160,13 +160,13 @@ const DonationPage = () => {
                       ? "..."
                       : donationStats.totalStudentsHelped.toLocaleString()}
                   </h3>
-                  <p className="text-gray-600 text-sm font-medium">
+                  <p className="text-muted-foreground text-sm font-medium">
                     Students Helped
                   </p>
                 </div>
               </Card>
 
-              <Card className="p-6 text-center">
+              <Card className="p-6 text-center bg-card border-border transition-all duration-300 hover:shadow-lg">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto">
                   <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                 </div>
@@ -177,13 +177,13 @@ const DonationPage = () => {
                       ? "..."
                       : donationStats.totalDonations.toLocaleString()}
                   </h3>
-                  <p className="text-gray-600 text-sm font-medium">
+                  <p className="text-muted-foreground text-sm font-medium">
                     Total Donated
                   </p>
                 </div>
               </Card>
 
-              <Card className="p-6 text-center">
+              <Card className="p-6 text-center bg-card border-border transition-all duration-300 hover:shadow-lg">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto">
                   <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                 </div>
@@ -193,7 +193,7 @@ const DonationPage = () => {
                       ? "..."
                       : donationStats.currentMonthStudents}
                   </h3>
-                  <p className="text-gray-600 text-sm font-medium">
+                  <p className="text-muted-foreground text-sm font-medium">
                     Helped This Month
                   </p>
                 </div>
@@ -203,268 +203,213 @@ const DonationPage = () => {
         </div>
       </section>
 
-      {/* Impact Stories */}
-      <section className="py-16 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Real Impact Stories
-          </h2>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="p-6">
-              <div className="flex items-center gap-1 mb-4">
-                {Array.from({ length: 5 }, (_, i) => (
-                  <Star
-                    key={i}
-                    className="w-4 h-4 text-yellow-400 fill-current"
-                  />
-                ))}
-              </div>
-              <p className="text-gray-600 mb-4">
-                &quot;Thanks to CheatPDF Pro, I was able to create practice
-                exams from my textbooks. It helped me pass my medical school
-                exams with flying colors!&quot;
-              </p>
-              <div className="text-sm text-gray-500">
-                <strong>Maria S.</strong> - Medical Student, Brazil
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-1 mb-4">
-                {Array.from({ length: 5 }, (_, i) => (
-                  <Star
-                    key={i}
-                    className="w-4 h-4 text-yellow-400 fill-current"
-                  />
-                ))}
-              </div>
-              <p className="text-gray-600 mb-4">
-                &quot;The AI-powered exam mode helped me identify my weak areas.
-                I improved my grades by 2 letter grades this semester!&quot;
-              </p>
-              <div className="text-sm text-gray-500">
-                <strong>Ahmed K.</strong> - Engineering Student, Egypt
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-1 mb-4">
-                {Array.from({ length: 5 }, (_, i) => (
-                  <Star
-                    key={i}
-                    className="w-4 h-4 text-yellow-400 fill-current"
-                  />
-                ))}
-              </div>
-              <p className="text-gray-600 mb-4">
-                &quot;Being able to chat with my PDFs in my native language made
-                studying so much easier. Thank you to whoever sponsored my
-                access!&quot;
-              </p>
-              <div className="text-sm text-gray-500">
-                <strong>Priya M.</strong> - Computer Science Student, India
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Donation Form */}
-      <section className="py-16 px-4 bg-gradient-to-r from-purple-100 to-pink-100">
+      {/* Donation Form Section */}
+      <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto max-w-2xl">
-          <Card className="p-8">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-4">
-                Make a Difference Today
-              </h2>
-              <p className="text-gray-600">
-                Choose how many students you&apos;d like to help and for how
-                long
-              </p>
-            </div>
-
+          <Card className="p-8 bg-card border-border transition-all duration-300 hover:shadow-lg">
             <div className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="donorName">Your Name *</Label>
-                  <Input
-                    id="donorName"
-                    type="text"
-                    value={formData.donorName}
-                    onChange={(e) =>
-                      handleInputChange("donorName", e.target.value)
-                    }
-                    placeholder="John Doe"
-                    required
-                  />
-                </div>
+              <div className="text-center space-y-3">
+                <h2 className="text-2xl font-bold text-foreground">
+                  Make a Donation
+                </h2>
+                <p className="text-muted-foreground">
+                  Choose how many students you&apos;d like to help and for how long
+                </p>
+              </div>
 
-                <div>
-                  <Label htmlFor="donorEmail">Your Email *</Label>
-                  <Input
-                    id="donorEmail"
-                    type="email"
-                    value={formData.donorEmail}
-                    onChange={(e) =>
-                      handleInputChange("donorEmail", e.target.value)
-                    }
-                    placeholder="john@example.com"
-                    required
-                  />
+              {/* Donor Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">
+                  Your Information
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="donorName" className="text-foreground">
+                      Full Name
+                    </Label>
+                    <Input
+                      id="donorName"
+                      type="text"
+                      placeholder="Your full name"
+                      value={formData.donorName}
+                      onChange={(e) =>
+                        handleInputChange("donorName", e.target.value)
+                      }
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="donorEmail" className="text-foreground">
+                      Email Address
+                    </Label>
+                    <Input
+                      id="donorEmail"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={formData.donorEmail}
+                      onChange={(e) =>
+                        handleInputChange("donorEmail", e.target.value)
+                      }
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
-              <CountryLanguageForm
-                onSelectionChange={(field: string, value: string) =>
-                  field === "country"
-                    ? handleInputChange("targetCountry", value)
-                    : handleInputChange("targetLanguage", value)
-                }
-                selectedCountry={formData.targetCountry}
-                selectedLanguage={formData.targetLanguage}
-              />
-
-              <div>
-                <Label htmlFor="studentsToHelp">
-                  Number of Students to Help
-                </Label>
-                <Input
-                  id="studentsToHelp"
-                  type="number"
-                  min="1"
-                  max="50"
-                  value={formData.studentsToHelp}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "studentsToHelp",
-                      parseInt(e.target.value) || 1
-                    )
+              {/* Target Demographics */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">
+                  Target Demographics
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Choose which students you&apos;d like to help (optional)
+                </p>
+                <CountryLanguageForm
+                  onSelectionChange={(field: string, value: string) =>
+                    field === "country"
+                      ? handleInputChange("targetCountry", value)
+                      : handleInputChange("targetLanguage", value)
                   }
+                  selectedCountry={formData.targetCountry}
+                  selectedLanguage={formData.targetLanguage}
                 />
               </div>
 
-              <div>
-                <Label htmlFor="donationFrequency">Donation Frequency</Label>
-                <Select
-                  value={formData.donationFrequency}
-                  onValueChange={(value) =>
-                    handleInputChange("donationFrequency", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MONTHLY">
-                      Monthly ($2 per student)
-                    </SelectItem>
-                    <SelectItem value="QUARTERLY">
-                      Quarterly ($4 per student)
-                    </SelectItem>
-                    <SelectItem value="BIANNUAL">
-                      Bi-annually ($6 per student)
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Donation Summary */}
-              <Card className="p-6 bg-gradient-to-r from-amber-50 to-purple-50 border-purple-200">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-purple-600" />
-                  Donation Summary
+              {/* Donation Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">
+                  Donation Details
                 </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Students to help:</span>
-                    <span className="font-semibold">
-                      {formData.studentsToHelp}
-                    </span>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="studentsToHelp" className="text-foreground">
+                      Number of Students
+                    </Label>
+                    <Select
+                      value={formData.studentsToHelp.toString()}
+                      onValueChange={(value) =>
+                        handleInputChange("studentsToHelp", parseInt(value))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select number" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 10, 15, 20, 25, 50].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} {num === 1 ? "student" : "students"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Frequency:</span>
-                    <span className="font-semibold">
-                      {getDonationFrequencyText()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Target region:</span>
-                    <span className="font-semibold">
-                      {formData.targetCountry || "Any Country"}
-                      {formData.targetLanguage &&
-                        ` (${formData.targetLanguage})`}
-                    </span>
-                  </div>
-                  <hr className="my-2" />
-                  <div className="flex justify-between text-lg font-bold text-purple-600">
-                    <span>Total donation:</span>
-                    <span>${calculateDonationAmount()}</span>
+                  <div className="space-y-2">
+                    <Label htmlFor="donationFrequency" className="text-foreground">
+                      Donation Frequency
+                    </Label>
+                    <Select
+                      value={formData.donationFrequency}
+                      onValueChange={(value) =>
+                        handleInputChange("donationFrequency", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MONTHLY">Monthly</SelectItem>
+                        <SelectItem value="QUARTERLY">Quarterly</SelectItem>
+                        <SelectItem value="BIANNUAL">Bi-annual</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-              </Card>
-
-              <Button
-                onClick={handleDonate}
-                disabled={isLoading}
-                className="w-full bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-700 hover:to-purple-700 py-6 text-lg"
-              >
-                {isLoading
-                  ? "Creating Donation..."
-                  : `Donate $${calculateDonationAmount()} ${getDonationFrequencyText()}`}
-              </Button>
-
-              <p className="text-xs text-gray-500 text-center">
-                You&apos;ll be redirected to Stripe to complete your secure
-                donation. Your donation helps provide pro access to students in
-                need.
-              </p>
+              </div>
             </div>
           </Card>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-16 px-4 bg-white">
-        <div className="container mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            How Your Donation Works
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-purple-600">1</span>
+      {/* Summary and Checkout */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto max-w-2xl">
+          <Card className="p-8 bg-card border-border transition-all duration-300 hover:shadow-lg">
+            <div className="space-y-6">
+              <div className="text-center space-y-3">
+                <h2 className="text-2xl font-bold text-foreground">
+                  Donation Summary
+                </h2>
               </div>
-              <h3 className="text-xl font-semibold mb-2">You Donate</h3>
-              <p className="text-gray-600">
-                Choose how many students to help and make your secure donation
-                through Stripe
+
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Students to help:</span>
+                  <span className="font-semibold text-foreground">
+                    {formData.studentsToHelp}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Frequency:</span>
+                  <span className="font-semibold text-foreground">
+                    {getDonationFrequencyText()}
+                  </span>
+                </div>
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold text-foreground">
+                      Total Amount:
+                    </span>
+                    <span className="text-2xl font-bold text-brand-amber">
+                      ${calculateDonationAmount()}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {getDonationFrequencyText()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-muted/50 border border-border rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <Star className="w-5 h-5 text-brand-amber mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Impact of Your Donation
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Your ${calculateDonationAmount()} donation will provide{" "}
+                      {formData.studentsToHelp}{" "}
+                      {formData.studentsToHelp === 1 ? "student" : "students"} with
+                      pro access to AI-powered study tools, helping them excel in
+                      their studies.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                onClick={handleDonate}
+                disabled={isLoading || !formData.donorEmail || !formData.donorName}
+                className="w-full h-14 text-lg gradient-brand text-white hover:opacity-90 transition-all duration-300"
+              >
+                {isLoading ? (
+                  "Processing..."
+                ) : (
+                  <>
+                    <Heart className="w-5 h-5 mr-2" />
+                    Donate ${calculateDonationAmount()} {getDonationFrequencyText()}
+                  </>
+                )}
+              </Button>
+
+              <p className="text-xs text-muted-foreground text-center">
+                Secure payment processed by Stripe. You can cancel or modify your
+                donation at any time.
               </p>
             </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-purple-600">2</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">We Match Students</h3>
-              <p className="text-gray-600">
-                We identify students who need help based on your preferences and
-                their eligibility
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-purple-600">3</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Students Succeed</h3>
-              <p className="text-gray-600">
-                Students get pro access and can study more effectively with
-                advanced features
-              </p>
-            </div>
-          </div>
+          </Card>
         </div>
       </section>
     </div>
