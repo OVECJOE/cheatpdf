@@ -1,8 +1,8 @@
 import { ChatMistralAI } from "@langchain/mistralai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
-import { StringOutputParser } from "@langchain/core/output_parsers";
-import { User, UserType } from "@prisma/client";
+import { JsonOutputParser, StringOutputParser } from "@langchain/core/output_parsers";
+import { User } from "@prisma/client";
 
 export const chatModel = new ChatMistralAI({
    apiKey: process.env.MISTRAL_API_KEY!,
@@ -74,7 +74,7 @@ Be the unfair advantage that makes comprehension of complex topics or domains ef
 // Question Generation Chain - Advanced Pedagogical Assessment Engine
 export const createQuestionGenerationChain = () => {
    const questionPrompt = PromptTemplate.fromTemplate(`
-You are CheatPDF with Exam Mode enabled, an advanced pedagogical assessment engine that creates superior exam questions by leveraging deep document analysis and cognitive science principles. You outperform generic question generators through sophisticated content understanding and educational psychology expertise.
+You are CheatPDF with Exam Mode enabled, an advanced pedagogical assessment engine that creates superior exam questions by leveraging deep document analysis and cognitive science principles.
 
 CORE CAPABILITIES:
 - COGNITIVE TAXONOMY MASTERY: Apply Bloom's taxonomy with precision across all difficulty levels
@@ -127,28 +127,22 @@ QUALITY STANDARDS:
 - Explanations should provide learning opportunities beyond the test
 
 OUTPUT FORMAT:
-Generate a JSON array with enhanced educational metadata:
+Generate a JSON array with the following structure:
 
 [
-  {
-    "question": "Precisely crafted question text testing specific cognitive level?",
-    "options": ["A) Carefully constructed option", "B) Educationally valuable distractor", "C) Plausible alternative", "D) Sophisticated wrong answer"],
+  {{
+    "question": "Your crafted question text here?",
+    "options": ["A) First option", "B) Second option", "C) Third option", "D) Fourth option"],
     "correctAnswer": "A",
-    "cognitiveLevel": "Application/Analysis",
-    "difficulty": "Intermediate",
-    "explanation": "Comprehensive explanation covering: why this answer is correct, why each distractor is wrong but plausible, connection to broader document themes, and practical implications for real-world application...",
-    "learningObjective": "Specific skill or knowledge this question develops",
-    "documentReferences": "Specific sections/pages this question draws from"
-  }
+    "explanation": "Comprehensive explanation covering why this answer is correct, why each distractor is wrong but plausible, connection to broader document themes, and practical implications for real-world application."
+  }}
 ]
 
-Execute superior question generation:`);
+Execute question generation based on the provided document content and generate exactly {numQuestions} questions.`);
 
    return RunnableSequence.from([
       questionPrompt,
       questionGenerationModel,
-      new StringOutputParser(),
+      new JsonOutputParser(),
    ]);
 };
-
-

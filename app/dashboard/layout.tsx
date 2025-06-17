@@ -204,7 +204,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* Upgrade Button (if not pro) */}
             {!isProUser && (
               <Button
-                onClick={() => router.push("/upgrade")}
+                onClick={() => router.push("/dashboard/upgrade")}
                 size="sm"
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
@@ -251,7 +251,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </DropdownMenuItem>
                 {!isProUser && (
                   <DropdownMenuItem
-                    onClick={() => router.push("/upgrade")}
+                    onClick={() => router.push("/dashboard/upgrade")}
                     className="cursor-pointer"
                   >
                     <Crown className="w-4 h-4 mr-2" />

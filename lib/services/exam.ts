@@ -43,17 +43,9 @@ export class ExamService {
         const questionsJson = await questionChain.invoke({
             content: document.content,
             numQuestions,
-        });
+        }) as QuestionData[];
 
-        let questions: QuestionData[];
-        try {
-            questions = JSON.parse(questionsJson) as QuestionData[];
-        } catch (error) {
-            console.error("Error parsing questions JSON:", error);
-            throw new Error("Failed to generate valid exam questions");
-        }
-
-        if (!Array.isArray(questions) || questions.length === 0) {
+        if (!Array.isArray(questionsJson) || questionsJson.length === 0) {
             throw new Error("No valid questions generated");
         }
 
@@ -62,7 +54,7 @@ export class ExamService {
             data: {
                 title,
                 timeLimit,
-                totalQuestions: questions.length,
+                totalQuestions: questionsJson.length,
                 userId,
                 documentId,
                 status: ExamStatus.NOT_STARTED,
@@ -71,7 +63,7 @@ export class ExamService {
 
         // create exam questions
         await Promise.all(
-            questions.map((q) =>
+            questionsJson.map((q) =>
                 db.examQuestion.create({
                     data: {
                         question: q.question,
@@ -245,7 +237,7 @@ export class ExamService {
 
             const questionsWithResults = exam.questions.map(q => {
                 const userAnswer = q.answers[0];
-                const showExaplanation = userAnswer && !userAnswer.isCorrect;
+                const showExplanation = userAnswer && !userAnswer.isCorrect;
 
                 return {
                     id: q.id,
@@ -254,7 +246,7 @@ export class ExamService {
                     userAnswer: userAnswer?.answer,
                     correctAnswer: q.correctAnswer,
                     isCorrect: userAnswer?.isCorrect || false,
-                    explanation: showExaplanation ? q.explanation : null,
+                    explanation: showExplanation ? q.explanation : null,
                 }
             })
 

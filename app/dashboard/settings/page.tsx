@@ -247,7 +247,7 @@ export default function SettingsPage() {
               
               <div className="flex space-x-2">
                 {!isProUser ? (
-                  <Button onClick={() => router.push("/upgrade")}>
+                  <Button onClick={() => router.push("/dashboard/upgrade")}>
                     <Crown className="w-4 h-4 mr-2" />
                     Upgrade to Pro
                   </Button>
@@ -257,7 +257,7 @@ export default function SettingsPage() {
                       <CreditCard className="w-4 h-4 mr-2" />
                       Manage Billing
                     </Button>
-                    <Button variant="outline" onClick={() => router.push("/upgrade")}>
+                    <Button variant="outline" onClick={() => router.push("/dashboard/upgrade")}>
                       <SettingsIcon className="w-4 h-4 mr-2" />
                       Plan Details
                     </Button>

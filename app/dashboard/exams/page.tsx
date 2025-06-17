@@ -226,7 +226,7 @@ export default function ExamsPage() {
             Practice exams generated from your documents
           </p>
         </div>
-        <Button onClick={() => router.push("/dashboard/exams/new")} className="w-full sm:w-auto gradient-brand text-white hover:opacity-90 transition-all duration-300">
+        <Button onClick={() => router.push("/dashboard/exams/new")} className="w-full sm:w-auto gradient-brand hover:opacity-90 transition-all duration-300">
           <Plus className="w-4 h-4 mr-2" />
           Create Exam
         </Button>

@@ -212,7 +212,7 @@ export default function NewExamPage() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
           <div className="flex items-center justify-between w-full gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Create New Exam</h1>
+              <h1 className="text-xl sm:text-2xl font-bold">Create New Exam</h1>
               <p className="text-sm text-muted-foreground">
                 {currentStep === "document" 
                   ? "Select a document to create your exam" 
@@ -284,7 +284,7 @@ export default function NewExamPage() {
                       </p>
                       <Button 
                         onClick={() => router.push("/dashboard/upload")}
-                        className="gradient-brand text-white hover:opacity-90 transition-all duration-300"
+                        className="gradient-brand hover:opacity-90 transition-all duration-300"
                       >
                         <Upload className="w-4 h-4 mr-2" />
                         Upload Document
@@ -436,7 +436,7 @@ export default function NewExamPage() {
                     <Button
                       onClick={handleNextStep}
                       disabled={!selectedDocument}
-                      className="w-full gradient-brand text-white hover:opacity-90 transition-all duration-300"
+                      className="w-full gradient-brand hover:opacity-90 transition-all duration-300"
                     >
                       <Settings className="w-4 h-4 mr-2" />
                       Configure Exam
@@ -670,7 +670,7 @@ export default function NewExamPage() {
                     <Button
                       onClick={handleCreateExam}
                       disabled={!examConfig.title.trim() || creating}
-                      className="w-full gradient-brand text-white hover:opacity-90 transition-all duration-300"
+                      className="w-full gradient-brand hover:opacity-90 transition-all duration-300"
                     >
                       {creating ? (
                         <>
