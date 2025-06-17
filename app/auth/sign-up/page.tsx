@@ -74,7 +74,7 @@ export default function SignUpPage() {
   };
 
   const renderStep1 = () => (
-    <Card className="p-6 bg-card border-border transition-all duration-300 hover:shadow-lg">
+    <Card className="p-6 bg-card border-border">
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name" className="text-foreground">Full name</Label>
@@ -116,11 +116,11 @@ export default function SignUpPage() {
           <input id="terms" type="checkbox" className="rounded accent-primary" required />
           <Label htmlFor="terms" className="text-sm text-muted-foreground inline leading-relaxed">
             I agree to the{" "}
-            <Link href="/terms" className="text-brand-amber hover:text-primary/80 underline transition-colors duration-200">
+            <Link href="/terms" className="text-primary hover:text-primary/80 underline">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" className="text-brand-amber hover:text-primary/80 underline transition-colors duration-200">
+            <Link href="/privacy" className="text-primary hover:text-primary/80 underline">
               Privacy Policy
             </Link>
           </Label>
@@ -128,7 +128,7 @@ export default function SignUpPage() {
 
         <Button
           onClick={handleSignUp}
-          className="w-full h-12 gradient-brand text-white hover:opacity-90 transition-all duration-300"
+          className="w-full h-12 gradient-brand text-white hover:opacity-90"
           disabled={!formData.name.trim() || !formData.email.trim() || loading}
         >
           {loading ? (
@@ -145,7 +145,7 @@ export default function SignUpPage() {
   );
 
   const renderStep2 = () => (
-    <Card className="p-6 bg-card border-border transition-all duration-300 hover:shadow-lg">
+    <Card className="p-6 bg-card border-border">
       <div className="text-center space-y-4">
         <div className="flex justify-center">
           <CheckCircle className="w-16 h-16 text-green-500" />
@@ -175,14 +175,14 @@ export default function SignUpPage() {
             variant="outline"
             onClick={handleResendLink}
             disabled={loading}
-            className="w-full border-border text-foreground hover:bg-muted transition-all duration-300"
+            className="w-full border-border text-foreground hover:bg-muted"
           >
             {loading ? "Sending..." : "Resend link"}
           </Button>
 
           <button
             onClick={() => setStep(1)}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+            className="text-sm text-muted-foreground hover:text-foreground"
           >
             ← Use a different email
           </button>
@@ -210,12 +210,12 @@ export default function SignUpPage() {
       <div className="flex justify-center space-x-2">
         <div
           className={`w-2 h-2 rounded-full ${
-            step >= 1 ? "bg-purple-600" : "bg-gray-300"
+            step >= 1 ? "bg-primary" : "bg-muted"
           }`}
         />
         <div
           className={`w-2 h-2 rounded-full ${
-            step >= 2 ? "bg-purple-600" : "bg-gray-300"
+            step >= 2 ? "bg-primary" : "bg-muted"
           }`}
         />
       </div>
@@ -231,7 +231,7 @@ export default function SignUpPage() {
             Already have an account?{" "}
             <Link
               href="/auth/sign-in"
-              className="text-brand-amber hover:text-primary/80 font-semibold transition-colors duration-200"
+              className="text-primary hover:text-primary/80 font-semibold"
             >
               Sign in
             </Link>

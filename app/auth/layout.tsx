@@ -15,13 +15,13 @@ export default function AuthLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Headerr */}
         <div className="text-center flex flex-col items-center justify-center gap-3">
           <Link
             href="/"
-            className="inline-flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center space-x-2 text-sm text-gray-400 hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to home</span>

@@ -132,7 +132,7 @@ export default function ChatDetailPage() {
         // Replace temp message with real messages
         setChat(prev => prev ? {
           ...prev,
-          messages: data.messages || prev.messages
+          messages: [...prev.messages, data.message]
         } : null);
       } else {
         // Remove temp message on error

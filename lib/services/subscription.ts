@@ -91,46 +91,65 @@ export class SubscriptionService {
 
     public async handleWebhook(payload: string, signature: string) {
         try {
+            // Validate required environment variable
+            if (!process.env.STRIPE_WEBHOOK_SECRET) {
+                console.error('Missing STRIPE_WEBHOOK_SECRET environment variable');
+                throw new Error('Webhook configuration error: Missing webhook secret');
+            }
+
             const event = stripe.webhooks.constructEvent(
                 payload,
                 signature,
                 process.env.STRIPE_WEBHOOK_SECRET,
             );
 
-            switch (event.type) {
-                case "checkout.session.completed":
-                    await this.handleCheckoutCompleted(
-                        event.data.object as Stripe.Checkout.Session,
-                    );
-                    break;
-                case "invoice.payment_succeeded":
-                    await this.handlePaymentSucceeded(
-                        event.data.object as Stripe.Invoice,
-                    );
-                    break;
-                case "invoice.payment_failed":
-                    await this.handlePaymentFailed(
-                        event.data.object as Stripe.Invoice,
-                    );
-                    break;
-                case "customer.subscription.updated":
-                    await this.handleSubscriptionUpdated(
-                        event.data.object as Stripe.Subscription,
-                    );
-                    break;
-                case "customer.subscription.deleted":
-                    await this.handleSubscriptionDeleted(
-                        event.data.object as Stripe.Subscription,
-                    );
-                    break;
-                default:
-                    console.warn(`Unhandled event type: ${event.type}`);
+            console.log(`Processing subscription webhook event: ${event.type}`);
+
+            try {
+                switch (event.type) {
+                    case "checkout.session.completed":
+                        await this.handleCheckoutCompleted(
+                            event.data.object as Stripe.Checkout.Session,
+                        );
+                        console.log(`Successfully processed checkout completion for session: ${event.data.object.id}`);
+                        break;
+                    case "invoice.payment_succeeded":
+                        await this.handlePaymentSucceeded(
+                            event.data.object as Stripe.Invoice,
+                        );
+                        console.log(`Successfully processed payment success for invoice: ${event.data.object.id}`);
+                        break;
+                    case "invoice.payment_failed":
+                        await this.handlePaymentFailed(
+                            event.data.object as Stripe.Invoice,
+                        );
+                        console.log(`Successfully processed payment failure for invoice: ${event.data.object.id}`);
+                        break;
+                    case "customer.subscription.updated":
+                        await this.handleSubscriptionUpdated(
+                            event.data.object as Stripe.Subscription,
+                        );
+                        console.log(`Successfully processed subscription update for subscription: ${event.data.object.id}`);
+                        break;
+                    case "customer.subscription.deleted":
+                        await this.handleSubscriptionDeleted(
+                            event.data.object as Stripe.Subscription,
+                        );
+                        console.log(`Successfully processed subscription deletion for subscription: ${event.data.object.id}`);
+                        break;
+                    default:
+                        console.warn(`Unhandled subscription event type: ${event.type}`);
+                }
+            } catch (handlerError) {
+                console.error(`Error processing ${event.type} event:`, handlerError);
+                // Still throw to indicate failure, but with more context
+                throw new Error(`Failed to process ${event.type} event: ${handlerError instanceof Error ? handlerError.message : 'Unknown error'}`);
             }
 
             return { received: true };
         } catch (error) {
-            console.error("Error handling webhook:", error);
-            throw new Error("Failed to handle webhook");
+            console.error("Error handling subscription webhook:", error);
+            throw new Error(`Failed to handle subscription webhook: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 

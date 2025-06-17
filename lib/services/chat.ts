@@ -80,7 +80,7 @@ export class ChatService {
             }, { runId: chatId });
 
             // Save assistant response
-            await db.message.create({
+            const message = await db.message.create({
                 data: {
                     chatId,
                     role: MessageRole.ASSISTANT,
@@ -88,7 +88,7 @@ export class ChatService {
                 },
             });
 
-            return response;
+            return message;
         } catch (error) {
             console.error("Error sending message:", error);
             throw new Error("Failed to send message");

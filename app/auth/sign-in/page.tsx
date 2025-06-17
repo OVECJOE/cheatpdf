@@ -68,28 +68,28 @@ function SignInContent() {
   };
 
   const renderStep1 = () => (
-    <Card className="p-6">
+    <Card className="p-6 bg-card border-border">
       <div className="space-y-4">
         {(error || errorParam) && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-red-800">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-start space-x-3">
+            <AlertCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-destructive">
               {error || "Authentication failed. Please try again."}
             </div>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email address</Label>
+          <Label htmlFor="email" className="text-foreground">Email address</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+            <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
             <Input
               id="email"
               type="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10"
+              className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
               onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
               required
             />
@@ -98,7 +98,7 @@ function SignInContent() {
 
         <Button
           onClick={handleSignIn}
-          className="w-full h-12"
+          className="w-full h-12 gradient-brand text-white hover:opacity-90"
           disabled={!email.trim() || loading}
         >
           {loading ? (
@@ -115,27 +115,27 @@ function SignInContent() {
   );
 
   const renderStep2 = () => (
-    <Card className="p-6">
+    <Card className="p-6 bg-card border-border">
       <div className="text-center space-y-4">
         <div className="flex justify-center">
           <CheckCircle className="w-16 h-16 text-green-500" />
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-foreground">
             Check your email!
           </h2>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             We&apos;ve sent a secure sign-in link to:
           </p>
-          <p className="font-medium text-gray-900">{email}</p>
+          <p className="font-medium text-foreground">{email}</p>
         </div>
 
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-left">
-          <h3 className="font-medium text-purple-900 mb-2">
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 text-left">
+          <h3 className="font-medium text-foreground mb-2">
             What&apos;s next?
           </h3>
-          <ol className="text-sm text-purple-800 space-y-1">
+          <ol className="text-sm text-muted-foreground space-y-1">
             <li>1. Check your inbox (and spam folder)</li>
             <li>2. Click the sign-in link in the email</li>
             <li>3. You&apos;ll be automatically signed in</li>
@@ -147,7 +147,7 @@ function SignInContent() {
             variant="outline"
             onClick={handleResendLink}
             disabled={loading}
-            className="w-full"
+            className="w-full border-border text-foreground hover:bg-muted"
           >
             {loading ? "Sending..." : "Resend link"}
           </Button>
@@ -157,7 +157,7 @@ function SignInContent() {
               setStep(1);
               setError("");
             }}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="text-sm text-muted-foreground hover:text-foreground"
           >
             ← Use a different email
           </button>
@@ -170,10 +170,10 @@ function SignInContent() {
     <div className="max-w-md mx-auto p-4 space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-foreground">
           {step === 1 ? "Welcome back" : "Check your email!"}
         </h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           {step === 1
             ? "Sign in to your account"
             : "We've sent you a secure sign-in link"}
@@ -184,12 +184,12 @@ function SignInContent() {
       <div className="flex justify-center space-x-2">
         <div
           className={`w-2 h-2 rounded-full ${
-            step >= 1 ? "bg-purple-600" : "bg-gray-300"
+            step >= 1 ? "bg-primary" : "bg-muted"
           }`}
         />
         <div
           className={`w-2 h-2 rounded-full ${
-            step >= 2 ? "bg-purple-600" : "bg-gray-300"
+            step >= 2 ? "bg-primary" : "bg-muted"
           }`}
         />
       </div>
@@ -201,11 +201,11 @@ function SignInContent() {
       {/* Footer */}
       {step === 1 && (
         <div className="text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
             <Link
               href="/auth/sign-up"
-              className="text-amber-600 hover:text-amber-800 font-semibold hover:underline"
+              className="text-primary hover:text-primary/80 font-semibold hover:underline"
             >
               Sign up
             </Link>
@@ -224,7 +224,7 @@ function SignInSkeleton() {
         <Skeleton className="h-6 w-64 mx-auto" />
       </div>
 
-      <Card className="p-6 space-y-4">
+      <Card className="p-6 space-y-4 bg-card border-border">
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
@@ -239,8 +239,8 @@ function SignInSkeleton() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<SignInSkeleton />}>
-      <SignInContent />
-    </Suspense>
+      <Suspense fallback={<SignInSkeleton />}>
+        <SignInContent />
+      </Suspense>
   );
 }

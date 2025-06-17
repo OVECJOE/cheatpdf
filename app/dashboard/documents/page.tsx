@@ -135,7 +135,7 @@ export default function DocumentsPage() {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md">
+      <div className="relative w-full max-w-xl">
         <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
         <Input
           placeholder="Search documents..."

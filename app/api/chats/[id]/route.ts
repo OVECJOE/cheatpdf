@@ -31,7 +31,6 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions)
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -42,18 +41,25 @@ export async function POST(
     // Send message
     if (!message) {
       return NextResponse.json(
-        { error: 'Chat ID and message are required' },
+        { error: 'Message is required' },
         { status: 400 }
       )
     }
 
-    const response = await chatService.sendMessage(
+    const messageResponse = await chatService.sendMessage(
       id,
       message,
       session.user.id
     )
 
-    return NextResponse.json({ response })
+    return NextResponse.json({
+      message: {
+        content: messageResponse.content,
+        role: messageResponse.role,
+        createdAt: messageResponse.createdAt,
+        id: messageResponse.id,
+      }
+    })
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to process chat request' },
