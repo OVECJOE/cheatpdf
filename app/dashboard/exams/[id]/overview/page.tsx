@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +27,6 @@ import { toast } from "sonner";
 interface Exam {
   id: string;
   title: string;
-  documentId: string;
   document: { id: string; name: string; fileName: string };
   timeLimit: number;
   totalQuestions: number;
@@ -43,7 +41,6 @@ interface Exam {
 export default function ExamOverviewPage() {
   const router = useRouter();
   const params = useParams();
-  const { data: session } = useSession();
   const examId = params.id as string;
 
   const [exam, setExam] = useState<Exam | null>(null);
@@ -51,24 +48,24 @@ export default function ExamOverviewPage() {
   const [starting, setStarting] = useState(false);
 
   useEffect(() => {
-    if (session?.user && examId) {
+    if (examId) {
       fetchExam();
     }
-  }, [session, examId]);
+  }, [examId]);
 
   const fetchExam = async () => {
+    setLoading(true);
+
     try {
       const response = await fetch(`/api/exams/${examId}`);
+      const data = await response.json();
       if (response.ok) {
-        const data = await response.json();
-        setExam(data);
+        setExam(data.exam);
       } else {
-        toast.error("Failed to load exam");
-        router.push("/dashboard/exams");
+        throw new Error(data.error);
       }
-    } catch (error) {
-      console.error("Error fetching exam:", error);
-      toast.error("Failed to load exam");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load exam");
     } finally {
       setLoading(false);
     }
@@ -89,7 +86,8 @@ export default function ExamOverviewPage() {
         toast.success("Starting exam...");
         router.push(`/dashboard/exams/${examId}/take`);
       } else {
-        toast.error("Failed to start exam");
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to start exam");
       }
     } catch (error) {
       console.error("Error starting exam:", error);
@@ -128,10 +126,10 @@ export default function ExamOverviewPage() {
     const questionCount = exam?.totalQuestions || 0;
     const timeLimit = exam?.timeLimit || 0;
     const timePerQuestion = Math.round(timeLimit / questionCount);
-    
+
     let difficulty: "Easy" | "Medium" | "Hard" = "Medium";
     let color = "text-brand-amber bg-amber-100 border-amber-200";
-    
+
     if (timePerQuestion >= 3) {
       difficulty = "Easy";
       color = "text-green-600 bg-green-100 border-green-200";
@@ -139,7 +137,7 @@ export default function ExamOverviewPage() {
       difficulty = "Hard";
       color = "text-red-600 bg-red-100 border-red-200";
     }
-    
+
     return { difficulty, color, timePerQuestion };
   };
 
@@ -157,15 +155,18 @@ export default function ExamOverviewPage() {
     return (
       <div className="p-6">
         <Card className="p-8 text-center bg-card border-border">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-foreground mb-2">Exam Not Found</h2>
-          <p className="text-muted-foreground mb-4">
-            The exam you're looking for doesn't exist or you don't have access to it.
-          </p>
-          <Button 
-            onClick={() => router.push("/dashboard/exams")} 
-            className="gradient-brand text-white hover:opacity-90 transition-all duration-300"
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-2" />
+          <div className="space-y-2 mb-4">
+            <h2 className="text-xl font-bold text-foreground">Exam Not Found</h2>
+            <p className="text-muted-foreground">
+              The exam you're looking for doesn't exist or you don't have access to it.
+            </p>
+          </div>
+          <Button
+            onClick={() => router.push("/dashboard/exams")}
+            className="gradient-brand hover:opacity-90 transition-all duration-300"
           >
+            <ArrowLeft className="w-4 h-4" />
             Back to Exams
           </Button>
         </Card>
@@ -204,7 +205,7 @@ export default function ExamOverviewPage() {
           <Button
             variant="default"
             size="sm"
-            className="gradient-brand text-white"
+            className="gradient-brand hover:opacity-90 transition-all duration-300"
           >
             Overview
           </Button>
@@ -251,7 +252,7 @@ export default function ExamOverviewPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-4">Exam Information</h3>
-                
+
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3">
@@ -330,7 +331,7 @@ export default function ExamOverviewPage() {
           <Card className="p-6 bg-card border-border">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-foreground">Preparation Tips</h3>
-              
+
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div className="flex items-start space-x-3">
@@ -415,24 +416,26 @@ export default function ExamOverviewPage() {
                     <Play className="w-8 h-8 text-primary" />
                   )}
                 </div>
-                
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  {exam.status === "COMPLETED" 
-                    ? "Exam Completed" 
-                    : exam.status === "IN_PROGRESS" 
-                    ? "Continue Exam" 
-                    : "Ready to Start"
-                  }
-                </h3>
-                
-                <p className="text-muted-foreground mb-4">
-                  {exam.status === "COMPLETED"
-                    ? "Review your results and performance"
-                    : exam.status === "IN_PROGRESS"
-                    ? "Resume where you left off"
-                    : "Take the exam when you're ready"
-                  }
-                </p>
+
+                <div className="space-y-1 mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {exam.status === "COMPLETED"
+                      ? "Exam Completed"
+                      : exam.status === "IN_PROGRESS"
+                        ? "Continue Exam"
+                        : "Ready to Start"
+                    }
+                  </h3>
+
+                  <p className="text-muted-foreground">
+                    {exam.status === "COMPLETED"
+                      ? "Review your results and performance"
+                      : exam.status === "IN_PROGRESS"
+                        ? "Resume where you left off"
+                        : "Take the exam when you're ready"
+                    }
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -440,7 +443,7 @@ export default function ExamOverviewPage() {
                   <Button
                     onClick={handleStartExam}
                     disabled={starting}
-                    className="w-full gradient-brand text-white hover:opacity-90 transition-all duration-300"
+                    className="w-full gradient-brand hover:opacity-90 transition-all duration-300"
                   >
                     {starting ? (
                       <>
@@ -459,7 +462,7 @@ export default function ExamOverviewPage() {
                 {exam.status === "IN_PROGRESS" && (
                   <Button
                     onClick={() => router.push(`/dashboard/exams/${examId}/take`)}
-                    className="w-full gradient-brand text-white hover:opacity-90 transition-all duration-300"
+                    className="w-full gradient-brand hover:opacity-90 transition-all duration-300"
                   >
                     <Play className="w-4 h-4 mr-2" />
                     Continue Exam
@@ -470,12 +473,12 @@ export default function ExamOverviewPage() {
                   <>
                     <Button
                       onClick={() => router.push(`/dashboard/exams/${examId}/results`)}
-                      className="w-full gradient-brand text-white hover:opacity-90 transition-all duration-300"
+                      className="w-full gradient-brand hover:opacity-90 transition-all duration-300"
                     >
                       <TrendingUp className="w-4 h-4 mr-2" />
                       View Results
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       onClick={() => router.push(`/dashboard/exams/${examId}/analytics`)}
@@ -489,7 +492,7 @@ export default function ExamOverviewPage() {
 
                 <Button
                   variant="outline"
-                  onClick={() => router.push(`/dashboard/documents/${exam.documentId}`)}
+                  onClick={() => router.push(`/dashboard/documents/${exam.document.id}`)}
                   className="w-full border-border text-foreground hover:bg-muted transition-all duration-300"
                 >
                   <Eye className="w-4 h-4 mr-2" />

@@ -128,6 +128,7 @@ QUALITY STANDARDS:
 
 OUTPUT FORMAT:
 Generate a JSON array with the following structure:
+Note: The options should be in the same language as the question, and no need to add the option label like A), B), C), D)
 
 [
   {{

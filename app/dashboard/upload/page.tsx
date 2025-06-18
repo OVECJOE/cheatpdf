@@ -433,7 +433,7 @@ export default function DashboardUploadPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => router.push(`/exam?document=${file.documentId}`)}
+                          onClick={() => router.push(`/dashboard/exams/new?document=${file.documentId}`)}
                           className="text-xs"
                         >
                           <ClipboardList className="w-3 h-3 mr-1" />

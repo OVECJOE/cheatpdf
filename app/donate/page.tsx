@@ -392,7 +392,7 @@ const DonationPage = () => {
               <Button
                 onClick={handleDonate}
                 disabled={isLoading || !formData.donorEmail || !formData.donorName}
-                className="w-full h-14 text-lg gradient-brand text-white hover:opacity-90 transition-all duration-300"
+                className="w-full h-14 text-lg gradient-brand hover:opacity-90 transition-all duration-300"
               >
                 {isLoading ? (
                   "Processing..."

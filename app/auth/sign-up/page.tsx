@@ -128,7 +128,7 @@ export default function SignUpPage() {
 
         <Button
           onClick={handleSignUp}
-          className="w-full h-12 gradient-brand text-white hover:opacity-90"
+          className="w-full h-12 gradient-brand hover:opacity-90"
           disabled={!formData.name.trim() || !formData.email.trim() || loading}
         >
           {loading ? (

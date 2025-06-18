@@ -122,7 +122,7 @@ const DonationSuccess = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 onClick={() => router.push("/donate")}
-                className="gradient-brand text-white hover:opacity-90 transition-all duration-300"
+                className="gradient-brand hover:opacity-90 transition-all duration-300"
               >
                 Make Another Donation
               </Button>
@@ -267,7 +267,7 @@ const DonationSuccess = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               onClick={handleShare}
-              className="flex items-center gap-2 gradient-brand text-white hover:opacity-90 transition-all duration-300"
+              className="flex items-center gap-2 gradient-brand hover:opacity-90 transition-all duration-300"
             >
               <Share2 className="w-4 h-4" />
               Share Your Impact

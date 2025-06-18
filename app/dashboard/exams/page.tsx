@@ -40,6 +40,7 @@ import {
   Play,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { SubscriptionStatus } from "@prisma/client";
 
 interface Exam {
   id: string;
@@ -70,7 +71,6 @@ export default function ExamsPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [exams, setExams] = useState<Exam[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -82,20 +82,10 @@ export default function ExamsPage() {
 
   const fetchData = async () => {
     try {
-      // Fetch user profile to check subscription
-      const profileResponse = await fetch("/api/user/profile");
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json();
-        setUserProfile(profileData);
-        
-        // Only fetch exams if user is subscribed
-        if (profileData.subscriptionStatus === "ACTIVE") {
-          const examsResponse = await fetch("/api/exams");
-          if (examsResponse.ok) {
-            const examsData = await examsResponse.json();
-            setExams(examsData.exams || []);
-          }
-        }
+      const examsResponse = await fetch("/api/exams");
+      if (examsResponse.ok) {
+        const examsData = await examsResponse.json();
+        setExams(examsData.results || []);
       }
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -191,31 +181,7 @@ export default function ExamsPage() {
     );
   }
 
-  // Check if user is subscribed
-  if (userProfile?.subscriptionStatus !== "ACTIVE") {
-    return (
-      <div className="p-6">
-        <Card className="p-8 border-border bg-card">
-          <div className="text-center">
-            <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              Upgrade to Access Exams
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              Exam mode is a Pro feature. Upgrade to create practice exams from your documents.
-            </p>
-            <Button onClick={() => router.push("/dashboard/upgrade")}>
-              <Trophy className="w-4 h-4 mr-2" />
-              Upgrade to Pro
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
   const stats = calculateStats();
-
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -387,7 +353,7 @@ export default function ExamsPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => router.push(`/exam/${exam.id}`)}
+                        onClick={() => router.push(`/dashboard/exams/${exam.id}`)}
                       >
                         {exam.status === "COMPLETED" ? (
                           <>
@@ -410,7 +376,7 @@ export default function ExamsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-card border-border">
                           <DropdownMenuItem
-                            onClick={() => router.push(`/exam/${exam.id}`)}
+                            onClick={() => router.push(`/dashboard/exams/${exam.id}`)}
                             className="cursor-pointer"
                           >
                             <Eye className="w-4 h-4 mr-2" />

@@ -133,7 +133,6 @@ export default function NewExamPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "create",
           documentId: selectedDocument.id,
           title: examConfig.title.trim(),
           timeLimit: examConfig.timeLimit,

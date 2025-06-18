@@ -56,13 +56,13 @@ function AuthErrorContent() {
           <div className="space-y-3 pt-4">
             {isAccessDenied ? (
               <Link href="/auth/sign-up">
-                <Button className="w-full gradient-brand text-white hover:opacity-90 transition-all duration-300">
+                <Button className="w-full gradient-brand hover:opacity-90 transition-all duration-300">
                   Create Account
                 </Button>
               </Link>
             ) : (
               <Link href="/auth/sign-in">
-                <Button className="w-full gradient-brand text-white hover:opacity-90 transition-all duration-300">
+                <Button className="w-full gradient-brand hover:opacity-90 transition-all duration-300">
                   Try Again
                 </Button>
               </Link>

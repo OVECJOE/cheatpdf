@@ -20,7 +20,7 @@ interface UserProfile {
 }
 
 export default function ExamsLayout({ children }: ExamsLayoutProps) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ export default function ExamsLayout({ children }: ExamsLayoutProps) {
     if (status === "authenticated") {
       fetchUserProfile();
     }
-  }, [status, router]);
+  }, [status]);
 
   const fetchUserProfile = async () => {
     try {

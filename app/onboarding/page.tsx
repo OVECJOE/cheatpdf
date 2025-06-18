@@ -480,7 +480,7 @@ export default function OnboardingPage() {
               <Button
                 onClick={() => setStep(2)}
                 disabled={!studentData.educationLevel || !studentData.studyGoals}
-                className="gradient-brand text-white hover:opacity-90 transition-all duration-300"
+                className="gradient-brand hover:opacity-90 transition-all duration-300"
               >
                 Continue
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -606,7 +606,7 @@ export default function OnboardingPage() {
               <Button
                 onClick={completeOnboarding}
                 disabled={isLoading}
-                className="gradient-brand text-white hover:opacity-90 transition-all duration-300"
+                className="gradient-brand hover:opacity-90 transition-all duration-300"
               >
                 {isLoading ? "Setting up your account..." : "Get Started with CheatPDF"}
                 {!isLoading && <ArrowRight className="w-4 h-4 ml-2" />}

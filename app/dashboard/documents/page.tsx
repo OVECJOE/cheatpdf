@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,8 +20,6 @@ import {
   MessageCircle,
   ClipboardList,
   Trash2,
-  Download,
-  Eye,
   Loader2,
   FolderOpen,
   Calendar,
@@ -46,7 +43,6 @@ interface Document {
 }
 
 export default function DocumentsPage() {
-  const { data: session } = useSession();
   const router = useRouter();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -222,7 +218,10 @@ export default function DocumentsPage() {
                       <FileText className="w-5 h-5 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-foreground truncate">
+                      <h3 
+                        className="font-medium text-foreground truncate cursor-pointer hover:text-primary transition-colors"
+                        onClick={() => router.push(`/dashboard/documents/${document.id}`)}
+                      >
                         {document.name}
                       </h3>
                       <p className="text-xs text-muted-foreground truncate">

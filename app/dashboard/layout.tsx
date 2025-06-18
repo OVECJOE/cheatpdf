@@ -189,7 +189,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   </Button>
                   {isProUser && (
                     <Button
-                      onClick={() => router.push("/exam")}
+                      onClick={() => router.push("/dashboard/exams/new")}
                       className="w-full justify-start"
                       variant="outline"
                     >
