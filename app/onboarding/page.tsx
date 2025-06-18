@@ -13,8 +13,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { useState, useMemo } from "react";
 import {
-  BookOpen,
-  GraduationCap,
   ArrowRight,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -30,17 +28,7 @@ type EducationLevel =
   | "PhD"
   | "Professional"
   | "Other";
-type SubjectCategory =
-  | "STEM"
-  | "Liberal Arts"
-  | "Social Sciences"
-  | "Professional"
-  | "Applied";
-type ExamCategory =
-  | "standardized"
-  | "academic"
-  | "professional"
-  | "international";
+
 type StudyGoal =
   | "improve-grades"
   | "exam-prep"
@@ -57,19 +45,6 @@ interface EducationConfig {
   exams: readonly string[];
   goals: readonly StudyGoal[];
   description: string;
-}
-
-interface SubjectConfig {
-  category: SubjectCategory;
-  relatedExams: readonly string[];
-  suggestedGoals: readonly StudyGoal[];
-}
-
-interface ExamConfig {
-  category: ExamCategory;
-  difficulty: number;
-  timeframe: "short" | "medium" | "long";
-  subjects: readonly string[];
 }
 
 interface StudentData {
@@ -348,11 +323,11 @@ export default function OnboardingPage() {
         {step === 1 && (
           <Card className="p-8 bg-card border-border transition-all duration-300 hover:shadow-lg">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-semibold text-foreground mb-3">
-                Let's personalize your study experience
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                Let&apos;s personalize your study experience
               </h2>
               <p className="text-muted-foreground">
-                We'll suggest the best features and content for your needs
+                We&apos;ll suggest the best features and content for your needs
               </p>
             </div>
 
@@ -360,7 +335,7 @@ export default function OnboardingPage() {
               {/* Education Level */}
               <div>
                 <Label className="text-base font-medium text-foreground mb-4 block">
-                  What's your current education level?
+                  What&apos;s your current education level?
                 </Label>
                 <Select
                   value={studentData.educationLevel}
@@ -390,7 +365,7 @@ export default function OnboardingPage() {
               {studentData.educationLevel && (
                 <div>
                   <Label className="text-base font-medium text-foreground mb-4 block">
-                    What's your primary study goal?
+                    What&apos;s your primary study goal?
                   </Label>
                   <div className="grid sm:grid-cols-2 gap-4">
                     {smartSuggestions.goals.map((goal) => (
@@ -493,11 +468,11 @@ export default function OnboardingPage() {
         {step === 2 && (
           <Card className="p-8 bg-card border-border transition-all duration-300 hover:shadow-lg">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-semibold text-foreground mb-3">
-                You're all set!
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                You&apos;re all set!
               </h2>
               <p className="text-muted-foreground">
-                Here's what we've set up for your CheatPDF experience
+                Here&apos;s what we&apos;ve set up for your CheatPDF experience
               </p>
             </div>
 

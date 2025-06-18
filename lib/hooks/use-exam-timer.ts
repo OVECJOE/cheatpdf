@@ -1,6 +1,6 @@
 // Make sure to install idb-keyval: npm install idb-keyval
 import { useState, useEffect } from "react";
-import { get, set } from "idb-keyval";
+import { set } from "idb-keyval";
 
 export function useExamTimer(examId: string, startedAt: string, timeLimit: number) {
   const [timeLeft, setTimeLeft] = useState<number>(() => {

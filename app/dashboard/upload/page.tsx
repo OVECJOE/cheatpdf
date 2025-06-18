@@ -56,10 +56,12 @@ export default function DashboardUploadPage() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      abortControllersRef.current.forEach(controller => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const controllers = abortControllersRef.current;
+      controllers.forEach(controller => {
         controller.abort();
       });
-      abortControllersRef.current.clear();
+      controllers.clear();
     };
   }, []);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 interface ExamTimerProps {
   timeRemaining: number;
@@ -21,6 +21,15 @@ export function ExamTimer({
 }: ExamTimerProps) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastAlertTimeRef = useRef<number>(0);
+
+  const playTimeAlert = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const windowWithPlayTimeAlert = window as unknown as { playTimeAlert?: () => void };
+      if (windowWithPlayTimeAlert.playTimeAlert) {
+        windowWithPlayTimeAlert.playTimeAlert();
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!isActive || timeRemaining <= 0) {
@@ -46,9 +55,7 @@ export function ExamTimer({
           (newTime === 300 || newTime === 60 || newTime === 30) &&
           now - lastAlertTimeRef.current > 1000 // Prevent multiple alerts
         ) {
-          if (typeof window !== 'undefined' && (window as any).playTimeAlert) {
-            (window as any).playTimeAlert();
-          }
+          playTimeAlert();
           lastAlertTimeRef.current = now;
         }
       }
@@ -64,6 +71,7 @@ export function ExamTimer({
         intervalRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, timeRemaining, timeLimit, soundEnabled]);
 
   // Cleanup on unmount

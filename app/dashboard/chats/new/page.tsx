@@ -8,7 +8,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft,
   FileText,
   MessageCircle,
   Upload,
@@ -65,7 +64,7 @@ export default function NewChatPage() {
     if (selectedDocument) {
       setChatTitle(`Chat with ${selectedDocument.name}`);
     }
-  }, [searchParams, documents]);
+  }, [searchParams, documents, selectedDocument]);
 
   const fetchDocuments = async () => {
     try {
@@ -333,7 +332,7 @@ export default function NewChatPage() {
                           <div className="text-sm">
                             <p className="text-amber-800 font-medium">Document Processing</p>
                             <p className="text-amber-700">
-                              This document is still being processed. You can create the chat, but it may take a moment before it's ready for conversation.
+                              This document is still being processed. You can create the chat, but it may take a moment before it&apos;s ready for conversation.
                             </p>
                           </div>
                         </div>

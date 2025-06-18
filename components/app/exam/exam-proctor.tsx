@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 
 interface ExamProctorProps {
   isActive: boolean;
@@ -17,6 +17,34 @@ export function ExamProctor({
   onTimeAlert,
   onWarning,
 }: ExamProctorProps) {
+  const playWarningSound = useCallback(() => {
+    if (!soundEnabled) return;
+    
+    try {
+      const audio = new Audio(
+        "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+D0u2YUBTGEFlMxr2JUcays"
+      );
+      audio.volume = 0.3;
+      audio.play().catch(() => {});
+    } catch (error) {
+      console.warn("Could not play warning sound:", error);
+    }
+  }, [soundEnabled]);
+
+  const playTimeAlert = useCallback(() => {
+    if (!soundEnabled) return;
+    
+    try {
+      const audio = new Audio(
+        "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+D0u2YUBTGE2vC9dywF"
+      );
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+    } catch (error) {
+      console.warn("Could not play time alert:", error);
+    }
+  }, [soundEnabled]);
+
   // Prevent tab switching and page leaving
   useEffect(() => {
     if (!isActive) return;
@@ -74,6 +102,7 @@ export function ExamProctor({
       document.removeEventListener("contextmenu", handleContextMenu);
       document.removeEventListener("selectstart", handleSelectStart);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, soundEnabled]);
 
   // Fullscreen management
@@ -89,44 +118,18 @@ export function ExamProctor({
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
-
-  const playWarningSound = () => {
-    if (!soundEnabled) return;
-    
-    try {
-      const audio = new Audio(
-        "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+D0u2YUBTGEFlMxr2JUcays"
-      );
-      audio.volume = 0.3;
-      audio.play().catch(() => {});
-    } catch (error) {
-      console.warn("Could not play warning sound:", error);
-    }
-  };
-
-  const playTimeAlert = () => {
-    if (!soundEnabled) return;
-    
-    try {
-      const audio = new Audio(
-        "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+D0u2YUBTGE2vC9dywF"
-      );
-      audio.volume = 0.5;
-      audio.play().catch(() => {});
-    } catch (error) {
-      console.warn("Could not play time alert:", error);
-    }
-  };
 
   // Expose time alert function to parent
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).playTimeAlert = () => {
+      (window as unknown as Record<string, unknown>).playTimeAlert = () => {
         playTimeAlert();
         onTimeAlert(); // Call the prop function as well
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [soundEnabled]);
 
   return null; // This component doesn't render anything

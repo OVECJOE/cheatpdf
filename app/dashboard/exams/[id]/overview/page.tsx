@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,7 +25,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import ExamSidebar from "@/components/app/exam/overview-sidebar";
 import ExamInfoCard from "@/components/app/exam/overview-info-card";
 import ExamPrepTipsCard from "@/components/app/exam/overview-prep-tips";
-import Link from "next/link";
+
+interface Question {
+  id: string;
+  question: string;
+  correctAnswer: string;
+  userAnswer?: string;
+  explanation: string;
+}
 
 interface Exam {
   id: string;
@@ -38,7 +45,7 @@ interface Exam {
   startedAt?: string;
   completedAt?: string;
   createdAt: string;
-  questions: any[];
+  questions: Question[];
 }
 
 export default function ExamOverviewPage() {
@@ -50,13 +57,7 @@ export default function ExamOverviewPage() {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
 
-  useEffect(() => {
-    if (examId) {
-      fetchExam();
-    }
-  }, [examId]);
-
-  const fetchExam = async () => {
+  const fetchExam = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -67,12 +68,19 @@ export default function ExamOverviewPage() {
       } else {
         throw new Error(data.error);
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to load exam");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to load exam";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, [examId]);
+
+  useEffect(() => {
+    if (examId) {
+      fetchExam();
+    }
+  }, [examId, fetchExam]);
 
   const handleStartExam = async () => {
     if (!exam) return;
@@ -93,8 +101,7 @@ export default function ExamOverviewPage() {
         toast.error(errorData.error || "Failed to start exam");
       }
     } catch (error) {
-      console.error("Error starting exam:", error);
-      toast.error("Failed to start exam");
+      toast.error((error as Error).message || "Failed to start exam");
     } finally {
       setStarting(false);
     }
@@ -162,7 +169,7 @@ export default function ExamOverviewPage() {
           <div className="space-y-2 mb-4">
             <h2 className="text-xl font-bold text-foreground">Exam Not Found</h2>
             <p className="text-muted-foreground">
-              The exam you're looking for doesn't exist or you don't have access to it.
+              The exam you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
             </p>
           </div>
           <Button

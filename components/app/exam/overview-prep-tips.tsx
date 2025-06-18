@@ -13,7 +13,7 @@ export default function ExamPrepTipsCard() {
               </div>
               <div>
                 <p className="font-medium text-foreground">Review the document</p>
-                <p className="text-sm text-muted-foreground">Make sure you're familiar with the content</p>
+                <p className="text-sm text-muted-foreground">Make sure you&apos;re familiar with the content</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">

@@ -10,9 +10,7 @@ import {
   MessageCircle,
   ClipboardList,
   Upload,
-  Plus,
   TrendingUp,
-  Calendar,
   Crown,
   Loader2,
   ArrowRight,
@@ -141,7 +139,7 @@ export default function DashboardPage() {
           Welcome back{userProfile?.name ? `, ${userProfile.name}` : ""}!
         </h1>
         <p className="text-muted-foreground">
-          Here's what's happening with your documents and studies.
+          Here&apos;s what&apos;s happening with your documents and studies.
         </p>
       </div>
 
