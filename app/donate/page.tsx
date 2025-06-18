@@ -123,39 +123,39 @@ const DonationPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-background via-surface-secondary to-surface-tertiary">
       <AppHeader />
 
       {/* Hero Section */}
-      <section className="py-16 px-4">
+      <section className="py-12 sm:py-16 lg:py-20 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           <div className="space-y-6">
             <Badge
               variant="outline"
-              className="text-brand-amber border-primary/30 text-xs sm:text-sm"
+              className="text-primary border-primary text-xs sm:text-sm"
             >
-              <Heart className="inline-block mr-1" />
+              <Heart className="inline w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               Your Donation Matters
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
               Help Students{" "}
-              <span className="gradient-brand bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Study Smarter
               </span>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
               Your donation provides pro access to students who can&apos;t
               afford it, giving them the tools they need to succeed
               academically.
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mt-12">
-              <Card className="p-6 text-center bg-card border-border transition-all duration-300 hover:shadow-lg">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto">
-                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+              <Card className="p-4 sm:p-6 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
                 <div className="text-center mt-4 space-y-1">
-                  <h3 className="text-3xl font-bold text-blue-600">
+                  <h3 className="text-3xl font-bold text-primary">
                     {isStatsLoading
                       ? "..."
                       : donationStats.totalStudentsHelped.toLocaleString()}
@@ -166,12 +166,12 @@ const DonationPage = () => {
                 </div>
               </Card>
 
-              <Card className="p-6 text-center bg-card border-border transition-all duration-300 hover:shadow-lg">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto">
-                  <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+              <Card className="p-4 sm:p-6 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto">
+                  <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-secondary" />
                 </div>
                 <div className="text-center mt-4 space-y-1">
-                  <h3 className="text-3xl font-bold text-green-600">
+                  <h3 className="text-3xl font-bold text-secondary">
                     $
                     {isStatsLoading
                       ? "..."
@@ -183,12 +183,12 @@ const DonationPage = () => {
                 </div>
               </Card>
 
-              <Card className="p-6 text-center bg-card border-border transition-all duration-300 hover:shadow-lg">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto">
-                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+              <Card className="p-4 sm:p-6 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
                 <div className="text-center mt-4 space-y-1">
-                  <h3 className="text-3xl font-bold text-purple-600">
+                  <h3 className="text-3xl font-bold text-primary">
                     {isStatsLoading
                       ? "..."
                       : donationStats.currentMonthStudents}
@@ -204,12 +204,12 @@ const DonationPage = () => {
       </section>
 
       {/* Donation Form Section */}
-      <section className="py-16 px-4 bg-muted/30">
+      <section className="py-12 sm:py-16 lg:py-20 px-4 bg-muted/50">
         <div className="container mx-auto max-w-2xl">
-          <Card className="p-8 bg-card border-border transition-all duration-300 hover:shadow-lg">
+          <Card className="p-6 sm:p-8 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
             <div className="space-y-6">
               <div className="text-center space-y-3">
-                <h2 className="text-2xl font-bold text-foreground">
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
                   Make a Donation
                 </h2>
                 <p className="text-muted-foreground">
@@ -293,7 +293,7 @@ const DonationPage = () => {
                         handleInputChange("studentsToHelp", parseInt(value))
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select number" />
                       </SelectTrigger>
                       <SelectContent>
@@ -315,7 +315,7 @@ const DonationPage = () => {
                         handleInputChange("donationFrequency", value)
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
                       <SelectContent>
@@ -333,12 +333,12 @@ const DonationPage = () => {
       </section>
 
       {/* Summary and Checkout */}
-      <section className="py-16 px-4">
+      <section className="py-12 sm:py-16 lg:py-20 px-4">
         <div className="container mx-auto max-w-2xl">
-          <Card className="p-8 bg-card border-border transition-all duration-300 hover:shadow-lg">
+          <Card className="p-6 sm:p-8 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
             <div className="space-y-6">
               <div className="text-center space-y-3">
-                <h2 className="text-2xl font-bold text-foreground">
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
                   Donation Summary
                 </h2>
               </div>
@@ -361,7 +361,7 @@ const DonationPage = () => {
                     <span className="text-lg font-semibold text-foreground">
                       Total Amount:
                     </span>
-                    <span className="text-2xl font-bold text-brand-amber">
+                    <span className="text-2xl font-bold text-primary">
                       ${calculateDonationAmount()}
                     </span>
                   </div>
@@ -373,7 +373,7 @@ const DonationPage = () => {
 
               <div className="bg-muted/50 border border-border rounded-lg p-4">
                 <div className="flex items-start space-x-3">
-                  <Star className="w-5 h-5 text-brand-amber mt-0.5" />
+                  <Star className="w-5 h-5 text-primary mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-foreground">
                       Impact of Your Donation

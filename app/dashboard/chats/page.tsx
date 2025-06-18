@@ -313,7 +313,7 @@ export default function ChatsPage() {
                             View Chat
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => router.push(`/dashboard/documents?highlight=${chat.document.id}`)}
+                            onClick={() => router.push(`/dashboard/documents/${chat.document.id}`)}
                             className="cursor-pointer"
                           >
                             <FileText className="w-4 h-4 mr-2" />

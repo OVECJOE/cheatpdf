@@ -172,7 +172,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </SheetHeader>
                 <div className="space-y-4 mt-6">
                   <Button
-                    onClick={() => router.push("/upload")}
+                    onClick={() => router.push("/dashboard/upload")}
                     className="w-full justify-start"
                     variant="outline"
                   >
@@ -180,7 +180,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     Upload Document
                   </Button>
                   <Button
-                    onClick={() => router.push("/chat")}
+                    onClick={() => router.push("/dashboard/chats/new")}
                     className="w-full justify-start"
                     variant="outline"
                   >

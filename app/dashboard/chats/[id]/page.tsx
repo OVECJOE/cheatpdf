@@ -286,7 +286,7 @@ export default function ChatDetailPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-card border-border">
               <DropdownMenuItem
-                onClick={() => router.push(`/dashboard/documents?highlight=${chat.document.id}`)}
+                onClick={() => router.push(`/dashboard/documents/${chat.document.id}`)}
                 className="cursor-pointer"
               >
                 <FileText className="w-4 h-4 mr-2" />

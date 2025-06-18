@@ -383,7 +383,7 @@ export default function ExamsPage() {
                             View Exam
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => router.push(`/dashboard/documents?highlight=${exam.document.id}`)}
+                            onClick={() => router.push(`/dashboard/documents/${exam.document.id}`)}
                             className="cursor-pointer"
                           >
                             <FileText className="w-4 h-4 mr-2" />

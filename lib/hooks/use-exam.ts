@@ -256,9 +256,6 @@ export function useExam({ examId, onError }: UseExamProps) {
 
   // Complete exam
   const handleCompleteExam = useCallback(async () => {
-    console.log(exam?.id);
-    if (!exam) return;
-
     setSubmitting(true);
     try {
       const response = await fetch(`/api/exams/${examId}`, {

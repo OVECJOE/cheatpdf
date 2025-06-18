@@ -278,7 +278,7 @@ export default function ExamOverviewPage() {
                                     <p className="text-xs truncate max-w-xs">{q.question}</p>
                                   </TooltipTrigger>
                                   <TooltipContent side="bottom" sideOffset={5} className="max-w-xs">
-                                    <p className="text-sm text-white">{q.question}</p>
+                                    <p className="text-base font-medium">{q.question}</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </td>
@@ -312,7 +312,7 @@ export default function ExamOverviewPage() {
                                     <p className="text-xs font-medium truncate max-w-xs">{q.explanation}</p>
                                   </TooltipTrigger>
                                   <TooltipContent side="bottom" sideOffset={5} className="max-w-xs">
-                                    <p className="text-sm text-white">{q.explanation}</p>
+                                    <p className="text-base font-medium">{q.explanation}</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </td>
@@ -371,12 +371,10 @@ export default function ExamOverviewPage() {
                   </p>
                 </div>
                 <div className="flex justify-end">
-                  <Link href={`/dashboard/exams/${examId}/take`}>
-                    <Button className="gradient-brand hover:opacity-90 transition-all duration-300">
-                      <Play className="w-4 h-4" />
-                      Take Exam
-                    </Button>
-                  </Link>
+                  <Button onClick={handleStartExam} className="gradient-brand hover:opacity-90 transition-all duration-300">
+                    <Play className="w-4 h-4" />
+                    Take Exam
+                  </Button>
                 </div>
               </Card>
             </div>

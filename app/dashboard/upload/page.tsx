@@ -422,17 +422,14 @@ export default function DashboardUploadPage() {
                     {file.status === "completed" && (
                       <div className="flex space-x-2">
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => router.push(`/chat?document=${file.documentId}`)}
-                          className="text-xs"
+                          onClick={() => router.push(`/dashboard/chats/new?document=${file.documentId}`)}
+                          className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
                         >
-                          <MessageCircle className="w-3 h-3 mr-1" />
+                          <MessageCircle className="w-4 h-4" />
                           Chat
                         </Button>
                         <Button
                           variant="outline"
-                          size="sm"
                           onClick={() => router.push(`/dashboard/exams/new?document=${file.documentId}`)}
                           className="text-xs"
                         >
@@ -473,12 +470,11 @@ export default function DashboardUploadPage() {
                 </div>
                 <div className="flex space-x-2">
                   <Button 
-                    onClick={() => router.push("/chat")}
-                    className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                    disabled={hasUploading}
+                    onClick={() => router.push("/dashboard/chats/new")}
+                    className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Start Chatting
+                    <MessageCircle className="w-4 h-4" />
+                    Start New Chat
                   </Button>
                   <Button 
                     variant="outline"

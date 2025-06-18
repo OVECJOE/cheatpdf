@@ -106,10 +106,10 @@ const DonationSuccess = () => {
 
   if (error || !donation) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-b from-background via-surface-secondary to-surface-tertiary">
         <AppHeader />
         <div className="container mx-auto max-w-2xl px-4 py-16">
-          <Card className="p-8 text-center bg-card border-border transition-all duration-300 hover:shadow-lg">
+          <Card className="p-6 sm:p-8 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-red-600" />
             </div>
@@ -145,124 +145,137 @@ const DonationSuccess = () => {
   const targetLanguage = donation.metadata.targetLanguage || "Any Language";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-background via-surface-secondary to-surface-tertiary">
       <AppHeader />
 
       {/* Success Hero Section */}
-      <section className="py-16 px-4">
+      <section className="py-12 sm:py-16 lg:py-20 px-4">
         <div className="container mx-auto max-w-2xl text-center">
           <div className="space-y-6">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle className="w-12 h-12 text-green-600" />
+              <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
-
-            <Badge
-              variant="outline"
-              className="text-green-600 border-green-600 text-sm"
-            >
-              <Heart className="inline-block mr-1 w-4 h-4" />
-              Donation Successful
-            </Badge>
-
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground leading-tight">
               Thank You for Your{" "}
-              <span className="gradient-brand bg-clip-text text-transparent">
-                Generosity!
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Generous Donation!
               </span>
             </h1>
-
-            <p className="text-lg text-muted-foreground">
-              Your donation of <strong className="text-brand-amber">${donation.amount}</strong> will help{" "}
-              <strong className="text-brand-amber">
-                {studentsCount} student{studentsCount !== 1 ? "s" : ""}
-              </strong>{" "}
-              access premium study tools and succeed academically.
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
+              Your contribution will make a real difference in students&apos; lives.
+              Here&apos;s what your donation will accomplish:
             </p>
           </div>
         </div>
       </section>
 
-      {/* Donation Summary */}
-      <section className="py-8 px-4">
-        <div className="container mx-auto max-w-xl">
-          <Card className="p-6 bg-primary/5 border-primary/20 transition-all duration-300 hover:shadow-lg">
-            <h2 className="text-xl font-bold mb-4 text-center text-foreground">
-              Donation Summary
-            </h2>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-primary" />
-                  <span className="text-muted-foreground">Amount</span>
-                </div>
-                <span className="font-semibold text-foreground">${donation.amount}</span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-primary" />
-                  <span className="text-muted-foreground">Students Helped</span>
-                </div>
-                <span className="font-semibold text-foreground">{studentsCount}</span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <span className="text-muted-foreground">Frequency</span>
-                </div>
-                <span className="font-semibold text-foreground">
-                  {getDonationFrequencyText(donation.metadata.donationFrequency)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-primary" />
-                  <span className="text-muted-foreground">Target Region</span>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold text-foreground">{targetCountry}</div>
-                  {targetLanguage !== "Any Language" && (
-                    <div className="text-sm text-muted-foreground">
-                      {targetLanguage}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Impact Section */}
-      <section className="py-8 px-4">
-        <div className="container mx-auto max-w-2xl">
-          <Card className="p-6 bg-card border-border transition-all duration-300 hover:shadow-lg">
-            <div className="text-center space-y-4">
-              <h2 className="text-xl font-bold text-foreground">Your Impact</h2>
-              <div className="space-y-3">
-                <div className="flex items-center justify-center gap-2">
-                  <Heart className="w-5 h-5 text-red-500" />
-                  <span className="text-muted-foreground">
-                    You've helped {studentsCount} student{studentsCount !== 1 ? "s" : ""} access AI study tools
-                  </span>
-                </div>
-                <div className="bg-muted/50 border border-border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">
-                    Your donation will provide full access to premium features like 
-                    unlimited document chats, exam generation, and personalized study plans.
+      {/* Impact Summary */}
+      <section className="py-12 sm:py-16 lg:py-20 px-4 bg-muted/50">
+        <div className="container mx-auto max-w-4xl">
+          <div className="grid md:grid-cols-2 gap-8">
+            <Card className="p-6 sm:p-8 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Heart className="w-8 h-8 text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-foreground mb-2">
+                    Your Impact
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Here&apos;s what your donation will provide:
                   </p>
                 </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <Users className="w-5 h-5 text-primary" />
+                      <span className="text-foreground font-medium">Students Helped</span>
+                    </div>
+                    <span className="text-2xl font-bold text-primary">
+                      {studentsCount}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <DollarSign className="w-5 h-5 text-secondary" />
+                      <span className="text-foreground font-medium">Donation Amount</span>
+                    </div>
+                    <span className="text-2xl font-bold text-secondary">
+                      ${donation.amount}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <Calendar className="w-5 h-5 text-primary" />
+                      <span className="text-foreground font-medium">Frequency</span>
+                    </div>
+                    <span className="text-lg font-semibold text-foreground">
+                      {donation.metadata.donationFrequency === "MONTHLY" && "Monthly"}
+                      {donation.metadata.donationFrequency === "QUARTERLY" && "Quarterly"}
+                      {donation.metadata.donationFrequency === "BIANNUAL" && "Bi-annual"}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+
+            <Card className="p-6 sm:p-8 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Globe className="w-8 h-8 text-secondary" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-foreground mb-2">
+                    Target Demographics
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Your donation will help students in:
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 bg-secondary/5 rounded-lg">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <Globe className="w-5 h-5 text-secondary" />
+                      <span className="text-foreground font-medium">Target Country</span>
+                    </div>
+                    <p className="text-lg font-semibold text-secondary">
+                      {targetCountry}
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-primary/5 rounded-lg">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <Users className="w-5 h-5 text-primary" />
+                      <span className="text-foreground font-medium">Target Language</span>
+                    </div>
+                    <p className="text-lg font-semibold text-primary">
+                      {targetLanguage}
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <Heart className="w-5 h-5 text-primary" />
+                      <span className="text-foreground font-medium">Donor Information</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Email:</strong> {donation.donorEmail}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
         </div>
       </section>
 
       {/* Action Buttons */}
-      <section className="py-8 px-4">
+      <section className="py-12 sm:py-16 lg:py-20 px-4">
         <div className="container mx-auto max-w-2xl">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button

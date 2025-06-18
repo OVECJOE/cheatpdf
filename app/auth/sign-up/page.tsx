@@ -116,13 +116,9 @@ export default function SignUpPage() {
           <input id="terms" type="checkbox" className="rounded accent-primary" required />
           <Label htmlFor="terms" className="text-sm text-muted-foreground inline leading-relaxed">
             I agree to the{" "}
-            <Link href="/terms" className="text-primary hover:text-primary/80 underline">
-              Terms of Service
-            </Link>{" "}
+            <span className="text-primary font-semibold">Terms of Service</span>{" "}
             and{" "}
-            <Link href="/privacy" className="text-primary hover:text-primary/80 underline">
-              Privacy Policy
-            </Link>
+            <span className="text-primary font-semibold">Privacy Policy</span>
           </Label>
         </div>
 

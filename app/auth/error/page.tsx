@@ -81,12 +81,9 @@ function AuthErrorContent() {
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
           Need help?{" "}
-          <Link
-            href="/support"
-            className="text-brand-amber hover:text-primary/80 font-semibold transition-colors duration-200"
-          >
-            Contact Support
-          </Link>
+          <span className="text-brand-amber font-semibold">
+            Contact us at support@cheatpdf.com
+          </span>
         </p>
       </div>
     </div>
