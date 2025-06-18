@@ -7,22 +7,25 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
-  Play,
   Clock,
   Target,
-  FileText,
-  Brain,
   CheckCircle,
   AlertCircle,
   TrendingUp,
-  Shield,
-  Zap,
   Loader2,
-  Eye,
   BarChart3,
+  ArrowRight,
+  Play,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import clsx from "clsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import ExamSidebar from "@/components/app/exam/overview-sidebar";
+import ExamInfoCard from "@/components/app/exam/overview-info-card";
+import ExamPrepTipsCard from "@/components/app/exam/overview-prep-tips";
+import Link from "next/link";
 
 interface Exam {
   id: string;
@@ -179,16 +182,8 @@ export default function ExamOverviewPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/dashboard/exams")}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Exams
-          </Button>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-start justify-between w-full space-x-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">{exam.title}</h1>
             <div className="flex items-center space-x-4 mt-1">
@@ -198,330 +193,196 @@ export default function ExamOverviewPage() {
               </p>
             </div>
           </div>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="flex items-center space-x-2">
           <Button
-            variant="default"
-            size="sm"
-            className="gradient-brand hover:opacity-90 transition-all duration-300"
+            variant="ghost"
+            onClick={() => router.push("/dashboard/exams")}
+            className="text-muted-foreground hover:text-foreground"
           >
-            Overview
+            Back to Exams
+            <ArrowRight className="w-4 h-4" />
           </Button>
-          {exam.status !== "NOT_STARTED" && (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push(`/dashboard/exams/${examId}/take`)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Take Exam
-              </Button>
-              {exam.status === "COMPLETED" && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.push(`/dashboard/exams/${examId}/results`)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Results
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.push(`/dashboard/exams/${examId}/analytics`)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Analytics
-                  </Button>
-                </>
-              )}
-            </>
-          )}
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Exam Info Card */}
-          <Card className="p-6 bg-card border-border">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-4">Exam Information</h3>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <FileText className="w-5 h-5 text-primary" />
-                      <div>
-                        <p className="font-medium text-foreground">Source Document</p>
-                        <p className="text-sm text-muted-foreground">{exam.document.name}</p>
-                      </div>
+      <Tabs defaultValue="overview" className="w-full space-y-5">
+        {/* Tabs Navigation */}
+        {exam.status === "COMPLETED" && (
+          <TabsList className="mt-2 md:mt-0 w-full">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="results">Results</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
+        )}
+        {exam.status !== "COMPLETED" && (
+          <TabsList className="w-full mt-2 md:mt-0">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="take">Take Exam</TabsTrigger>
+          </TabsList>
+        )}
+        <TabsContent value="overview">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Exam Info Card */}
+              <ExamInfoCard exam={exam} difficulty={difficulty} color={color} timePerQuestion={timePerQuestion} />
+              {/* Preparation Tips */}
+              <ExamPrepTipsCard />
+            </div>
+            {/* Sidebar */}
+            <ExamSidebar exam={exam} examId={examId} handleStartExam={handleStartExam} starting={starting} router={router} />
+          </div>
+        </TabsContent>
+        <TabsContent value="results">
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="p-6 bg-card border-border">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground">Results</h3>
+                  <div className="flex flex-col md:flex-row md:items-center md:gap-8 gap-2 md:justify-between border border-primary/50 rounded-sm p-2 bg-primary/5">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                      <span className="font-medium text-foreground">Final Score:</span>
+                      <span className="text-2xl font-bold text-primary">{exam.score}%</span>
                     </div>
-
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-2">
                       <Target className="w-5 h-5 text-primary" />
-                      <div>
-                        <p className="font-medium text-foreground">Questions</p>
-                        <p className="text-sm text-muted-foreground">{exam.totalQuestions} multiple choice</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                      <Clock className="w-5 h-5 text-primary" />
-                      <div>
-                        <p className="font-medium text-foreground">Time Limit</p>
-                        <p className="text-sm text-muted-foreground">{exam.timeLimit} minutes total</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <Brain className="w-5 h-5 text-primary" />
-                      <div>
-                        <p className="font-medium text-foreground">Difficulty</p>
-                        <Badge className={color}>{difficulty}</Badge>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                      <Zap className="w-5 h-5 text-primary" />
-                      <div>
-                        <p className="font-medium text-foreground">Pace</p>
-                        <p className="text-sm text-muted-foreground">~{timePerQuestion} min per question</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                      <Shield className="w-5 h-5 text-primary" />
-                      <div>
-                        <p className="font-medium text-foreground">Security</p>
-                        <p className="text-sm text-muted-foreground">Proctoring enabled</p>
-                      </div>
+                      <span className="font-medium text-foreground">Correct:</span>
+                      <span className="text-lg font-bold text-green-600">{exam.questions.filter(q => q.userAnswer === q.correctAnswer).length}</span>
+                      <span className="text-muted-foreground">/ {exam.totalQuestions}</span>
                     </div>
                   </div>
                 </div>
-              </div>
+                <div className="flex flex-col gap-6">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-border">
+                      <thead>
+                        <tr>
+                          <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground">No.</th>
+                          <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground">Question</th>
+                          <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground">Your Answer</th>
+                          <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground">Correct</th>
+                          <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground">Result</th>
+                          <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground">Explanation</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {exam.questions.map((q, idx) => {
+                          const isCorrect = q.correctAnswer === q.userAnswer;
 
-              {exam.status === "COMPLETED" && (
-                <div className="pt-4 border-t border-border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">Final Score</p>
-                      <p className="text-2xl font-bold text-primary">{exam.score}%</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Completed</p>
-                      <p className="text-sm font-medium text-foreground">
-                        {exam.completedAt && formatDistanceToNow(new Date(exam.completedAt))} ago
-                      </p>
-                    </div>
+                          return (
+                            <tr key={q.id} className="odd:bg-muted/30 even:bg-background">
+                              <td className="px-2 py-2 align-top text-xs">{idx + 1}</td>
+                              <td className="px-2 py-2 align-top">
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <p className="text-xs truncate max-w-xs">{q.question}</p>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="bottom" sideOffset={5} className="max-w-xs">
+                                    <p className="text-sm text-white">{q.question}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </td>
+                              <td className="px-2 py-2 align-top">
+                                <Badge
+                                  variant='outline'
+                                  className="text-xs font-semibold"
+                                >
+                                  {q.userAnswer || 'N/A'}
+                                </Badge>
+                              </td>
+                              <td className="px-2 py-2 align-top">
+                                <Badge variant="outline" className="text-xs font-semibold">
+                                  {q.correctAnswer}
+                                </Badge>
+                              </td>
+                              <td className="px-2 py-2 align-top">
+                                <Badge
+                                  variant="outline"
+                                  className={clsx("font-semibold text-xs", {
+                                    "text-green-600 bg-green-100 border-green-200": isCorrect,
+                                    "text-red-600 bg-red-100 border-red-200": !isCorrect
+                                  })}
+                                >
+                                  {isCorrect ? 'correct' : 'incorrect'}
+                                </Badge>
+                              </td>
+                              <td className="px-2 py-2 align-top">
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <p className="text-xs font-medium truncate max-w-xs">{q.explanation}</p>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="bottom" sideOffset={5} className="max-w-xs">
+                                    <p className="text-sm text-white">{q.explanation}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-              )}
+              </Card>
             </div>
-          </Card>
-
-          {/* Preparation Tips */}
-          <Card className="p-6 bg-card border-border">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Preparation Tips</h3>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5">
-                      <span className="text-xs font-bold text-primary">1</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Review the document</p>
-                      <p className="text-sm text-muted-foreground">Make sure you're familiar with the content</p>
-                    </div>
+            <ExamSidebar exam={exam} examId={examId} handleStartExam={handleStartExam} starting={starting} router={router} />
+          </div>
+        </TabsContent>
+        <TabsContent value="analytics">
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="p-6 bg-card border-border">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Analytics</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg bg-muted/50">
+                    <BarChart3 className="w-8 h-8 text-primary" />
+                    <span className="text-lg font-semibold text-foreground">Questions Answered</span>
+                    <span className="text-2xl font-bold text-primary">{exam.questions.filter(q => q.userAnswer).length} / {exam.totalQuestions}</span>
                   </div>
-
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5">
-                      <span className="text-xs font-bold text-primary">2</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Find a quiet space</p>
-                      <p className="text-sm text-muted-foreground">Minimize distractions for better focus</p>
-                    </div>
+                  <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg bg-muted/50">
+                    <Target className="w-8 h-8 text-primary" />
+                    <span className="text-lg font-semibold text-foreground">Correct Answers</span>
+                    <span className="text-2xl font-bold text-green-600">{exam.questions.filter(q => q.userAnswer === q.correctAnswer).length}</span>
                   </div>
-
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5">
-                      <span className="text-xs font-bold text-primary">3</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Check your internet</p>
-                      <p className="text-sm text-muted-foreground">Ensure stable connection throughout</p>
-                    </div>
+                  <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg bg-muted/50">
+                    <Clock className="w-8 h-8 text-primary" />
+                    <span className="text-lg font-semibold text-foreground">Time Limit</span>
+                    <span className="text-2xl font-bold text-primary">{exam.timeLimit} min</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg bg-muted/50">
+                    <TrendingUp className="w-8 h-8 text-primary" />
+                    <span className="text-lg font-semibold text-foreground">Score</span>
+                    <span className="text-2xl font-bold text-primary">{exam.score}%</span>
                   </div>
                 </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5">
-                      <span className="text-xs font-bold text-primary">4</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Read carefully</p>
-                      <p className="text-sm text-muted-foreground">Take time to understand each question</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5">
-                      <span className="text-xs font-bold text-primary">5</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Manage your time</p>
-                      <p className="text-sm text-muted-foreground">Keep track of remaining time</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5">
-                      <span className="text-xs font-bold text-primary">6</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Stay focused</p>
-                      <p className="text-sm text-muted-foreground">Avoid switching tabs or windows</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              </Card>
             </div>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Action Card */}
-          <Card className="p-6 bg-card border-border sticky top-6">
-            <div className="space-y-6">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  {exam.status === "COMPLETED" ? (
-                    <CheckCircle className="w-8 h-8 text-green-600" />
-                  ) : exam.status === "IN_PROGRESS" ? (
-                    <Clock className="w-8 h-8 text-blue-600" />
-                  ) : (
-                    <Play className="w-8 h-8 text-primary" />
-                  )}
-                </div>
-
-                <div className="space-y-1 mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {exam.status === "COMPLETED"
-                      ? "Exam Completed"
-                      : exam.status === "IN_PROGRESS"
-                        ? "Continue Exam"
-                        : "Ready to Start"
-                    }
-                  </h3>
-
+            <ExamSidebar exam={exam} examId={examId} handleStartExam={handleStartExam} starting={starting} router={router} />
+          </div>
+        </TabsContent>
+        <TabsContent value="take">
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="p-6 bg-card border-border">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Take Exam</h3>
                   <p className="text-muted-foreground">
-                    {exam.status === "COMPLETED"
-                      ? "Review your results and performance"
-                      : exam.status === "IN_PROGRESS"
-                        ? "Resume where you left off"
-                        : "Take the exam when you're ready"
-                    }
+                    You can take the exam now.
                   </p>
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                {exam.status === "NOT_STARTED" && (
-                  <Button
-                    onClick={handleStartExam}
-                    disabled={starting}
-                    className="w-full gradient-brand hover:opacity-90 transition-all duration-300"
-                  >
-                    {starting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Starting...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4 mr-2" />
-                        Start Exam
-                      </>
-                    )}
-                  </Button>
-                )}
-
-                {exam.status === "IN_PROGRESS" && (
-                  <Button
-                    onClick={() => router.push(`/dashboard/exams/${examId}/take`)}
-                    className="w-full gradient-brand hover:opacity-90 transition-all duration-300"
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    Continue Exam
-                  </Button>
-                )}
-
-                {exam.status === "COMPLETED" && (
-                  <>
-                    <Button
-                      onClick={() => router.push(`/dashboard/exams/${examId}/results`)}
-                      className="w-full gradient-brand hover:opacity-90 transition-all duration-300"
-                    >
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      View Results
+                <div className="flex justify-end">
+                  <Link href={`/dashboard/exams/${examId}/take`}>
+                    <Button className="gradient-brand hover:opacity-90 transition-all duration-300">
+                      <Play className="w-4 h-4" />
+                      Take Exam
                     </Button>
-
-                    <Button
-                      variant="outline"
-                      onClick={() => router.push(`/dashboard/exams/${examId}/analytics`)}
-                      className="w-full border-border text-foreground hover:bg-muted transition-all duration-300"
-                    >
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Analytics
-                    </Button>
-                  </>
-                )}
-
-                <Button
-                  variant="outline"
-                  onClick={() => router.push(`/dashboard/documents/${exam.document.id}`)}
-                  className="w-full border-border text-foreground hover:bg-muted transition-all duration-300"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  View Document
-                </Button>
-              </div>
+                  </Link>
+                </div>
+              </Card>
             </div>
-          </Card>
-
-          {/* Quick Stats */}
-          <Card className="p-4 bg-card border-border">
-            <h4 className="font-semibold text-foreground mb-3">Quick Stats</h4>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Pass Rate</span>
-                <span className="text-sm font-medium text-foreground">70%+</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Avg Completion</span>
-                <span className="text-sm font-medium text-foreground">{exam.timeLimit - 5} min</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Question Type</span>
-                <span className="text-sm font-medium text-foreground">Multiple Choice</span>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 } 

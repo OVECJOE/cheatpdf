@@ -1,6 +1,7 @@
 import { createQuestionGenerationChain } from "../core/mistral";
 import db from "../config/db";
 import { ExamStatus, SubscriptionStatus } from "@prisma/client";
+import {vectorStore} from "@/lib/core/vector-store";
 
 interface QuestionData {
     question: string;
@@ -91,6 +92,7 @@ export class ExamService {
         documentId: string,
         title: string,
         timeLimit: number,
+        difficultyLevel: string,
         numQuestions: number = 10,
     ): Promise<{ id: string; title: string; status: ExamStatus }> {
         try {
@@ -113,11 +115,34 @@ export class ExamService {
                 throw new Error("Document must be vectorized before creating an exam");
             }
 
+            // Get relevant context from the vector store
+            const relevantDocs = await vectorStore.similaritySearch(
+                title,
+                userId,
+                40,
+                documentId,
+            );
+            const context = relevantDocs.map((doc) => doc.pageContent).join("\n\n");
+
             // Generate questions using the Mistral chain
             const questionChain = createQuestionGenerationChain();
             const questionsJson = await questionChain.invoke({
-                content: document.content,
+                context,
                 numQuestions,
+                examTitle: title,
+                difficultyLevel,
+                timeLimit,
+                questionTypes: "multiple-choice",
+                userBackground: JSON.stringify({
+                    name: user.name,
+                    educationLevel: user.educationLevel,
+                    studyGoals: user.studyGoals,
+                    examType: user.examType,
+                    subjects: user.subjects,
+                    language: user.language,
+                    country: user.country,
+                    userType: user.userType
+                })
             }) as QuestionData[];
 
             if (!Array.isArray(questionsJson) || questionsJson.length === 0) {
@@ -184,8 +209,15 @@ export class ExamService {
                             options: true,
                             correctAnswer: true,
                             explanation: true,
+                            answers: {
+                                where: { examId },
+                                select: {
+                                    answer: true,
+                                    isCorrect: true,
+                                }
+                            }
                         }
-                    }
+                    },
                 }
             });
 
@@ -210,6 +242,8 @@ export class ExamService {
                     options: q.options,
                     correctAnswer: q.correctAnswer,
                     explanation: q.explanation,
+                    userAnswer: q.answers[0]?.answer || undefined,
+                    isCorrect: q.answers[0]?.isCorrect || undefined,
                 })),
             };
         } catch (error) {

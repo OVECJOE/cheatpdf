@@ -71,75 +71,46 @@ Be the unfair advantage that makes comprehension of complex topics or domains ef
      new StringOutputParser(),
    ])
 }
-// Question Generation Chain - Advanced Pedagogical Assessment Engine
+
+// Question Generation Chain
 export const createQuestionGenerationChain = () => {
    const questionPrompt = PromptTemplate.fromTemplate(`
-You are CheatPDF with Exam Mode enabled, an advanced pedagogical assessment engine that creates superior exam questions by leveraging deep document analysis and cognitive science principles.
+You are CheatPDF's Exam Generator, creating high-quality questions combining the context of the document and the user's background.
 
-CORE CAPABILITIES:
-- COGNITIVE TAXONOMY MASTERY: Apply Bloom's taxonomy with precision across all difficulty levels
-- CONTENT PATTERN RECOGNITION: Identify the most assessment-worthy concepts within documents
-- DISTRACTOR OPTIMIZATION: Create compelling wrong answers that reveal common misconceptions
-- CONTEXTUAL RELEVANCE: Generate questions that mirror real-world application scenarios
+EXAM PARAMETERS:
+Title: {examTitle}
+Difficulty: {difficultyLevel}
+Questions: {numQuestions}
+Time Limit: {timeLimit} minutes
+Type: {questionTypes}
 
-Document Content Analysis:
-{content}
+DOCUMENT CONTEXT:
+{context}
 
-ASSESSMENT GENERATION PARAMETERS:
-Target Questions: {numQuestions}
-Cognitive Distribution: 30% Knowledge/Comprehension, 40% Application/Analysis, 30% Synthesis/Evaluation
+USER BACKGROUND:
+{userBackground}
 
-ADVANCED QUESTION CRAFTING PROTOCOL:
+GENERATION GUIDELINES:
+1. Create {numQuestions} questions that match the difficulty level
+2. Each question should test understanding, not just recall
+3. Include 4 options per question (A, B, C, D)
+4. Make distractors plausible but clearly wrong
+5. Provide concise but educational explanations
+6. Use document-specific terminology and examples
+7. Vary question types: factual, analytical, application-based
 
-1. CONTENT MINING PHASE:
-   - Extract key concepts, principles, relationships, and applications
-   - Identify critical thinking opportunities within the material
-   - Map content hierarchy from foundational to advanced concepts
-   - Locate real-world examples and case studies for contextualization
-
-2. COGNITIVE ALIGNMENT:
-   - REMEMBER/UNDERSTAND: Test foundational knowledge with precise terminology
-   - APPLY/ANALYZE: Create scenario-based questions requiring concept application
-   - EVALUATE/CREATE: Design questions requiring judgment and synthesis
-
-3. DISTRACTOR ENGINEERING:
-   - Craft plausible but incorrect options based on common student errors
-   - Include near-miss answers that test precision of understanding
-   - Embed misconceptions that reveal shallow vs. deep comprehension
-   - Balance obvious wrong answers with sophisticated distractors
-
-4. CONTEXTUAL ENHANCEMENT:
-   - Use document-specific examples and terminology
-   - Create questions that connect multiple document sections
-   - Include practical application scenarios relevant to the subject matter
-   - Ensure questions prepare students for real professional challenges
-
-5. EXPLANATORY MASTERY:
-   - Provide comprehensive explanations that teach beyond the correct answer
-   - Explain why each distractor is incorrect with educational value
-   - Connect answers to broader document themes and implications
-   - Offer additional insights that deepen understanding
-
-QUALITY STANDARDS:
-- Each question must test genuine understanding, not mere recall
-- Distractors must be educationally valuable (revealing common errors)
-- Questions should prepare students for practical application
-- Explanations should provide learning opportunities beyond the test
-
-OUTPUT FORMAT:
-Generate a JSON array with the following structure:
-Note: The options should be in the same language as the question, and no need to add the option label like A), B), C), D)
-
+OUTPUT FORMAT (JSON array):
 [
-  {{
-    "question": "Your crafted question text here?",
-    "options": ["A) First option", "B) Second option", "C) Third option", "D) Fourth option"],
-    "correctAnswer": "A",
-    "explanation": "Comprehensive explanation covering why this answer is correct, why each distractor is wrong but plausible, connection to broader document themes, and practical implications for real-world application."
-  }}
+   {{
+      "question": "Question text here?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "A",
+      "explanation": "Why this answer is correct and why others are wrong."
+   }}
 ]
 
-Execute question generation based on the provided document content and generate exactly {numQuestions} questions.`);
+Focus on quality over quantity. Each question should be clear, fair, and educational.
+`);
 
    return RunnableSequence.from([
       questionPrompt,

@@ -149,8 +149,19 @@ export function useExam({ examId, onError }: UseExamProps) {
   const submitAnswer = useCallback(async (questionId: string, answer: string) => {
     if (!exam) return;
 
-    setAutoSaveStatus("saving");
-    
+    setAutoSaveStatus("saving");    
+    // Optimistically update the answer in local state
+    setExam(prevExam => {
+      if (!prevExam) return prevExam;
+      return {
+        ...prevExam,
+        questions: prevExam.questions.map(q => 
+          q.id === questionId 
+            ? { ...q, userAnswer: answer }
+            : q
+        )
+      };
+    });
     // Clear existing timeout
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
@@ -169,7 +180,7 @@ export function useExam({ examId, onError }: UseExamProps) {
 
       if (response.ok) {
         const result = await response.json();
-        // Update the exam state with the new answer
+        // Update the exam state with the new answer and isCorrect from server
         setExam(prevExam => {
           if (!prevExam) return prevExam;
           return {
@@ -190,14 +201,38 @@ export function useExam({ examId, onError }: UseExamProps) {
       } else {
         const errorData = await response.json();
         setAutoSaveStatus("error");
+        // Revert optimistic update on error
+        setExam(prevExam => {
+          if (!prevExam) return prevExam;
+          return {
+            ...prevExam,
+            questions: prevExam.questions.map(q => 
+              q.id === questionId 
+                ? { ...q, userAnswer: undefined }
+                : q
+            )
+          };
+        });
         toast.error(errorData.error || "Failed to save answer");
       }
     } catch (error) {
       console.error("Error answering question:", error);
       setAutoSaveStatus("error");
+      // Revert optimistic update on error
+      setExam(prevExam => {
+        if (!prevExam) return prevExam;
+        return {
+          ...prevExam,
+          questions: prevExam.questions.map(q => 
+            q.id === questionId 
+              ? { ...q, userAnswer: undefined }
+              : q
+          )
+        };
+      });
       toast.error("Failed to save answer");
     }
-  }, [examId]);
+  }, [examId, exam]);
 
   // Toggle flag
   const toggleFlag = useCallback((questionId: string) => {
@@ -221,6 +256,7 @@ export function useExam({ examId, onError }: UseExamProps) {
 
   // Complete exam
   const handleCompleteExam = useCallback(async () => {
+    console.log(exam);
     if (!exam) return;
 
     setSubmitting(true);

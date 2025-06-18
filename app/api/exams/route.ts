@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { documentId, title, timeLimit, numQuestions } = body
+    const { documentId, title, timeLimit, numQuestions, difficultyLevel } = body
 
     // Validate required fields
     if (!documentId || !title || !timeLimit) {
@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       documentId,
       title,
       timeLimit,
+      difficultyLevel,
       numQuestions || 10
     )
 

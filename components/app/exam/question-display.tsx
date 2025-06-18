@@ -73,7 +73,7 @@ export function QuestionDisplay({
         <div className="space-y-3">
           {question.options.map((option, index) => {
             const optionLetter = String.fromCharCode(65 + index);
-            const isSelected = question.userAnswer === optionLetter;
+            const isSelected = question.userAnswer === option;
             
             return (
               <button

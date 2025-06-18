@@ -137,6 +137,7 @@ export default function NewExamPage() {
           title: examConfig.title.trim(),
           timeLimit: examConfig.timeLimit,
           numQuestions: examConfig.numQuestions,
+          difficultyLevel: examConfig.difficulty,
         }),
       });
 
