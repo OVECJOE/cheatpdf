@@ -61,6 +61,7 @@ export default function TakeExamPage() {
       toast.error("Time is up! Submitting your exam.");
       handleCompleteExam();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, exam]);
 
   const handleTimeAlert = () => {
@@ -86,7 +87,7 @@ export default function TakeExamPage() {
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-foreground mb-2">Exam Not Found</h2>
           <p className="text-muted-foreground mb-4">
-            The exam you're looking for doesn't exist or you don't have access to it.
+            The exam you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
           </p>
           <Button
             onClick={() => router.push("/dashboard/exams")}

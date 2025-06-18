@@ -17,7 +17,6 @@ import {
   Users,
   TrendingUp,
   DollarSign,
-  CheckCircle,
   Star,
 } from "lucide-react";
 import { toast } from "sonner";

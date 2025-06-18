@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/config/auth";
 import db from "@/lib/config/db";
-import { User, UserType } from "@prisma/client";
 import { onboardingSchema } from "@/lib/validations";
 
 export async function GET() {

@@ -58,8 +58,8 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching chats:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      { error: (error as Error).message || "Failed to fetch chats" },
+      { status: 400 }
     );
   }
 }
@@ -81,6 +81,9 @@ export async function POST(request: NextRequest) {
     const chat = await chatService.create(session.user.id, documentId, title);
     return NextResponse.json({ chat });
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: (error as Error).message || "Failed to create chat" },
+      { status: 400 }
+    );
   }
 }

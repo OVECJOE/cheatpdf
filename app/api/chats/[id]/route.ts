@@ -19,8 +19,8 @@ export async function GET(
     return NextResponse.json({ chat })
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch chats' },
-      { status: 500 }
+      { error: (error as Error).message || 'Failed to fetch chats' },
+      { status: 400 }
     )
   }
 }
@@ -62,8 +62,8 @@ export async function POST(
     })
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to process chat request' },
-      { status: 500 }
+      { error: (error as Error).message || 'Failed to process chat request' },
+      { status: 400 }
     )
   }
 }
@@ -108,10 +108,9 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting chat:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      { error: (error as Error).message || "Failed to delete chat" },
+      { status: 400 }
     );
   }
 } 

@@ -33,7 +33,6 @@ import {
   Upload,
   Palette,
   Loader2,
-  Menu,
 } from "lucide-react";
 import AppLogo from "@/components/app/logo";
 import { ThemeToggle } from "@/components/app/theme-toggle";

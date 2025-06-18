@@ -1,13 +1,27 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, CheckCircle, Clock, Play, Loader2 } from "lucide-react";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+
+interface Exam {
+  id: string;
+  title: string;
+  document: { id: string; name: string; fileName: string };
+  timeLimit: number;
+  totalQuestions: number;
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+  score?: number;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+}
 
 interface ExamSidebarProps {
-  exam: any;
+  exam: Exam;
   examId: string;
   handleStartExam: () => void;
   starting: boolean;
-  router: any;
+  router: AppRouterInstance;
 }
 
 export default function ExamSidebar({

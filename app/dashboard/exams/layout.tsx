@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -25,18 +25,7 @@ export default function ExamsLayout({ children }: ExamsLayoutProps) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/sign-in");
-      return;
-    }
-
-    if (status === "authenticated") {
-      fetchUserProfile();
-    }
-  }, [status]);
-
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       const response = await fetch("/api/user/profile");
       if (response.ok) {
@@ -53,7 +42,20 @@ export default function ExamsLayout({ children }: ExamsLayoutProps) {
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/sign-in");
+      return;
+    }
+
+    if (status === "authenticated") {
+      fetchUserProfile();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   // Show loading state while checking authentication and subscription
   if (status === "loading" || loading) {

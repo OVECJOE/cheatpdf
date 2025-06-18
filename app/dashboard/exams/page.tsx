@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -36,11 +35,9 @@ import {
   Target,
   TrendingUp,
   CheckCircle,
-  XCircle,
   Play,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { SubscriptionStatus } from "@prisma/client";
 
 interface Exam {
   id: string;
@@ -63,12 +60,7 @@ interface Exam {
   };
 }
 
-interface UserProfile {
-  subscriptionStatus: string;
-}
-
 export default function ExamsPage() {
-  const { data: session } = useSession();
   const router = useRouter();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);

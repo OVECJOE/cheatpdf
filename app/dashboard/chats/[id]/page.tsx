@@ -55,7 +55,7 @@ export default function ChatDetailPage() {
   const params = useParams();
   const router = useRouter();
   const chatId = params.id as string;
-  
+
   const [chat, setChat] = useState<Chat | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -67,6 +67,7 @@ export default function ChatDetailPage() {
     if (chatId) {
       fetchChat();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId]);
 
   useEffect(() => {
@@ -128,7 +129,7 @@ export default function ChatDetailPage() {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Replace temp message with real messages
         setChat(prev => prev ? {
           ...prev,
@@ -140,7 +141,7 @@ export default function ChatDetailPage() {
           ...prev,
           messages: prev.messages.filter(m => m.id !== tempUserMessage.id)
         } : null);
-        
+
         const errorData = await response.json();
         toast.error(errorData.error || "Failed to send message");
       }
@@ -150,7 +151,7 @@ export default function ChatDetailPage() {
         ...prev,
         messages: prev.messages.filter(m => m.id !== tempUserMessage.id)
       } : null);
-      
+
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
     } finally {
@@ -168,15 +169,15 @@ export default function ChatDetailPage() {
   // Auto-resize textarea based on content
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
-    
+
     // Reset height to get the correct scrollHeight
     e.target.style.height = 'auto';
-    
+
     // Set height based on scrollHeight, with min and max constraints
     const scrollHeight = e.target.scrollHeight;
     const minHeight = 40; // min-h-[40px]
     const maxHeight = 120; // max-h-[120px]
-    
+
     if (scrollHeight > maxHeight) {
       e.target.style.height = `${maxHeight}px`;
       e.target.style.overflowY = 'auto';
@@ -236,7 +237,7 @@ export default function ChatDetailPage() {
           <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-foreground mb-2">Chat Not Found</h3>
           <p className="text-muted-foreground mb-4">
-            The chat you're looking for doesn't exist or has been deleted.
+            The chat you&apos;re looking for doesn&apos;t exist or has been deleted.
           </p>
           <Button onClick={() => router.push("/dashboard/chats")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -321,17 +322,17 @@ export default function ChatDetailPage() {
                 Start the conversation!
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground mb-4 px-4">
-                Ask questions about "{chat.document.name}" to get started.
+                Ask questions about &quot;{chat.document.name}&quot; to get started.
               </p>
               <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto px-4">
                 <Badge variant="outline" className="text-xs">
-                  "Summarize the main points"
+                  &quot;Summarize the main points&quot;
                 </Badge>
                 <Badge variant="outline" className="text-xs">
-                  "What are the key concepts?"
+                  &quot;What are the key concepts?&quot;
                 </Badge>
                 <Badge variant="outline" className="text-xs">
-                  "Explain this topic in detail"
+                  &quot;Explain this topic in detail&quot;
                 </Badge>
               </div>
             </div>
@@ -339,15 +340,13 @@ export default function ChatDetailPage() {
             chat.messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex items-start space-x-3 ${
-                  msg.role === "USER" ? "flex-row-reverse space-x-reverse" : ""
-                }`}
+                className={`flex items-start space-x-3 ${msg.role === "USER" ? "flex-row-reverse space-x-reverse" : ""
+                  }`}
               >
-                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  msg.role === "USER" 
-                    ? "bg-primary/10" 
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === "USER"
+                    ? "bg-primary/10"
                     : "bg-secondary/10"
-                }`}>
+                  }`}>
                   {msg.role === "USER" ? (
                     <User className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                   ) : (
@@ -355,14 +354,12 @@ export default function ChatDetailPage() {
                   )}
                 </div>
 
-                <div className={`flex-1 min-w-0 ${
-                  msg.role === "USER" ? "text-right" : ""
-                }`}>
-                  <div className={`inline-block max-w-[85%] sm:max-w-[80%] p-3 sm:p-4 rounded-lg ${
-                    msg.role === "USER"
+                <div className={`flex-1 min-w-0 ${msg.role === "USER" ? "text-right" : ""
+                  }`}>
+                  <div className={`inline-block max-w-[85%] sm:max-w-[80%] p-3 sm:p-4 rounded-lg ${msg.role === "USER"
                       ? "bg-primary text-primary-foreground"
                       : "bg-card border border-border"
-                  }`}>
+                    }`}>
                     {msg.role === "USER" ? (
                       <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                     ) : (
@@ -372,9 +369,8 @@ export default function ChatDetailPage() {
                     )}
                   </div>
 
-                  <div className={`flex items-center space-x-2 mt-2 text-xs text-muted-foreground ${
-                    msg.role === "USER" ? "justify-end" : ""
-                  }`}>
+                  <div className={`flex items-center space-x-2 mt-2 text-xs text-muted-foreground ${msg.role === "USER" ? "justify-end" : ""
+                    }`}>
                     <span className="hidden sm:inline">{formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}</span>
                     <Button
                       variant="ghost"
@@ -438,7 +434,7 @@ export default function ChatDetailPage() {
               )}
             </Button>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-3 space-y-1 sm:space-y-0 text-xs text-muted-foreground">
             <span className="hidden sm:inline">Press Enter to send, Shift+Enter for new line</span>
             <span className="sm:hidden text-center">Tap Send or press Enter</span>

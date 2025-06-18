@@ -13,6 +13,7 @@ export default function ExamDetailPage() {
     if (examId) {
       router.replace(`/dashboard/exams/${examId}/overview`);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examId]);
 
   return (

@@ -15,15 +15,12 @@ import {
   Users,
   Shield,
   Star,
-  Sparkles,
   Loader2,
   Settings,
   Zap,
-  Target,
   MessageCircle,
   ClipboardList,
   TrendingUp,
-  Infinity,
   ArrowRight,
   X,
 } from "lucide-react";
@@ -34,12 +31,6 @@ interface UserProfile {
   email: string;
   subscriptionStatus: string;
   subscriptionEnds?: string;
-}
-
-interface SubscriptionStatus {
-  status: string;
-  plan?: string;
-  currentPeriodEnd?: string;
 }
 
 type PricingPlan = "monthly" | "quarterly" | "biannually";
@@ -137,7 +128,6 @@ export default function DashboardUpgradePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan>("quarterly");
 
@@ -160,12 +150,6 @@ export default function DashboardUpgradePage() {
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
         setUserProfile(profileData);
-      }
-
-      const subscriptionResponse = await fetch("/api/subscription");
-      if (subscriptionResponse.ok) {
-        const subscriptionData = await subscriptionResponse.json();
-        setSubscriptionStatus(subscriptionData.status);
       }
     } catch (error) {
       toast.error((error as Error).message || "Failed to load user data");
@@ -277,7 +261,7 @@ export default function DashboardUpgradePage() {
             <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <Crown className="w-8 h-8 text-secondary" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">You're a Pro User! 🎉</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2">You&apos;re a Pro User! 🎉</h2>
             <p className="text-muted-foreground mb-6">
               Thank you for supporting CheatPDF. You have access to all premium features.
             </p>

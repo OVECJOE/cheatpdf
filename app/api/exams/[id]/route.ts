@@ -30,10 +30,10 @@ export async function GET(
       const exam = await examService.getExamDetails(id, session.user.id);
       return NextResponse.json({ exam });
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching exam:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to fetch exam" },
+      { error: (error as Error).message || "Failed to fetch exam" },
       { status: 400 }
     );
   }
@@ -81,10 +81,10 @@ export async function PATCH(
           { status: 400 }
         );
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating exam:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to update exam" },
+      { error: (error as Error).message || "Failed to update exam" },
       { status: 400 }
     );
   }
@@ -103,11 +103,11 @@ export async function DELETE(
     const { id } = await params;
     const result = await examService.delete(id, session.user.id);
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error deleting exam:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to delete exam" },
-      { status: 500 }
+      { error: (error as Error).message || "Failed to delete exam" },
+      { status: 400 }
     );
   }
 } 

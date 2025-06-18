@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,14 +17,12 @@ import {
   MessageCircle,
   ClipboardList,
   Trash2,
-  Download,
   Eye,
   Loader2,
   Calendar,
   HardDrive,
   MoreVertical,
   Clock,
-  Activity,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -57,7 +54,6 @@ interface DocumentDetail {
 }
 
 export default function DocumentDetailPage() {
-  const { data: session } = useSession();
   const router = useRouter();
   const params = useParams();
   const documentId = params.id as string;
@@ -70,6 +66,7 @@ export default function DocumentDetailPage() {
     if (documentId) {
       fetchDocument();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [documentId]);
 
   const fetchDocument = async () => {
@@ -136,7 +133,7 @@ export default function DocumentDetailPage() {
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold text-foreground mb-2">Document not found</h2>
           <p className="text-muted-foreground mb-4">
-            The document you're looking for doesn't exist or has been deleted.
+            The document you&apos;re looking for doesn&apos;t exist or has been deleted.
           </p>
           <Button onClick={() => router.push("/dashboard/documents")}>
             <ArrowLeft className="w-4 h-4 mr-2" />

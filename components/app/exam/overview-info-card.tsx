@@ -3,8 +3,21 @@ import { FileText, Target, Clock, Brain, Zap, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 
+interface Exam {
+  id: string;
+  title: string;
+  document: { id: string; name: string; fileName: string };
+  timeLimit: number;
+  totalQuestions: number;
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+  score?: number;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+}
+
 interface ExamInfoCardProps {
-  exam: any;
+  exam: Exam;
   difficulty: string;
   color: string;
   timePerQuestion: number;
@@ -75,7 +88,7 @@ export default function ExamInfoCard({ exam, difficulty, color, timePerQuestion 
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Completed</p>
                 <p className="text-sm font-medium text-foreground">
-                  {formatDistanceToNow(new Date(exam.completedAt), { addSuffix: true })}
+                  {exam.completedAt ? formatDistanceToNow(new Date(exam.completedAt), { addSuffix: true }) : "Recently"}
                 </p>
               </div>
             </div>

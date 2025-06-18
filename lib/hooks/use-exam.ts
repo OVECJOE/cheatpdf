@@ -89,6 +89,7 @@ export function useExam({ examId, onError }: UseExamProps) {
 
   useEffect(() => {
     fetchExam();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle time updates
@@ -99,8 +100,29 @@ export function useExam({ examId, onError }: UseExamProps) {
   // Handle time expiration
   const handleTimeExpired = useCallback(async () => {
     setTimeRemaining(0);
-    await handleCompleteExam();
-  }, []);
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/exams/${examId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "complete" }),
+      });
+
+      if (response.ok) {
+        toast.success("Exam submitted successfully!");
+        router.push(`/dashboard/exams/${examId}/overview`);
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to submit exam");
+      }
+    } catch (error) {
+      console.error("Error completing exam:", error);
+      toast.error("Failed to submit exam");
+    } finally {
+      setSubmitting(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [examId]);
 
   // Handle tab switching
   const handleTabSwitch = useCallback(() => {
@@ -277,6 +299,7 @@ export function useExam({ examId, onError }: UseExamProps) {
     } finally {
       setSubmitting(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examId]);
 
   // Utility functions

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle,
   Heart,
@@ -68,15 +67,6 @@ const DonationSuccess = () => {
 
     fetchSessionData();
   }, [sessionId]);
-
-  const getDonationFrequencyText = (frequency: string) => {
-    const texts: Record<string, string> = {
-      MONTHLY: "Monthly",
-      QUARTERLY: "Every 3 months",
-      BIANNUAL: "Every 6 months",
-    };
-    return texts[frequency] || frequency;
-  };
 
   const handleShare = async () => {
     const studentsCount = donation?.metadata.studentsToHelp || "1";
