@@ -256,7 +256,7 @@ export function useExam({ examId, onError }: UseExamProps) {
 
   // Complete exam
   const handleCompleteExam = useCallback(async () => {
-    console.log(exam);
+    console.log(exam?.id);
     if (!exam) return;
 
     setSubmitting(true);
