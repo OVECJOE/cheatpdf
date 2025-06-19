@@ -75,45 +75,8 @@ export default function DashboardUploadPage() {
     }
   }, []);
 
-  const validateFile = (file: File): string | null => {
-    if (file.type !== "application/pdf") {
-      return "Only PDF files are supported";
-    }
-
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      return "File size must be less than 10MB";
-    }
-
-    if (file.name.length > 255) {
-      return "File name is too long";
-    }
-
-    return null;
-  };
-
   const handleFiles = useCallback((newFiles: File[]) => {
-    const validFiles: File[] = [];
-    const errors: string[] = [];
-
-    newFiles.forEach(file => {
-      const error = validateFile(file);
-      if (error) {
-        errors.push(`${file.name}: ${error}`);
-      } else {
-        validFiles.push(file);
-      }
-    });
-
-    if (errors.length > 0) {
-      toast.error(`Upload errors:\n${errors.join('\n')}`);
-    }
-
-    if (validFiles.length === 0) {
-      return;
-    }
-
-    const uploadFiles: UploadedFile[] = validFiles.map(file => ({
+    const uploadFiles: UploadedFile[] = newFiles.map(file => ({
       file,
       id: crypto.randomUUID(),
       status: "uploading",
@@ -121,7 +84,6 @@ export default function DashboardUploadPage() {
     }));
 
     setFiles(prev => [...prev, ...uploadFiles]);
-    
     uploadFiles.forEach(uploadFile => {
       uploadSingleFile(uploadFile);
     });
@@ -147,74 +109,102 @@ export default function DashboardUploadPage() {
   const uploadSingleFile = async (uploadFile: UploadedFile) => {
     const abortController = new AbortController();
     abortControllersRef.current.set(uploadFile.id, abortController);
-
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      
       const formData = new FormData();
       formData.append("file", uploadFile.file);
-
-      const response = await fetch("/api/documents", {
-        method: "POST",
-        body: formData,
-        signal: abortController.signal,
-      });
-
-      abortControllersRef.current.delete(uploadFile.id);
-
-      if (response.ok) {
-        const result: DocumentResponse = await response.json();
-        
-        setFiles(prev => prev.map(f => 
-          f.id === uploadFile.id 
-            ? { 
-                ...f, 
-                status: "completed", 
-                progress: 100,
-                documentId: result.document.id 
-              }
-            : f
-        ));
-
-        toast.success(`${uploadFile.file.name} uploaded successfully!`);
-      } else {
-        const errorData: ErrorResponse = await response.json();
-        setFiles(prev => prev.map(f => 
-          f.id === uploadFile.id 
-            ? { 
-                ...f, 
-                status: "error", 
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/documents");
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          setFiles(prev => prev.map(f =>
+            f.id === uploadFile.id ? { ...f, progress: percent } : f
+          ));
+        }
+      };
+      xhr.onload = () => {
+        abortControllersRef.current.delete(uploadFile.id);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const result: DocumentResponse = JSON.parse(xhr.responseText);
+            setFiles(prev => prev.map(f =>
+              f.id === uploadFile.id
+                ? {
+                  ...f,
+                  status: "completed",
+                  progress: 100,
+                  documentId: result.document.id
+                }
+                : f
+            ));
+            toast.success(`${uploadFile.file.name} uploaded successfully!`);
+          } catch {
+            setFiles(prev => prev.map(f =>
+              f.id === uploadFile.id
+                ? {
+                  ...f,
+                  status: "error",
+                  progress: 0,
+                  error: "Upload succeeded but response was invalid"
+                }
+                : f
+            ));
+            toast.error(`Upload succeeded but response was invalid for ${uploadFile.file.name}`);
+          }
+        } else {
+          let errorMsg = `Upload failed (${xhr.status})`;
+          try {
+            const errorData: ErrorResponse = JSON.parse(xhr.responseText);
+            errorMsg = errorData.error || errorMsg;
+          } catch {}
+          setFiles(prev => prev.map(f =>
+            f.id === uploadFile.id
+              ? {
+                ...f,
+                status: "error",
                 progress: 0,
-                error: errorData.error || `Upload failed (${response.status})` 
+                error: errorMsg
               }
+              : f
+          ));
+          toast.error(errorMsg);
+        }
+        setIsLoading(false);
+      };
+      xhr.onerror = () => {
+        abortControllersRef.current.delete(uploadFile.id);
+        setFiles(prev => prev.map(f =>
+          f.id === uploadFile.id
+            ? {
+              ...f,
+              status: "error",
+              progress: 0,
+              error: "Network error occurred"
+            }
             : f
         ));
         toast.error(`Failed to upload ${uploadFile.file.name}`);
-      }
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        return;
-      }
-
+        setIsLoading(false);
+      };
+      xhr.onabort = () => {
+        abortControllersRef.current.delete(uploadFile.id);
+        setIsLoading(false);
+      };
+      xhr.send(formData);
+    } catch {
       abortControllersRef.current.delete(uploadFile.id);
-      
-      let errorMessage = "Network error occurred";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      setFiles(prev => prev.map(f => 
-        f.id === uploadFile.id 
-          ? { 
-              ...f, 
-              status: "error", 
-              progress: 0,
-              error: errorMessage 
-            }
+      setFiles(prev => prev.map(f =>
+        f.id === uploadFile.id
+          ? {
+            ...f,
+            status: "error",
+            progress: 0,
+            error: "Upload failed"
+          }
           : f
       ));
       toast.error(`Failed to upload ${uploadFile.file.name}`);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -450,7 +440,10 @@ export default function DashboardUploadPage() {
                   
                   {file.status === "uploading" && (
                     <div className="w-full bg-muted rounded-full h-2 mt-3">
-                      <div className="bg-primary h-2 rounded-full animate-pulse" style={{ width: '60%' }} />
+                      <div
+                        className="bg-primary h-2 rounded-full w-full"
+                        style={{ width: `${file.progress}%` }}
+                      />
                     </div>
                   )}
                 </div>

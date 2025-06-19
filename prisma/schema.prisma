@@ -53,8 +53,6 @@ model User {
   subjects            String[] @default([])
   studyGoals          String?
   examType            String?
-  company             String?
-  role                String?
   onboardingCompleted Boolean  @default(false)
 
   // Subscription
@@ -93,6 +91,7 @@ model Document {
   contentType String
   content     String  @db.Text
   vectorized  Boolean @default(false)
+  extractionStage DocumentExtractionStage @default(PDF_PARSE)
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -280,4 +279,10 @@ enum DonationFrequency {
   MONTHLY
   QUARTERLY
   BIANNUAL
+}
+
+enum DocumentExtractionStage {
+  PDF_PARSE
+  PDF_LOADER
+  PER_PAGE
 }
