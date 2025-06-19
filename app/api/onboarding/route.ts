@@ -21,9 +21,11 @@ export async function GET() {
                 language: true,
                 educationLevel: true,
                 subjects: true,
-                company: true,
-                role: true,
+                studyGoals: true,
+                examType: true,
                 onboardingCompleted: true,
+                createdAt: true,
+                updatedAt: true,
             },
         });
 
