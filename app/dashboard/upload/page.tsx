@@ -60,35 +60,31 @@ export default function DashboardUploadPage() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Cleanup abort controllers
       // eslint-disable-next-line react-hooks/exhaustive-deps
       const controllers = abortControllersRef.current;
       controllers.forEach(controller => {
         controller.abort();
       });
-      controllers.clear();
-
-      // Cleanup polling intervals
+      
       // eslint-disable-next-line react-hooks/exhaustive-deps
       const intervals = pollingIntervalsRef.current;
       intervals.forEach(interval => {
         clearInterval(interval);
       });
+
       intervals.clear();
+      controllers.clear();
     };
   }, []);
 
-  // Poll document status
   const pollDocumentStatus = useCallback((documentId: string, fileId: string) => {
     const interval = setInterval(async () => {
       try {
-        console.log(`Polling document status for ${documentId}`);
         const response = await fetch(`/api/documents/${documentId}`);
         
         if (response.ok) {
           const data: DocumentResponse = await response.json();
           const document = data.document;
-          console.log(`Document status: ${document.extractionStage}, vectorized: ${document.vectorized}`);
 
           setFiles(prev => prev.map(f => {
             if (f.id === fileId) {
@@ -113,7 +109,6 @@ export default function DashboardUploadPage() {
             return f;
           }));
 
-          // Stop polling if completed or failed
           if (document.vectorized || document.extractionStage === "FAILED") {
             clearInterval(interval);
             pollingIntervalsRef.current.delete(fileId);
@@ -125,7 +120,6 @@ export default function DashboardUploadPage() {
             }
           }
         } else {
-          console.error(`Failed to fetch document status: ${response.status}`);
           const errorText = await response.text();
           console.error('Error response:', errorText);
         }
@@ -184,7 +178,6 @@ export default function DashboardUploadPage() {
     abortControllersRef.current.set(uploadFile.id, abortController);
     setIsLoading(true);
     
-    // Start with a simulated progress
     let progress = 0;
     const progressInterval = setInterval(() => {
       if (progress < 90) {
@@ -199,14 +192,12 @@ export default function DashboardUploadPage() {
       const formData = new FormData();
       formData.append("file", uploadFile.file);
       
-      // Use modern fetch() with progress tracking
       const response = await fetch("/api/documents", {
         method: "POST",
         body: formData,
         signal: abortController.signal,
       });
 
-      // Clear progress interval and set to 90% (processing starts)
       clearInterval(progressInterval);
       setFiles(prev => prev.map(f =>
         f.id === uploadFile.id ? { 
@@ -230,7 +221,6 @@ export default function DashboardUploadPage() {
               : f
           ));
           
-          // Start polling for status updates
           if (result.document.id) {
             pollDocumentStatus(result.document.id, uploadFile.id);
           }
@@ -270,7 +260,6 @@ export default function DashboardUploadPage() {
     } catch (error) {
       clearInterval(progressInterval);
       if (error instanceof Error && error.name === 'AbortError') {
-        // Upload was cancelled, don't show error
         return;
       }
       
@@ -291,7 +280,6 @@ export default function DashboardUploadPage() {
   };
 
   const removeFile = (id: string) => {
-    // Cancel upload if in progress
     const controller = abortControllersRef.current.get(id);
     if (controller) {
       controller.abort();
