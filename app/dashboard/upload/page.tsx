@@ -459,7 +459,7 @@ export default function DashboardUploadPage() {
                     <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     {completedFiles.length} file{completedFiles.length > 1 ? "s" : ""} ready!
                   </h4>
-                  <p className="text-xs sm:text-sm text-secondary/80 mt-1">
+                  <p className="text-xs sm:text-sm mt-1">
                     Your documents have been processed and are ready for AI chat.
                   </p>
                 </div>
