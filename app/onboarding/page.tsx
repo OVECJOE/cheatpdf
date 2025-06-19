@@ -210,7 +210,7 @@ export default function OnboardingPage() {
     educationLevel: "",
     subjects: [],
     studyGoals: "",
-    examType: "",
+    examType: "none",
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -260,7 +260,7 @@ export default function OnboardingPage() {
         educationLevel: studentData.educationLevel,
         subjects: studentData.subjects,
         studyGoals: studentData.studyGoals,
-        examType: studentData.examType,
+        examType: studentData.examType === "none" ? "" : studentData.examType,
       };
 
       const response = await fetch("/api/onboarding", {
@@ -432,7 +432,7 @@ export default function OnboardingPage() {
                       <SelectValue placeholder="Select an exam type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No specific exam</SelectItem>
+                      <SelectItem value="none">No specific exam</SelectItem>
                       {smartSuggestions.exams.map((exam) => (
                         <SelectItem key={exam} value={exam}>
                           {exam}
@@ -514,7 +514,7 @@ export default function OnboardingPage() {
                       </div>
                     </div>
                   )}
-                  {studentData.examType && (
+                  {studentData.examType && studentData.examType !== "none" && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Upcoming Exam:</span>
                       <span className="font-medium text-foreground">
