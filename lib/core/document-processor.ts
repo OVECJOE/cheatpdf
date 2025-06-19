@@ -1,4 +1,5 @@
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import '@ungap/with-resolvers';
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { recognize } from 'tesseract.js';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from '@langchain/core/documents';
@@ -27,7 +28,7 @@ function isTextMeaningful(text: string): boolean {
 
 async function extractTextPerPageWithPdfjs(buffer: Buffer): Promise<{ pageTexts: string[], emptyPages: number[] }> {
     // Only use text extraction, no rendering
-    const loadingTask = pdfjsLib.getDocument({ data: buffer });
+    const loadingTask = pdfjs.getDocument({ data: buffer });
     const pdf = await loadingTask.promise;
     const numPages = pdf.numPages;
     const pageTexts: string[] = [];
@@ -55,6 +56,13 @@ export class DocumentProcessor {
             chunkOverlap: 200,
             separators: ['\n\n', '\n', ' ', ''],
         });
+
+        this.loadPdfjsWorker();
+    }
+
+    private async loadPdfjsWorker() {
+        // @ts-expect-error: dynamic import for pdfjs worker is not typed
+        await import('pdfjs-dist/legacy/build/pdf.worker.mjs');
     }
 
     /**
