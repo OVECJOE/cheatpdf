@@ -15,10 +15,6 @@ function validatePDF(buffer: Buffer, fileName: string, maxSizeMB = 100) {
     if (buffer.length > maxSizeMB * 1024 * 1024) throw new Error(`File size exceeds ${maxSizeMB}MB limit`);
 }
 
-function sanitizeFileName(fileName: string): string {
-    return fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 128);
-}
-
 /**
  * Checks if the extracted text is meaningful (not just whitespace or very short)
  */
@@ -50,7 +46,6 @@ export class DocumentProcessor {
     ) {
         try {
             validatePDF(buffer, fileName, 100);
-            const safeFileName = sanitizeFileName(fileName);
             let extractedText = '';
             let splitDocs: Document[] = [];
             let extractionStage: DocumentExtractionStage = DocumentExtractionStage.PDF_PARSE;

@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/config/auth'
 import { documentProcessor } from '@/lib/core/document-processor'
 import db from '@/lib/config/db'
 import { DocumentExtractionStage } from '@prisma/client'
+import { sanitizeFileName } from '@/lib/utils'
 
 export async function GET() {
   try {
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes)
 
     // Create initial document record
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 128)
+    const safeFileName = sanitizeFileName(file.name)
     const document = await db.document.create({
       data: {
         name: safeFileName.replace(/\.[^/.]+$/, ''),
