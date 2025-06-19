@@ -7,7 +7,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { Document } from "@langchain/core/documents";
 import { recognize } from "tesseract.js";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
-import { createCanvas } from "canvas";
+import { createCanvas } from "@napi-rs/canvas";
 import { vectorStore } from "./vector-store";
 import db from "../config/db";
 
@@ -96,9 +96,9 @@ async function extractTextPerPage(buffer: Buffer): Promise<string[]> {
             // Render page to image using node-canvas
             const viewport = page.getViewport({ scale: 2.0 });
             const canvas = createCanvas(viewport.width, viewport.height);
-            const context = canvas.getContext('2d');
+            const context = canvas.getContext("2d", { alpha: true, colorSpace: 'srgb' });
             await page.render({ canvasContext: context as unknown as CanvasRenderingContext2D, viewport }).promise;
-            const imageBuffer = canvas.toBuffer('image/jpeg');
+            const imageBuffer = canvas.toBuffer('image/webp', 0.9);
             const { data: { text: ocrText } } = await recognize(imageBuffer, 'eng');
             pageTexts.push(ocrText);
         }
