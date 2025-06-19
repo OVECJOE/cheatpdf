@@ -81,6 +81,7 @@
     "@types/katex": "^0.16.7",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",
+    "@types/pdfjs-dist": "^2.10.377",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/ws": "^8.18.1",

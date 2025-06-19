@@ -6,6 +6,8 @@ import { Document } from '@langchain/core/documents';
 import db from '@/lib/config/db';
 import { vectorStore } from './vector-store';
 import { DocumentExtractionStage } from '@prisma/client';
+import '@ungap/with-resolvers';
+import 'pdfjs-dist/build/pdf.worker.mjs';
 
 /**
  * Utility: Validate PDF file (extension, magic number, size)
@@ -28,8 +30,7 @@ function isTextMeaningful(text: string): boolean {
 
 async function extractTextPerPageWithPdfjs(buffer: Buffer): Promise<{ pageTexts: string[], emptyPages: number[] }> {
     // Only use text extraction, no rendering
-    const loadingTask = pdfjs.getDocument({ data: buffer });
-    const pdf = await loadingTask.promise;
+    const pdf = await pdfjs.getDocument({ data: buffer }).promise;
     const numPages = pdf.numPages;
     const pageTexts: string[] = [];
     const emptyPages: number[] = [];
@@ -56,13 +57,6 @@ export class DocumentProcessor {
             chunkOverlap: 200,
             separators: ['\n\n', '\n', ' ', ''],
         });
-
-        this.loadPdfjsWorker();
-    }
-
-    private async loadPdfjsWorker() {
-        // @ts-expect-error: dynamic import for pdfjs worker is not typed
-        await import('pdfjs-dist/legacy/build/pdf.worker.mjs');
     }
 
     /**
