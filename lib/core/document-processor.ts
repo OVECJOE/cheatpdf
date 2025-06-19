@@ -1,13 +1,10 @@
-import '@ungap/with-resolvers';
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { recognize } from 'tesseract.js';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from '@langchain/core/documents';
 import db from '@/lib/config/db';
 import { vectorStore } from './vector-store';
 import { DocumentExtractionStage } from '@prisma/client';
-import '@ungap/with-resolvers';
-import 'pdfjs-dist/build/pdf.worker.mjs';
+import PDFParser from 'pdf2json';
 
 /**
  * Utility: Validate PDF file (extension, magic number, size)
@@ -22,30 +19,48 @@ function sanitizeFileName(fileName: string): string {
     return fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 128);
 }
 
+/**
+ * Checks if the extracted text is meaningful (not just whitespace or very short)
+ */
 function isTextMeaningful(text: string): boolean {
     if (!text) return false;
-    const clean = text.replace(/\s+/g, '');
-    return clean.length > 100;
+    const trimmed = text.trim();
+    return trimmed.length > 50 && !/^\s*$/.test(trimmed);
 }
 
-async function extractTextPerPageWithPdfjs(buffer: Buffer): Promise<{ pageTexts: string[], emptyPages: number[] }> {
-    // Only use text extraction, no rendering
-    const pdf = await pdfjs.getDocument({ data: buffer }).promise;
-    const numPages = pdf.numPages;
-    const pageTexts: string[] = [];
-    const emptyPages: number[] = [];
-    for (let i = 1; i <= numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        const text = content.items.map((item) => ('str' in item ? item.str : '')).join(' ');
-        if (isTextMeaningful(text)) {
-            pageTexts.push(text);
-        } else {
-            pageTexts.push('');
-            emptyPages.push(i);
+/**
+ * Extract text from PDF using pdf2json
+ */
+function extractTextFromPDF(buffer: Buffer): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const pdfParser = new PDFParser(null, true);
+
+        pdfParser.on('pdfParser_dataReady', (pdfData) => {
+            try {
+                // Convert PDF data to text, handling each page
+                const pages = pdfData.Pages.map(page => {
+                    const texts = page.Texts.map(text => 
+                        decodeURIComponent(text.R.map(r => r.T).join(' '))
+                    );
+                    return texts.join(' ');
+                });
+
+                resolve(pages.join('\n\n'));
+            } catch (error) {
+                reject(new Error('Failed to parse PDF text: ' + (error as Error).message));
+            }
+        });
+
+        pdfParser.on('pdfParser_dataError', (errData) => {
+            reject(new Error('PDF parsing failed: ' + errData.parserError));
+        });
+
+        try {
+            pdfParser.parseBuffer(buffer);
+        } catch (error) {
+            reject(new Error('Failed to start PDF parsing: ' + (error as Error).message));
         }
-    }
-    return { pageTexts, emptyPages };
+    });
 }
 
 export class DocumentProcessor {
@@ -60,7 +75,7 @@ export class DocumentProcessor {
     }
 
     /**
-     * Process and store a PDF document (streaming, robust, universal)
+     * Process and store a PDF document
      */
     public async processAndStoreDocument(
         buffer: Buffer,
@@ -75,29 +90,37 @@ export class DocumentProcessor {
             let extractedText = '';
             let splitDocs: Document[] = [];
             let extractionStage: DocumentExtractionStage = DocumentExtractionStage.PDF_PARSE;
-            let pageTexts: string[] = [];
-            let emptyPages: number[] = [];
 
-            // 1. Try per-page text extraction with pdfjs-dist (no rendering)
+            // 1. Try pdf2json first (fast, reliable for text-based PDFs)
             try {
-                const result = await extractTextPerPageWithPdfjs(buffer);
-                pageTexts = result.pageTexts;
-                emptyPages = result.emptyPages;
-                extractedText = pageTexts.join('\n');
+                extractedText = await extractTextFromPDF(buffer);
+                
                 if (isTextMeaningful(extractedText)) {
-                    splitDocs = await this.textSplitter.splitDocuments(
-                        pageTexts.filter(Boolean).map((t) => new Document({ pageContent: t }))
-                    );
+                    // Split by pages (they're already separated by double newlines)
+                    const pages = extractedText.split('\n\n')
+                        .filter(page => isTextMeaningful(page));
+                    
+                    if (pages.length > 0) {
+                        splitDocs = await this.textSplitter.splitDocuments(
+                            pages.map(text => new Document({ pageContent: text }))
+                        );
+                    } else {
+                        splitDocs = await this.textSplitter.splitDocuments([
+                            new Document({ pageContent: extractedText })
+                        ]);
+                    }
                 }
-            } catch {
+            } catch (error) {
+                console.warn('PDF parse failed, falling back to OCR:', error);
                 extractionStage = DocumentExtractionStage.PER_PAGE;
             }
 
-            // 2. Fallback: full-document OCR if no meaningful text
+            // 2. Fallback to OCR if needed
             if (!isTextMeaningful(extractedText)) {
                 extractionStage = DocumentExtractionStage.PER_PAGE;
                 const { data } = await recognize(buffer, 'eng');
                 extractedText = data.text;
+                
                 if (isTextMeaningful(extractedText)) {
                     splitDocs = await this.textSplitter.splitDocuments([
                         new Document({ pageContent: extractedText })
@@ -107,7 +130,7 @@ export class DocumentProcessor {
                 }
             }
 
-            // 4. Store preview in DB, full text in vector store
+            // 3. Store preview in DB, full text in vector store
             const preview = extractedText.slice(0, 10000);
             const document = await db.document.create({
                 data: {
@@ -123,14 +146,16 @@ export class DocumentProcessor {
             });
             documentId = document.id;
 
-            // 5. Stream chunks to vector store (concurrent, efficient)
+            // 4. Stream chunks to vector store
             if (!splitDocs || splitDocs.length === 0) {
                 throw new Error('Failed to split document into chunks');
             }
+
             const concurrency = 5;
             async function processChunk(chunk: Document) {
                 await vectorStore.addDocuments([chunk], userId, document.id);
             }
+
             const processAll = async () => {
                 const running: Promise<void>[] = [];
                 for (const chunk of splitDocs) {
@@ -144,13 +169,12 @@ export class DocumentProcessor {
             };
             await processAll();
 
-            // 6. Mark as vectorized
+            // 5. Mark as vectorized
             await db.document.update({
                 where: { id: document.id },
                 data: { vectorized: true },
             });
 
-            console.log(`Number of empty pages for ${safeFileName}: ${emptyPages.length}`);
             return document;
         } catch (error) {
             if (documentId) {
