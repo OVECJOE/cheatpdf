@@ -339,7 +339,7 @@ export default function DashboardUploadPage() {
             </div>
             <div className="flex items-center space-x-2">
               <Target className="w-4 h-4" />
-              <span>Max 10MB per file</span>
+              <span>Max 100MB per file</span>
             </div>
             <div className="flex items-center space-x-2">
               <Zap className="w-4 h-4" />
