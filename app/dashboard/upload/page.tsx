@@ -42,6 +42,7 @@ interface DocumentResponse {
     createdAt: string;
     updatedAt: string;
   };
+  status?: string;
 }
 
 interface ErrorResponse {
@@ -325,31 +326,6 @@ export default function DashboardUploadPage() {
     }
   };
 
-  const testProcessing = async (documentId: string) => {
-    try {
-      console.log('Testing processing for document:', documentId);
-      const response = await fetch('/api/test-processing', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ documentId }),
-      });
-
-      if (response.ok) {
-        console.log('Test processing started successfully');
-        toast.success('Test processing started');
-      } else {
-        const error = await response.text();
-        console.error('Test processing failed:', error);
-        toast.error('Test processing failed');
-      }
-    } catch (error) {
-      console.error('Test processing error:', error);
-      toast.error('Test processing error');
-    }
-  };
-
   const getStatusIcon = (status: UploadedFile["status"]) => {
     switch (status) {
       case "uploading":
@@ -529,17 +505,6 @@ export default function DashboardUploadPage() {
                         className="text-xs self-end sm:self-auto"
                       >
                         Retry
-                      </Button>
-                    )}
-
-                    {file.status === "processing" && file.documentId && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => testProcessing(file.documentId!)}
-                        className="text-xs self-end sm:self-auto"
-                      >
-                        Test Process
                       </Button>
                     )}
 
