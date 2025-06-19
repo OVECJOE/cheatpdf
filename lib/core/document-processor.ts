@@ -7,7 +7,7 @@ import db from '@/lib/config/db';
 import { vectorStore } from './vector-store';
 import { DocumentExtractionStage } from '@prisma/client';
 import '@ungap/with-resolvers';
-import 'pdfjs-dist/legacy/build/pdf.worker.mjs';
+import 'pdfjs-dist/build/pdf.worker.mjs';
 
 /**
  * Utility: Validate PDF file (extension, magic number, size)
