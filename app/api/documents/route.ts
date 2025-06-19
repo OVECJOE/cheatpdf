@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    fetch('/api/documents/process', {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || new URL(request.url).origin}/api/documents/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
