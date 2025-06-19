@@ -7,7 +7,6 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { Document } from "@langchain/core/documents";
 import { recognize } from "tesseract.js";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
-import { createCanvas } from "@napi-rs/canvas";
 import { vectorStore } from "./vector-store";
 import db from "../config/db";
 
@@ -83,7 +82,6 @@ async function extractTextPerPage(buffer: Buffer): Promise<string[]> {
     const pdf = await loadingTask.promise;
     const numPages = pdf.numPages;
     const pageTexts: string[] = [];
-
     for (let i = 1; i <= numPages; i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
@@ -93,13 +91,16 @@ async function extractTextPerPage(buffer: Buffer): Promise<string[]> {
         if (isTextMeaningful(text)) {
             pageTexts.push(text);
         } else {
-            // Render page to image using node-canvas
-            const viewport = page.getViewport({ scale: 2.0 });
-            const canvas = createCanvas(viewport.width, viewport.height);
-            const context = canvas.getContext("2d", { alpha: true, colorSpace: 'srgb' });
-            await page.render({ canvasContext: context as unknown as CanvasRenderingContext2D, viewport }).promise;
-            const imageBuffer = canvas.toBuffer('image/webp', 0.9);
-            const { data: { text: ocrText } } = await recognize(imageBuffer, 'eng');
+            const operatorList = await page.getOperatorList();
+            const rawContent = operatorList && operatorList.fnArray && operatorList.argsArray ? Buffer.from(JSON.stringify({ fnArray: operatorList.fnArray, argsArray: operatorList.argsArray })) : null;
+            let ocrText = '';
+            if (rawContent && rawContent.length > 0) {
+                const { data } = await recognize(rawContent, 'eng');
+                ocrText = data.text;
+            } else {
+                const { data } = await recognize(buffer, 'eng');
+                ocrText = data.text;
+            }
             pageTexts.push(ocrText);
         }
     }
