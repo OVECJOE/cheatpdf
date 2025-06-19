@@ -47,7 +47,7 @@ export class SubscriptionService {
             // Create checkout session
             const session = await stripe.checkout.sessions.create({
                 customer: customerId,
-                payment_method_types: ["card", "link"],
+                payment_method_types: ["card"],
                 line_items: [{
                     price: priceId,
                     quantity: 1,

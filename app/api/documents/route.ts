@@ -96,8 +96,9 @@ export async function POST(request: NextRequest) {
     // Process document asynchronously
     documentProcessor.processAndStoreDocument(
       buffer,
-      file.name,
-      session.user.id
+      safeFileName,
+      session.user.id,
+      document.id
     ).catch(async (error) => {
       console.error('Background document processing failed:', error)
       // Update document status to failed

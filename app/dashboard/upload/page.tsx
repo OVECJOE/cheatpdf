@@ -258,19 +258,19 @@ export default function DashboardUploadPage() {
   const hasUploading = files.some(f => f.status === "uploading");
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-foreground">Upload Documents</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Upload Documents</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Upload PDF documents to start chatting with your study materials using AI
         </p>
       </div>
 
       {/* Upload Area */}
-      <Card className="p-8 border-border bg-card">
+      <Card className="p-4 sm:p-8 border-border bg-card">
         <div
-          className={`border-2 border-dashed rounded-lg p-12 text-center transition-all duration-200 ${
+          className={`border-2 border-dashed rounded-lg p-6 sm:p-12 text-center transition-all duration-200 ${
             isLoading
               ? "border-muted bg-muted/50 cursor-not-allowed"
               : dragActive 
@@ -283,19 +283,19 @@ export default function DashboardUploadPage() {
           onDrop={!isLoading ? handleDrop : undefined}
         >
           <div className={`transition-all duration-200 ${dragActive ? 'scale-110' : ''}`}>
-            <Upload className={`w-16 h-16 mx-auto mb-6 ${
+            <Upload className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-6 ${
               isLoading ? 'text-muted-foreground' : 
               dragActive ? 'text-primary' : 'text-muted-foreground'
             }`} />
           </div>
           
-          <h3 className={`text-xl font-semibold mb-3 ${
+          <h3 className={`text-lg sm:text-xl font-semibold mb-2 sm:mb-3 ${
             isLoading ? 'text-muted-foreground' : 'text-foreground'
           }`}>
             {dragActive ? 'Drop your files here!' : 'Drop your PDF files here'}
           </h3>
           
-          <p className={`mb-6 ${
+          <p className={`mb-4 sm:mb-6 text-sm sm:text-base ${
             isLoading ? 'text-muted-foreground/70' : 'text-muted-foreground'
           }`}>
             or click to browse and select files
@@ -313,7 +313,7 @@ export default function DashboardUploadPage() {
           
           <label 
             htmlFor="file-upload" 
-            className={`inline-flex items-center px-6 py-3 rounded-lg font-medium cursor-pointer transition-all duration-200 ${
+            className={`inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium cursor-pointer transition-all duration-200 text-sm sm:text-base ${
               isLoading 
                 ? 'bg-muted text-muted-foreground cursor-not-allowed' 
                 : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105'
@@ -321,28 +321,28 @@ export default function DashboardUploadPage() {
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
                 Processing...
               </>
             ) : (
               <>
-                <Upload className="w-5 h-5 mr-2" />
+                <Upload className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Select PDF Files
               </>
             )}
           </label>
           
-          <div className="mt-6 flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-6 text-sm text-muted-foreground">
-            <div className="flex items-center space-x-2">
-              <FileText className="w-4 h-4" />
+          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 lg:space-x-6 text-xs sm:text-sm text-muted-foreground">
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>PDF format only</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <Target className="w-4 h-4" />
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              <Target className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Max 100MB per file</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <Zap className="w-4 h-4" />
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>AI-powered processing</span>
             </div>
           </div>
@@ -351,33 +351,33 @@ export default function DashboardUploadPage() {
 
       {/* File List */}
       {files.length > 0 && (
-        <Card className="p-6 border-border bg-card">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-foreground">
+        <Card className="p-4 sm:p-6 border-border bg-card">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
+            <h3 className="text-base sm:text-lg font-semibold text-foreground">
               Uploaded Files ({files.length})
             </h3>
             {hasUploading && (
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" />
+              <div className="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground">
+                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                 <span>Processing files...</span>
               </div>
             )}
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {files.map((file) => (
-              <div key={file.id} className="flex items-center space-x-4 p-4 border border-border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-6 h-6 text-primary" />
+              <div key={file.id} className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 sm:p-4 border border-border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-1 sm:space-y-0">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">
+                      <p className="font-medium text-foreground truncate text-sm sm:text-base">
                         {file.file.name}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {(file.file.size / 1024 / 1024).toFixed(1)} MB
                       </p>
                     </div>
@@ -385,17 +385,17 @@ export default function DashboardUploadPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => removeFile(file.id)}
-                      className="ml-2 text-muted-foreground hover:text-destructive"
+                      className="self-end sm:self-auto text-muted-foreground hover:text-destructive p-1 sm:p-2"
                       disabled={file.status === "uploading"}
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
                   </div>
                   
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex items-center space-x-2">
                       {getStatusIcon(file.status)}
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-xs sm:text-sm text-muted-foreground">
                         {getStatusText(file.status)}
                       </span>
                     </div>
@@ -405,19 +405,19 @@ export default function DashboardUploadPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => retryUpload(file.id)}
-                        className="text-xs"
+                        className="text-xs self-end sm:self-auto"
                       >
                         Retry
                       </Button>
                     )}
 
                     {file.status === "completed" && (
-                      <div className="flex space-x-2">
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 self-end sm:self-auto">
                         <Button
                           onClick={() => router.push(`/dashboard/chats/new?document=${file.documentId}`)}
-                          className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                          className="flex items-center gap-1 sm:gap-2 bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-sm"
                         >
-                          <MessageCircle className="w-4 h-4" />
+                          <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                           Chat
                         </Button>
                         <Button
@@ -433,7 +433,7 @@ export default function DashboardUploadPage() {
                   </div>
                   
                   {file.error && (
-                    <p className="text-sm text-destructive mt-2">
+                    <p className="text-xs sm:text-sm text-destructive mt-2">
                       {file.error}
                     </p>
                   )}
@@ -452,32 +452,33 @@ export default function DashboardUploadPage() {
           </div>
 
           {completedFiles.length > 0 && (
-            <div className="mt-6 p-4 bg-secondary/10 border border-secondary/20 rounded-lg">
-              <div className="flex items-center justify-between">
+            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-secondary/10 border border-secondary/20 rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 <div>
-                  <h4 className="font-semibold text-secondary flex items-center">
-                    <CheckCircle className="w-5 h-5 mr-2" />
+                  <h4 className="font-semibold text-secondary flex items-center text-sm sm:text-base">
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     {completedFiles.length} file{completedFiles.length > 1 ? "s" : ""} ready!
                   </h4>
-                  <p className="text-sm text-secondary/80 mt-1">
+                  <p className="text-xs sm:text-sm text-secondary/80 mt-1">
                     Your documents have been processed and are ready for AI chat.
                   </p>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                   <Button 
                     onClick={() => router.push("/dashboard/chats/new")}
-                    className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="flex items-center gap-1 sm:gap-2 bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-sm"
                   >
-                    <MessageCircle className="w-4 h-4" />
+                    <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                     Start New Chat
                   </Button>
                   <Button 
                     variant="outline"
                     onClick={() => router.push("/dashboard/documents")}
                     disabled={hasUploading}
+                    className="text-xs sm:text-sm"
                   >
                     View All Documents
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
                   </Button>
                 </div>
               </div>
@@ -487,33 +488,33 @@ export default function DashboardUploadPage() {
       )}
 
       {/* Info Cards */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <Card className="p-6 text-center border-border bg-card hover:shadow-md transition-shadow">
-          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Upload className="w-6 h-6 text-primary" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <Card className="p-4 sm:p-6 text-center border-border bg-card hover:shadow-md transition-shadow">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
           </div>
-          <h3 className="font-semibold text-foreground mb-2">Easy Upload</h3>
-          <p className="text-sm text-muted-foreground">
+          <h3 className="font-semibold text-foreground mb-2 text-sm sm:text-base">Easy Upload</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Simply drag and drop your PDF files or click to browse. Multiple files supported.
           </p>
         </Card>
 
-        <Card className="p-6 text-center border-border bg-card hover:shadow-md transition-shadow">
-          <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-6 h-6 text-secondary" />
+        <Card className="p-4 sm:p-6 text-center border-border bg-card hover:shadow-md transition-shadow">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-secondary" />
           </div>
-          <h3 className="font-semibold text-foreground mb-2">AI Processing</h3>
-          <p className="text-sm text-muted-foreground">
+          <h3 className="font-semibold text-foreground mb-2 text-sm sm:text-base">AI Processing</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Our AI analyzes your documents and creates searchable knowledge for instant answers.
           </p>
         </Card>
 
-        <Card className="p-6 text-center border-border bg-card hover:shadow-md transition-shadow">
-          <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-6 h-6 text-accent" />
+        <Card className="p-4 sm:p-6 text-center border-border bg-card hover:shadow-md transition-shadow sm:col-span-2 lg:col-span-1">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
           </div>
-          <h3 className="font-semibold text-foreground mb-2">Start Learning</h3>
-          <p className="text-sm text-muted-foreground">
+          <h3 className="font-semibold text-foreground mb-2 text-sm sm:text-base">Start Learning</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Chat with your documents, ask questions, and get instant, accurate answers.
           </p>
         </Card>

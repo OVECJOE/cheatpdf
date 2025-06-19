@@ -46,6 +46,7 @@ export class DocumentProcessor {
         buffer: Buffer,
         fileName: string,
         userId: string,
+        documentId: string,
     ) {
         try {
             validatePDF(buffer, fileName, 100);
@@ -57,11 +58,10 @@ export class DocumentProcessor {
             // Find existing document
             const document = await db.document.findFirst({
                 where: {
-                    fileName: safeFileName,
+                    id: documentId,
                     userId,
                     extractionStage: DocumentExtractionStage.PENDING,
                 },
-                orderBy: { createdAt: 'desc' },
             });
 
             if (!document) {
