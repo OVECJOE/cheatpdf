@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       new URL("https://images.unsplash.com/**"),
     ]
-  }
+  },
 };
 
 export default nextConfig;
