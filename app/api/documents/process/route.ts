@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/config/auth'
 import { documentProcessor } from '@/lib/core/document-processor'
 import db from '@/lib/config/db'
 import { DocumentExtractionStage } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { documentId, userId } = await request.json()
     if (!documentId || !userId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
