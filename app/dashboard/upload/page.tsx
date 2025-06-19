@@ -110,90 +110,87 @@ export default function DashboardUploadPage() {
     const abortController = new AbortController();
     abortControllersRef.current.set(uploadFile.id, abortController);
     setIsLoading(true);
+    
+    // Start with a simulated progress
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+      if (progress < 90) {
+        progress += Math.random() * 10;
+        setFiles(prev => prev.map(f =>
+          f.id === uploadFile.id ? { ...f, progress: Math.min(progress, 90) } : f
+        ));
+      }
+    }, 200);
+    
     try {
       const formData = new FormData();
       formData.append("file", uploadFile.file);
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", "/api/documents");
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100);
+      
+      // Use modern fetch() with progress tracking
+      const response = await fetch("/api/documents", {
+        method: "POST",
+        body: formData,
+        signal: abortController.signal,
+      });
+
+      // Clear progress interval and set to 100%
+      clearInterval(progressInterval);
+      setFiles(prev => prev.map(f =>
+        f.id === uploadFile.id ? { ...f, progress: 100 } : f
+      ));
+
+      if (response.ok) {
+        try {
+          const result: DocumentResponse = await response.json();
           setFiles(prev => prev.map(f =>
-            f.id === uploadFile.id ? { ...f, progress: percent } : f
+            f.id === uploadFile.id
+              ? {
+                ...f,
+                status: "completed",
+                progress: 100,
+                documentId: result.document.id
+              }
+              : f
           ));
-        }
-      };
-      xhr.onload = () => {
-        abortControllersRef.current.delete(uploadFile.id);
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const result: DocumentResponse = JSON.parse(xhr.responseText);
-            setFiles(prev => prev.map(f =>
-              f.id === uploadFile.id
-                ? {
-                  ...f,
-                  status: "completed",
-                  progress: 100,
-                  documentId: result.document.id
-                }
-                : f
-            ));
-            toast.success(`${uploadFile.file.name} uploaded successfully!`);
-          } catch {
-            setFiles(prev => prev.map(f =>
-              f.id === uploadFile.id
-                ? {
-                  ...f,
-                  status: "error",
-                  progress: 0,
-                  error: "Upload succeeded but response was invalid"
-                }
-                : f
-            ));
-            toast.error(`Upload succeeded but response was invalid for ${uploadFile.file.name}`);
-          }
-        } else {
-          let errorMsg = `Upload failed (${xhr.status})`;
-          try {
-            const errorData: ErrorResponse = JSON.parse(xhr.responseText);
-            errorMsg = errorData.error || errorMsg;
-          } catch {}
+          toast.success(`${uploadFile.file.name} uploaded successfully!`);
+        } catch {
           setFiles(prev => prev.map(f =>
             f.id === uploadFile.id
               ? {
                 ...f,
                 status: "error",
                 progress: 0,
-                error: errorMsg
+                error: "Upload succeeded but response was invalid"
               }
               : f
           ));
-          toast.error(errorMsg);
+          toast.error(`Upload succeeded but response was invalid for ${uploadFile.file.name}`);
         }
-        setIsLoading(false);
-      };
-      xhr.onerror = () => {
-        abortControllersRef.current.delete(uploadFile.id);
+      } else {
+        let errorMsg = `Upload failed (${response.status})`;
+        try {
+          const errorData: ErrorResponse = await response.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch {}
         setFiles(prev => prev.map(f =>
           f.id === uploadFile.id
             ? {
               ...f,
               status: "error",
               progress: 0,
-              error: "Network error occurred"
+              error: errorMsg
             }
             : f
         ));
-        toast.error(`Failed to upload ${uploadFile.file.name}`);
-        setIsLoading(false);
-      };
-      xhr.onabort = () => {
-        abortControllersRef.current.delete(uploadFile.id);
-        setIsLoading(false);
-      };
-      xhr.send(formData);
-    } catch {
-      abortControllersRef.current.delete(uploadFile.id);
+        toast.error(errorMsg);
+      }
+    } catch (error) {
+      clearInterval(progressInterval);
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Upload was cancelled, don't show error
+        return;
+      }
+      
       setFiles(prev => prev.map(f =>
         f.id === uploadFile.id
           ? {
@@ -205,6 +202,9 @@ export default function DashboardUploadPage() {
           : f
       ));
       toast.error(`Failed to upload ${uploadFile.file.name}`);
+    } finally {
+      clearInterval(progressInterval);
+      abortControllersRef.current.delete(uploadFile.id);
       setIsLoading(false);
     }
   };

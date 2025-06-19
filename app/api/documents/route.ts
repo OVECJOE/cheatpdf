@@ -3,81 +3,6 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/config/auth'
 import { documentProcessor } from '@/lib/core/document-processor'
 import db from '@/lib/config/db'
-import Busboy from 'busboy'
-import { Readable } from 'stream'
-
-function headersToObject(headers: Headers): Record<string, string> {
-  const result: Record<string, string> = {};
-  headers.forEach((value, key) => {
-    result[key.toLowerCase()] = value;
-  });
-  return result;
-}
-
-async function handleBusboyUpload(request: NextRequest, userId: string): Promise<Response> {
-  return new Promise((resolve) => {
-    const busboy = Busboy({
-      headers: headersToObject(request.headers),
-      limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
-    })
-    const fileBuffer: Buffer[] = []
-    let fileName = ''
-    let fileType = ''
-    let fileSize = 0
-    let fileFieldFound = false
-
-    busboy.on('file', (file: NodeJS.ReadableStream, filename: string, mimetype: string) => {
-      fileFieldFound = true
-      fileName = filename
-      fileType = mimetype
-      file.on('data', (data: Buffer) => {
-        fileBuffer.push(data)
-        fileSize += data.length
-        if (fileSize > 100 * 1024 * 1024) {
-          file.resume()
-          busboy.emit('error', new Error('File size exceeds 100MB limit'))
-        }
-      })
-      file.on('limit', () => {
-        busboy.emit('error', new Error('File size exceeds 100MB limit'))
-      })
-    })
-
-    busboy.on('finish', async () => {
-      if (!fileFieldFound) {
-        resolve(NextResponse.json({ error: 'No file uploaded' }, { status: 400 }))
-        return
-      }
-      const buffer = Buffer.concat(fileBuffer)
-      try {
-        const document = await documentProcessor.processAndStoreDocument(
-          buffer,
-          fileName,
-          userId,
-          fileType
-        )
-        resolve(NextResponse.json({ document }, { status: 201 }))
-      } catch (error) {
-        resolve(NextResponse.json(
-          { error: (error as Error).message },
-          { status: 400 }
-        ))
-      }
-    })
-
-    busboy.on('error', (err: Error) => {
-      resolve(NextResponse.json({ error: err.message }, { status: 400 }))
-    })
-
-    if (request.body) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const stream = Readable.fromWeb(request.body as any)
-      stream.pipe(busboy)
-    } else {
-      resolve(NextResponse.json({ error: 'No request body' }, { status: 400 }))
-    }
-  })
-}
 
 export async function GET() {
   try {
@@ -110,9 +35,8 @@ export async function GET() {
 
     return NextResponse.json({ documents })
   } catch (error) {
-    console.error('Error fetching documents:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch documents' },
+      { error: (error as Error).message },
       { status: 500 }
     )
   }
@@ -136,10 +60,39 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Move Busboy logic to a helper function
-    const response = await handleBusboyUpload(request, session.user.id)
-    return response
+    // Use Next.js built-in formData() for file uploads
+    const formData = await request.formData()
+    const file = formData.get('file') as File | null
+    if (!file) {
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
+    }
+
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+      return NextResponse.json({ error: 'File type is not PDF' }, { status: 400 })
+    }
+
+    // Validate file size (100MB limit)
+    const maxSize = 100 * 1024 * 1024 // 100MB
+    if (file.size > maxSize) {
+      return NextResponse.json({ error: 'File size exceeds 100MB limit' }, { status: 400 })
+    }
+
+    // Convert File to Buffer
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+
+    // Process and store the document
+    const document = await documentProcessor.processAndStoreDocument(
+      buffer,
+      file.name,
+      session.user.id,
+      file.type
+    )
+
+    return NextResponse.json({ document }, { status: 201 })
   } catch (error) {
+    console.error('Document upload error:', error)
     return NextResponse.json(
       { error: 'Failed to upload document: ' + (error as Error).message },
       { status: 500 }
@@ -169,9 +122,8 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting document:', error)
     return NextResponse.json(
-      { error: 'Failed to delete document' },
+      { error: (error as Error).message },
       { status: 500 }
     )
   }

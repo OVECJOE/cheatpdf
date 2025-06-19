@@ -4,7 +4,7 @@ import { Document } from '@langchain/core/documents';
 import db from '@/lib/config/db';
 import { vectorStore } from './vector-store';
 import { DocumentExtractionStage } from '@prisma/client';
-import PDFParser from 'pdf2json';
+import pdf from 'pdf-parse';
 
 /**
  * Utility: Validate PDF file (extension, magic number, size)
@@ -26,41 +26,6 @@ function isTextMeaningful(text: string): boolean {
     if (!text) return false;
     const trimmed = text.trim();
     return trimmed.length > 50 && !/^\s*$/.test(trimmed);
-}
-
-/**
- * Extract text from PDF using pdf2json
- */
-function extractTextFromPDF(buffer: Buffer): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const pdfParser = new PDFParser(null, true);
-
-        pdfParser.on('pdfParser_dataReady', (pdfData) => {
-            try {
-                // Convert PDF data to text, handling each page
-                const pages = pdfData.Pages.map(page => {
-                    const texts = page.Texts.map(text => 
-                        decodeURIComponent(text.R.map(r => r.T).join(' '))
-                    );
-                    return texts.join(' ');
-                });
-
-                resolve(pages.join('\n\n'));
-            } catch (error) {
-                reject(new Error('Failed to parse PDF text: ' + (error as Error).message));
-            }
-        });
-
-        pdfParser.on('pdfParser_dataError', (errData) => {
-            reject(new Error('PDF parsing failed: ' + errData.parserError));
-        });
-
-        try {
-            pdfParser.parseBuffer(buffer);
-        } catch (error) {
-            reject(new Error('Failed to start PDF parsing: ' + (error as Error).message));
-        }
-    });
 }
 
 export class DocumentProcessor {
@@ -91,13 +56,14 @@ export class DocumentProcessor {
             let splitDocs: Document[] = [];
             let extractionStage: DocumentExtractionStage = DocumentExtractionStage.PDF_PARSE;
 
-            // 1. Try pdf2json first (fast, reliable for text-based PDFs)
+            // 1. Try pdf-parse first (fast, reliable for text-based PDFs)
             try {
-                extractedText = await extractTextFromPDF(buffer);
+                const data = await pdf(buffer);
+                extractedText = data.text;
                 
                 if (isTextMeaningful(extractedText)) {
-                    // Split by pages (they're already separated by double newlines)
-                    const pages = extractedText.split('\n\n')
+                    // Split by pages if possible using page breaks
+                    const pages = extractedText.split(/\f|\[page\]|\[Page\]|\n{3,}/g)
                         .filter(page => isTextMeaningful(page));
                     
                     if (pages.length > 0) {
