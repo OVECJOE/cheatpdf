@@ -91,7 +91,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
