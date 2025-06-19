@@ -84,18 +84,19 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    fetch(`${process.env.NEXTAUTH_URL}/api/documents/process`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || new URL(request.url).origin}/api/documents/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         documentId: document.id,
-        userId: session.user.id 
+        userId: session.user.id
       })
     }).catch(error => {
       console.error('Failed to trigger background processing:', error)
+      documentProcessor.deleteDocument(document.id, session.user.id)
     })
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       document: {
         ...document,
         fileData: undefined
