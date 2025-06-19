@@ -29,6 +29,7 @@ export async function GET(
         fileSize: true,
         contentType: true,
         vectorized: true,
+        extractionStage: true,
         createdAt: true,
         updatedAt: true,
         content: true,

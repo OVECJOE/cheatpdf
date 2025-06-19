@@ -74,6 +74,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File type is not PDF' }, { status: 400 })
     }
 
+    // Validate file size (100MB limit)
+    const maxSize = 100 * 1024 * 1024 // 100MB
+    if (file.size > maxSize) {
+      return NextResponse.json({ error: 'File size exceeds 100MB limit' }, { status: 400 })
+    }
+
     // Convert File to Buffer
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
@@ -93,28 +99,39 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Start processing in a separate request to avoid timeout
-    // This will be handled by a separate API route
-    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/documents/${document.id}/process`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        buffer: buffer.toString('base64'),
-        fileName: safeFileName,
-        userId: session.user.id,
-      }),
-    }).catch(error => {
-      db.document.update({
-        where: { id: document.id },
-        data: {
-          extractionStage: DocumentExtractionStage.FAILED,
-          content: `Failed to start processing: ${error.message}`,
-        },
-      }).catch(console.error)
-    })
+    // Process document with timeout protection
+    const processWithTimeout = async () => {
+      try {
+        // Set a timeout for processing (8 seconds to stay within Vercel limits)
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Processing timeout')), 8000)
+        })
 
+        const processPromise = documentProcessor.processAndStoreDocument(
+          buffer,
+          safeFileName,
+          session.user.id,
+          document.id
+        )
+
+        // Race between processing and timeout
+        await Promise.race([processPromise, timeoutPromise])
+        console.log(`Document ${document.id} processed successfully`)
+      } catch (error) {
+        console.error(`Document processing failed for ${document.id}:`, error)
+        
+        // Update document status to failed
+        await db.document.update({
+          where: { id: document.id },
+          data: {
+            extractionStage: DocumentExtractionStage.FAILED,
+            content: `Processing failed: ${(error as Error).message}`,
+          },
+        })
+      }
+    }
+
+    processWithTimeout()
     return NextResponse.json({ document }, { status: 201 })
   } catch (error) {
     console.error('Document upload error:', error)

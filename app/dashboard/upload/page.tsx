@@ -81,10 +81,13 @@ export default function DashboardUploadPage() {
   const pollDocumentStatus = useCallback((documentId: string, fileId: string) => {
     const interval = setInterval(async () => {
       try {
+        console.log(`Polling document status for ${documentId}`);
         const response = await fetch(`/api/documents/${documentId}`);
+        
         if (response.ok) {
           const data: DocumentResponse = await response.json();
           const document = data.document;
+          console.log(`Document status: ${document.extractionStage}, vectorized: ${document.vectorized}`);
 
           setFiles(prev => prev.map(f => {
             if (f.id === fileId) {
@@ -120,6 +123,10 @@ export default function DashboardUploadPage() {
               toast.error(`Document "${document.name}" processing failed`);
             }
           }
+        } else {
+          console.error(`Failed to fetch document status: ${response.status}`);
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
         }
       } catch (error) {
         console.error('Failed to poll document status:', error);
@@ -318,6 +325,31 @@ export default function DashboardUploadPage() {
     }
   };
 
+  const testProcessing = async (documentId: string) => {
+    try {
+      console.log('Testing processing for document:', documentId);
+      const response = await fetch('/api/test-processing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ documentId }),
+      });
+
+      if (response.ok) {
+        console.log('Test processing started successfully');
+        toast.success('Test processing started');
+      } else {
+        const error = await response.text();
+        console.error('Test processing failed:', error);
+        toast.error('Test processing failed');
+      }
+    } catch (error) {
+      console.error('Test processing error:', error);
+      toast.error('Test processing error');
+    }
+  };
+
   const getStatusIcon = (status: UploadedFile["status"]) => {
     switch (status) {
       case "uploading":
@@ -497,6 +529,17 @@ export default function DashboardUploadPage() {
                         className="text-xs self-end sm:self-auto"
                       >
                         Retry
+                      </Button>
+                    )}
+
+                    {file.status === "processing" && file.documentId && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => testProcessing(file.documentId!)}
+                        className="text-xs self-end sm:self-auto"
+                      >
+                        Test Process
                       </Button>
                     )}
 
