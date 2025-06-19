@@ -10,7 +10,7 @@ export const registerSchema = z.object({
 
 export const onboardingSchema = z.object({
     userType: z.enum([
-        UserType.STUDENT
+      UserType.STUDENT
     ]),
     educationLevel: z.string().min(1, "Education level is required"),
     subjects: z.array(z.string()).min(1, "At least one subject is required"),

@@ -19,6 +19,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 // Types
 type EducationLevel =
@@ -257,6 +258,7 @@ export default function OnboardingPage() {
     setIsLoading(true);
     try {
       const payload = {
+        userType: session.user.userType,
         educationLevel: studentData.educationLevel,
         subjects: studentData.subjects,
         studyGoals: studentData.studyGoals,
@@ -272,10 +274,11 @@ export default function OnboardingPage() {
       if (response.ok) {
         router.push("/dashboard");
       } else {
-        console.error("Onboarding failed");
+        const error = await response.json();
+        toast.error(`Onboarding failed: ${error.error}`);
       }
     } catch (error) {
-      console.error("Error completing onboarding:", error);
+      toast.error(`Error completing onboarding: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsLoading(false);
     }
