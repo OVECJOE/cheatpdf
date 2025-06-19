@@ -285,4 +285,6 @@ enum DocumentExtractionStage {
   PDF_PARSE
   PDF_LOADER
   PER_PAGE
+  PENDING
+  FAILED
 }

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/config/auth'
 import { documentProcessor } from '@/lib/core/document-processor'
 import db from '@/lib/config/db'
+import { DocumentExtractionStage } from '@prisma/client'
 
 export async function GET() {
   try {
@@ -72,23 +73,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File type is not PDF' }, { status: 400 })
     }
 
-    // Validate file size (100MB limit)
-    const maxSize = 100 * 1024 * 1024 // 100MB
-    if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File size exceeds 100MB limit' }, { status: 400 })
-    }
 
     // Convert File to Buffer
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // Process and store the document
-    const document = await documentProcessor.processAndStoreDocument(
+    // Create initial document record
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 128)
+    const document = await db.document.create({
+      data: {
+        name: safeFileName.replace(/\.[^/.]+$/, ''),
+        fileName: safeFileName,
+        fileSize: buffer.length,
+        contentType: file.type,
+        userId: session.user.id,
+        vectorized: false,
+        extractionStage: DocumentExtractionStage.PENDING,
+        content: ""
+      },
+    })
+
+    // Process document asynchronously
+    documentProcessor.processAndStoreDocument(
       buffer,
       file.name,
-      session.user.id,
-      file.type
-    )
+      session.user.id
+    ).catch(async (error) => {
+      console.error('Background document processing failed:', error)
+      // Update document status to failed
+      await db.document.update({
+        where: { id: document.id },
+        data: {
+          extractionStage: DocumentExtractionStage.FAILED,
+          content: `Failed to process document: ${error.message}`,
+        },
+      })
+    })
 
     return NextResponse.json({ document }, { status: 201 })
   } catch (error) {

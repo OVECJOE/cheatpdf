@@ -46,15 +46,27 @@ export class DocumentProcessor {
         buffer: Buffer,
         fileName: string,
         userId: string,
-        contentType: string,
     ) {
-        let documentId: string | null = null;
         try {
             validatePDF(buffer, fileName, 100);
             const safeFileName = sanitizeFileName(fileName);
             let extractedText = '';
             let splitDocs: Document[] = [];
             let extractionStage: DocumentExtractionStage = DocumentExtractionStage.PDF_PARSE;
+
+            // Find existing document
+            const document = await db.document.findFirst({
+                where: {
+                    fileName: safeFileName,
+                    userId,
+                    extractionStage: DocumentExtractionStage.PENDING,
+                },
+                orderBy: { createdAt: 'desc' },
+            });
+
+            if (!document) {
+                throw new Error('Document not found or already processed');
+            }
 
             // 1. Try pdf-parse first (fast, reliable for text-based PDFs)
             try {
@@ -96,21 +108,15 @@ export class DocumentProcessor {
                 }
             }
 
-            // 3. Store preview in DB, full text in vector store
+            // 3. Store preview in DB
             const preview = extractedText.slice(0, 10000);
-            const document = await db.document.create({
+            const updatedDocument = await db.document.update({
+                where: { id: document.id },
                 data: {
-                    name: safeFileName.replace(/\.[^/.]+$/, ''),
-                    fileName: safeFileName,
-                    fileSize: buffer.length,
-                    contentType,
                     content: preview,
-                    userId,
-                    vectorized: false,
                     extractionStage,
                 },
             });
-            documentId = document.id;
 
             // 4. Stream chunks to vector store
             if (!splitDocs || splitDocs.length === 0) {
@@ -119,7 +125,7 @@ export class DocumentProcessor {
 
             const concurrency = 5;
             async function processChunk(chunk: Document) {
-                await vectorStore.addDocuments([chunk], userId, document.id);
+                await vectorStore.addDocuments([chunk], userId, updatedDocument.id);
             }
 
             const processAll = async () => {
@@ -137,15 +143,12 @@ export class DocumentProcessor {
 
             // 5. Mark as vectorized
             await db.document.update({
-                where: { id: document.id },
+                where: { id: updatedDocument.id },
                 data: { vectorized: true },
             });
 
-            return document;
+            return updatedDocument;
         } catch (error) {
-            if (documentId) {
-                await this.deleteDocument(documentId, userId);
-            }
             throw new Error(
                 'Failed to process and store document: ' +
                 (error as Error).message,
