@@ -23,10 +23,11 @@ import { toast } from "sonner";
 interface UploadedFile {
   file: File;
   id: string;
-  status: "uploading" | "completed" | "error";
+  status: "uploading" | "processing" | "completed" | "error";
   progress: number;
   error?: string;
   documentId?: string;
+  processingStage?: string;
 }
 
 interface DocumentResponse {
@@ -37,6 +38,7 @@ interface DocumentResponse {
     fileSize: number;
     contentType: string;
     vectorized: boolean;
+    extractionStage: string;
     createdAt: string;
     updatedAt: string;
   };
@@ -52,17 +54,79 @@ export default function DashboardUploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
+  const pollingIntervalsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      // Cleanup abort controllers
       // eslint-disable-next-line react-hooks/exhaustive-deps
       const controllers = abortControllersRef.current;
       controllers.forEach(controller => {
         controller.abort();
       });
       controllers.clear();
+
+      // Cleanup polling intervals
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const intervals = pollingIntervalsRef.current;
+      intervals.forEach(interval => {
+        clearInterval(interval);
+      });
+      intervals.clear();
     };
+  }, []);
+
+  // Poll document status
+  const pollDocumentStatus = useCallback((documentId: string, fileId: string) => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/documents/${documentId}`);
+        if (response.ok) {
+          const data: DocumentResponse = await response.json();
+          const document = data.document;
+
+          setFiles(prev => prev.map(f => {
+            if (f.id === fileId) {
+              let status: UploadedFile["status"] = "processing";
+              let processingStage = document.extractionStage;
+
+              if (document.vectorized) {
+                status = "completed";
+                processingStage = "Completed";
+              } else if (document.extractionStage === "FAILED") {
+                status = "error";
+                processingStage = "Failed";
+              }
+
+              return {
+                ...f,
+                status,
+                processingStage,
+                progress: document.vectorized ? 100 : 90,
+              };
+            }
+            return f;
+          }));
+
+          // Stop polling if completed or failed
+          if (document.vectorized || document.extractionStage === "FAILED") {
+            clearInterval(interval);
+            pollingIntervalsRef.current.delete(fileId);
+            
+            if (document.vectorized) {
+              toast.success(`Document "${document.name}" processed successfully!`);
+            } else {
+              toast.error(`Document "${document.name}" processing failed`);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to poll document status:', error);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    pollingIntervalsRef.current.set(fileId, interval);
   }, []);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -87,6 +151,7 @@ export default function DashboardUploadPage() {
     uploadFiles.forEach(uploadFile => {
       uploadSingleFile(uploadFile);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -133,10 +198,15 @@ export default function DashboardUploadPage() {
         signal: abortController.signal,
       });
 
-      // Clear progress interval and set to 100%
+      // Clear progress interval and set to 90% (processing starts)
       clearInterval(progressInterval);
       setFiles(prev => prev.map(f =>
-        f.id === uploadFile.id ? { ...f, progress: 100 } : f
+        f.id === uploadFile.id ? { 
+          ...f, 
+          progress: 90, 
+          status: "processing",
+          processingStage: "Processing..."
+        } : f
       ));
 
       if (response.ok) {
@@ -146,13 +216,18 @@ export default function DashboardUploadPage() {
             f.id === uploadFile.id
               ? {
                 ...f,
-                status: "completed",
-                progress: 100,
-                documentId: result.document.id
+                documentId: result.document.id,
+                processingStage: "Queued for processing"
               }
               : f
           ));
-          toast.success(`${uploadFile.file.name} uploaded successfully!`);
+          
+          // Start polling for status updates
+          if (result.document.id) {
+            pollDocumentStatus(result.document.id, uploadFile.id);
+          }
+          
+          toast.success(`${uploadFile.file.name} uploaded successfully! Processing in background...`);
         } catch {
           setFiles(prev => prev.map(f =>
             f.id === uploadFile.id
@@ -203,17 +278,23 @@ export default function DashboardUploadPage() {
       ));
       toast.error(`Failed to upload ${uploadFile.file.name}`);
     } finally {
-      clearInterval(progressInterval);
-      abortControllersRef.current.delete(uploadFile.id);
       setIsLoading(false);
     }
   };
 
   const removeFile = (id: string) => {
-    const abortController = abortControllersRef.current.get(id);
-    if (abortController) {
-      abortController.abort();
+    // Cancel upload if in progress
+    const controller = abortControllersRef.current.get(id);
+    if (controller) {
+      controller.abort();
       abortControllersRef.current.delete(id);
+    }
+
+    // Stop polling if active
+    const interval = pollingIntervalsRef.current.get(id);
+    if (interval) {
+      clearInterval(interval);
+      pollingIntervalsRef.current.delete(id);
     }
 
     setFiles(prev => prev.filter(f => f.id !== id));
@@ -221,32 +302,40 @@ export default function DashboardUploadPage() {
 
   const retryUpload = (fileId: string) => {
     const file = files.find(f => f.id === fileId);
-    if (!file) return;
-
-    setFiles(prev => prev.map(f => 
-      f.id === fileId 
-        ? { ...f, status: "uploading", progress: 0, error: undefined }
-        : f
-    ));
-
-    uploadSingleFile(file);
+    if (file) {
+      removeFile(fileId);
+      const newFile: UploadedFile = {
+        ...file,
+        id: crypto.randomUUID(),
+        status: "uploading",
+        progress: 0,
+        error: undefined,
+        documentId: undefined,
+        processingStage: undefined,
+      };
+      setFiles(prev => [...prev, newFile]);
+      uploadSingleFile(newFile);
+    }
   };
 
   const getStatusIcon = (status: UploadedFile["status"]) => {
     switch (status) {
       case "uploading":
-        return <Loader2 className="w-4 h-4 animate-spin text-primary" />;
+      case "processing":
+        return <Loader2 className="w-4 h-4 animate-spin text-blue-500" />;
       case "completed":
-        return <CheckCircle className="w-4 h-4 text-secondary" />;
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
       case "error":
-        return <AlertCircle className="w-4 h-4 text-destructive" />;
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
     }
   };
 
-  const getStatusText = (status: UploadedFile["status"]) => {
+  const getStatusText = (status: UploadedFile["status"], processingStage?: string) => {
     switch (status) {
       case "uploading":
-        return "Uploading and processing...";
+        return "Uploading...";
+      case "processing":
+        return processingStage || "Processing...";
       case "completed":
         return "Ready to chat!";
       case "error":
@@ -255,7 +344,7 @@ export default function DashboardUploadPage() {
   };
 
   const completedFiles = files.filter(f => f.status === "completed");
-  const hasUploading = files.some(f => f.status === "uploading");
+  const hasUploading = files.some(f => f.status === "uploading" || f.status === "processing");
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -386,7 +475,7 @@ export default function DashboardUploadPage() {
                       size="sm"
                       onClick={() => removeFile(file.id)}
                       className="self-end sm:self-auto text-muted-foreground hover:text-destructive p-1 sm:p-2"
-                      disabled={file.status === "uploading"}
+                      disabled={file.status === "uploading" || file.status === "processing"}
                     >
                       <X className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
@@ -396,7 +485,7 @@ export default function DashboardUploadPage() {
                     <div className="flex items-center space-x-2">
                       {getStatusIcon(file.status)}
                       <span className="text-xs sm:text-sm text-muted-foreground">
-                        {getStatusText(file.status)}
+                        {getStatusText(file.status, file.processingStage)}
                       </span>
                     </div>
                     
@@ -438,7 +527,7 @@ export default function DashboardUploadPage() {
                     </p>
                   )}
                   
-                  {file.status === "uploading" && (
+                  {(file.status === "uploading" || file.status === "processing") && (
                     <div className="w-full bg-muted rounded-full h-2 mt-3">
                       <div
                         className="bg-primary h-2 rounded-full w-full"

@@ -74,7 +74,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File type is not PDF' }, { status: 400 })
     }
 
-
     // Convert File to Buffer
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
@@ -94,22 +93,26 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Process document asynchronously
-    documentProcessor.processAndStoreDocument(
-      buffer,
-      safeFileName,
-      session.user.id,
-      document.id
-    ).catch(async (error) => {
-      console.error('Background document processing failed:', error)
-      // Update document status to failed
-      await db.document.update({
+    // Start processing in a separate request to avoid timeout
+    // This will be handled by a separate API route
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/documents/${document.id}/process`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        buffer: buffer.toString('base64'),
+        fileName: safeFileName,
+        userId: session.user.id,
+      }),
+    }).catch(error => {
+      db.document.update({
         where: { id: document.id },
         data: {
           extractionStage: DocumentExtractionStage.FAILED,
-          content: `Failed to process document: ${error.message}`,
+          content: `Failed to start processing: ${error.message}`,
         },
-      })
+      }).catch(console.error)
     })
 
     return NextResponse.json({ document }, { status: 201 })

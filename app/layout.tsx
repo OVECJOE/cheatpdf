@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -43,6 +44,7 @@ export default function RootLayout({
             expand
             duration={3000}
           />
+          <ServiceWorkerRegistration />
         </Providers>
       </body>
     </html>
