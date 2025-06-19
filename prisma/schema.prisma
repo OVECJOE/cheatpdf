@@ -92,6 +92,7 @@ model Document {
   content     String  @db.Text
   vectorized  Boolean @default(false)
   extractionStage DocumentExtractionStage @default(PDF_PARSE)
+  fileData String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

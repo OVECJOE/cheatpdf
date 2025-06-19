@@ -19,7 +19,6 @@ export async function PATCH(
       return NextResponse.json({ error: 'Document ID is required' }, { status: 400 })
     }
 
-    // Verify document exists and belongs to user
     const document = await db.document.findFirst({
       where: {
         id,
@@ -31,15 +30,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'Document not found' }, { status: 404 })
     }
 
-    // Get request body
     const body = await request.json()
     const { status, error } = body
-
     if (!status) {
       return NextResponse.json({ error: 'Status is required' }, { status: 400 })
     }
 
-    // Map status string to enum
     let extractionStage: DocumentExtractionStage
     switch (status.toUpperCase()) {
       case 'PENDING':
@@ -58,7 +54,6 @@ export async function PATCH(
         return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 
-    // Update document status
     const updatedDocument = await db.document.update({
       where: { id },
       data: {

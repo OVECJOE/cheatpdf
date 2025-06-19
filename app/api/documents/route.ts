@@ -3,13 +3,12 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/config/auth'
 import { documentProcessor } from '@/lib/core/document-processor'
 import db from '@/lib/config/db'
-import { DocumentExtractionStage } from '@prisma/client'
+import { DocumentExtractionStage, SubscriptionStatus } from '@prisma/client'
 import { sanitizeFileName } from '@/lib/utils'
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -51,40 +50,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Only 5 documents allowed for free users
     const userDocumentsCount = await db.document.count({
       where: { userId: session.user.id },
     })
-    if (userDocumentsCount >= 5 && session.user.subscriptionStatus !== 'ACTIVE') {
+    if (userDocumentsCount >= 5 && session.user.subscriptionStatus !== SubscriptionStatus.ACTIVE) {
       return NextResponse.json(
         { error: 'Free users can only upload up to 5 documents' },
         { status: 403 }
       )
     }
 
-    // Use Next.js built-in formData() for file uploads
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
-    // Validate file type
-    if (file.type !== 'application/pdf') {
-      return NextResponse.json({ error: 'File type is not PDF' }, { status: 400 })
-    }
-
-    // Validate file size (100MB limit)
-    const maxSize = 100 * 1024 * 1024 // 100MB
-    if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File size exceeds 100MB limit' }, { status: 400 })
-    }
-
-    // Convert File to Buffer
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // Create initial document record
     const safeFileName = sanitizeFileName(file.name)
     const document = await db.document.create({
       data: {
@@ -95,44 +79,30 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         vectorized: false,
         extractionStage: DocumentExtractionStage.PENDING,
-        content: ""
+        content: "",
+        fileData: buffer.toString('base64')
       },
     })
 
-    // Process document with timeout protection
-    const processWithTimeout = async () => {
-      try {
-        // Set a timeout for processing (8 seconds to stay within Vercel limits)
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Processing timeout')), 8000)
-        })
+    fetch(`${process.env.NEXTAUTH_URL}/api/documents/process`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        documentId: document.id,
+        userId: session.user.id 
+      })
+    }).catch(error => {
+      console.error('Failed to trigger background processing:', error)
+    })
 
-        const processPromise = documentProcessor.processAndStoreDocument(
-          buffer,
-          safeFileName,
-          session.user.id,
-          document.id
-        )
+    return NextResponse.json({ 
+      document: {
+        ...document,
+        fileData: undefined
+      },
+      status: 'processing'
+    }, { status: 201 })
 
-        // Race between processing and timeout
-        await Promise.race([processPromise, timeoutPromise])
-        console.log(`Document ${document.id} processed successfully`)
-      } catch (error) {
-        console.error(`Document processing failed for ${document.id}:`, error)
-        
-        // Update document status to failed
-        await db.document.update({
-          where: { id: document.id },
-          data: {
-            extractionStage: DocumentExtractionStage.FAILED,
-            content: `Processing failed: ${(error as Error).message}`,
-          },
-        })
-      }
-    }
-
-    processWithTimeout()
-    return NextResponse.json({ document }, { status: 201 })
   } catch (error) {
     console.error('Document upload error:', error)
     return NextResponse.json(
