@@ -332,7 +332,7 @@ export default function DashboardUploadPage() {
             )}
           </label>
           
-          <div className="mt-6 flex items-center justify-center space-x-6 text-sm text-muted-foreground">
+          <div className="mt-6 flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-6 text-sm text-muted-foreground">
             <div className="flex items-center space-x-2">
               <FileText className="w-4 h-4" />
               <span>PDF format only</span>

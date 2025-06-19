@@ -158,7 +158,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Quick Actions</span>
                 </Button>
               </SheetTrigger>
@@ -207,7 +207,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 size="sm"
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                <Crown className="w-4 h-4 mr-2" />
+                <Crown className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Upgrade</span>
               </Button>
             )}
@@ -333,40 +333,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </nav>
       </div>
-
-      {/* Mobile Menu Sheet */}
-      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="bg-card border-border">
-          <SheetHeader>
-            <SheetTitle className="text-foreground">Navigation</SheetTitle>
-          </SheetHeader>
-          <nav className="space-y-2 mt-6">
-            {sidebarItems.map((item) => {
-              if (item.requiresPro && !isProUser) return null;
-              
-              const Icon = item.icon;
-              const isActive = isActiveRoute(item);
-              
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    "flex items-center px-3 py-2 rounded-lg transition-colors",
-                    isActive
-                      ? "bg-primary/10 text-primary border border-primary/20"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 } 
