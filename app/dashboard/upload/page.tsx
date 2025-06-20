@@ -95,76 +95,41 @@ export default function DashboardUploadPage() {
   const activeUploadsRef = useRef<Set<string>>(new Set());
   const progressTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const documentIdToFileIdMap = useRef<Map<string, string>>(new Map());
-  
-  useEffect(() => {
-    const eventSource = new EventSource('/api/documents/events');
-    
-    eventSource.onmessage = (event) => {
-      try {
-        const data: SSEEvent = JSON.parse(event.data);
-        const fileId = documentIdToFileIdMap.current.get(data.documentId);
 
-        if (!fileId) return;
-
-        switch (data.type) {
-          case 'progress':
-            setFiles(prev => prev.map(f => f.id === fileId ? {
-              ...f,
-              status: "processing",
-              processingStage: data.message || getStageDisplayName(data.stage || ''),
-              progress: data.progress || f.progress,
-            } : f));
-            break;
-          case 'complete':
-            setFiles(prev => prev.map(f => f.id === fileId ? {
-              ...f,
-              status: "completed",
-              processingStage: "Completed",
-              progress: 100,
-            } : f));
-            const completedFile = files.find(f => f.id === fileId);
-            if (completedFile) toast.success(`"${completedFile.name}" processed successfully!`);
-            documentIdToFileIdMap.current.delete(data.documentId);
-            break;
-          case 'error':
-            setFiles(prev => prev.map(f => f.id === fileId ? {
-              ...f,
-              status: "error",
-              error: data.error || "Processing failed",
-            } : f));
-            const errorFile = files.find(f => f.id === fileId);
-            if(errorFile) toast.error(`"${errorFile.name}" failed: ${data.error}`);
-            documentIdToFileIdMap.current.delete(data.documentId);
-            break;
-        }
-      } catch (error) {
-        console.error('Error parsing SSE event:', error);
-      }
-    };
-    
-    eventSource.onerror = (err) => {
-      console.error('SSE connection error:', err);
-      eventSource.close();
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, [files]);
-
+  // Add the missing addFileToQueue function
   const addFileToQueue = useCallback((file: File) => {
-    const uploadFile: UploadedFile = {
-      id: crypto.randomUUID(),
+    // Validate file type
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      toast.error(`${file.name} is not a PDF file. Only PDF files are supported.`);
+      return;
+    }
+
+    // Check file size (100MB limit)
+    const maxSize = 100 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error(`${file.name} is too large. Maximum file size is 100MB.`);
+      return;
+    }
+
+    // Check if file already exists
+    const existingFile = files.find(f => f.name === file.name && f.size === file.size);
+    if (existingFile) {
+      toast.error(`${file.name} is already in the queue.`);
+      return;
+    }
+
+    const newFile: UploadedFile = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       name: file.name,
       size: file.size,
       status: "queued",
       progress: 0,
     };
-    setFiles(prev => [...prev, uploadFile]);
-    uploadQueueRef.current.push(uploadFile);
+
+    setFiles(prev => [...prev, newFile]);
+    uploadQueueRef.current.push(newFile);
     processQueue();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [files]);
 
   const processQueue = useCallback(() => {
     while (activeUploadsRef.current.size < MAX_CONCURRENT_UPLOADS && uploadQueueRef.current.length > 0) {
@@ -173,73 +138,7 @@ export default function DashboardUploadPage() {
         startUpload(nextFile);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const startUpload = useCallback(async (uploadFile: UploadedFile) => {
-    activeUploadsRef.current.add(uploadFile.id);
-    setIsUploading(true);
-
-    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-    const originalFile = Array.from(fileInput?.files || []).find(f => f.name === uploadFile.name && f.size === uploadFile.size);
-    
-    if (!originalFile) {
-        const errorMsg = "Could not find the original file object. Please try removing and re-adding the file.";
-        setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, status: "error", error: errorMsg } : f));
-        toast.error(errorMsg);
-        activeUploadsRef.current.delete(uploadFile.id);
-        processQueue();
-        return;
-    }
-
-    const controller = new AbortController();
-    setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, status: "uploading", uploadController: controller } : f));
-    
-    const progressTimer = setInterval(() => {
-      setFiles(prev => prev.map(f => {
-        if (f.id === uploadFile.id && f.status === "uploading" && f.progress < 90) {
-          return { ...f, progress: Math.min(f.progress + 5, 90) };
-        }
-        return f;
-      }));
-    }, PROGRESS_UPDATE_INTERVAL);
-    progressTimersRef.current.set(uploadFile.id, progressTimer);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", originalFile);
-      
-      const response = await fetch("/api/documents", { method: "POST", body: formData, signal: controller.signal });
-
-      clearInterval(progressTimer);
-      progressTimersRef.current.delete(uploadFile.id);
-
-      setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, progress: 90, status: "processing" } : f));
-
-      if (response.ok) {
-        const result: DocumentResponse = await response.json();
-        documentIdToFileIdMap.current.set(result.document.id, uploadFile.id);
-        setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, documentId: result.document.id, processingStage: "Processing..." } : f));
-        toast.success(`${uploadFile.name} uploaded successfully!`);
-      } else {
-        const errorData: ErrorResponse = await response.json();
-        const errorMsg = errorData.error || `Upload failed (${response.status})`;
-        setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, status: "error", error: errorMsg } : f));
-        toast.error(errorMsg);
-      }
-    } catch (error) {
-      clearInterval(progressTimer);
-      progressTimersRef.current.delete(uploadFile.id);
-      if (!(error instanceof Error && error.name === 'AbortError')) {
-        setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, status: "error", error: "Upload failed" } : f));
-        toast.error(`Failed to upload ${uploadFile.name}`);
-      }
-    } finally {
-      activeUploadsRef.current.delete(uploadFile.id);
-      if (activeUploadsRef.current.size === 0) setIsUploading(false);
-      processQueue();
-    }
-  }, [processQueue]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -317,6 +216,154 @@ export default function DashboardUploadPage() {
       processQueue();
     }
   }, [files, processQueue]);
+
+  const startUpload = useCallback(async (uploadFile: UploadedFile) => {
+    activeUploadsRef.current.add(uploadFile.id);
+    setIsUploading(true);
+
+    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+    const originalFile = Array.from(fileInput?.files || []).find(f => f.name === uploadFile.name && f.size === uploadFile.size);
+    
+    if (!originalFile) {
+      const errorMsg = "Could not find the original file object. Please try removing and re-adding the file.";
+      setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, status: "error", error: errorMsg } : f));
+      toast.error(errorMsg);
+      activeUploadsRef.current.delete(uploadFile.id);
+      processQueue();
+      return;
+    }
+
+    const controller = new AbortController();
+    setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, status: "uploading", uploadController: controller } : f));
+    
+    const progressTimer = setInterval(() => {
+      setFiles(prev => prev.map(f => {
+        if (f.id === uploadFile.id && f.status === "uploading" && f.progress < 90) {
+          return { ...f, progress: Math.min(f.progress + 5, 90) };
+        }
+        return f;
+      }));
+    }, PROGRESS_UPDATE_INTERVAL);
+    progressTimersRef.current.set(uploadFile.id, progressTimer);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", originalFile);
+      
+      const response = await fetch("/api/documents", { method: "POST", body: formData, signal: controller.signal });
+
+      clearInterval(progressTimer);
+      progressTimersRef.current.delete(uploadFile.id);
+
+      if (response.ok) {
+        const result: DocumentResponse = await response.json();
+        
+        documentIdToFileIdMap.current.set(result.document.id, uploadFile.id);
+        
+        // Update to processing state with progress continuing from 90%
+        setFiles(prev => prev.map(f => f.id === uploadFile.id ? { 
+          ...f, 
+          documentId: result.document.id, 
+          status: "processing",
+          progress: 90, // Continue from where upload left off
+          processingStage: "Starting processing..." 
+        } : f));
+        
+        toast.success(`${uploadFile.name} uploaded successfully!`);
+      } else {
+        const errorData: ErrorResponse = await response.json();
+        const errorMsg = errorData.error || `Upload failed (${response.status})`;
+        setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, status: "error", error: errorMsg } : f));
+        toast.error(errorMsg);
+      }
+    } catch (error) {
+      clearInterval(progressTimer);
+      progressTimersRef.current.delete(uploadFile.id);
+      if (!(error instanceof Error && error.name === 'AbortError')) {
+        setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, status: "error", error: "Upload failed" } : f));
+        toast.error(`Failed to upload ${uploadFile.name}`);
+      }
+    } finally {
+      activeUploadsRef.current.delete(uploadFile.id);
+      if (activeUploadsRef.current.size === 0) setIsUploading(false);
+      processQueue();
+    }
+  }, [processQueue]);
+
+  useEffect(() => {
+    const eventSource = new EventSource('/api/documents/events');
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data: SSEEvent = JSON.parse(event.data);
+        
+        // Skip heartbeat and connection events
+        if (data.type === 'heartbeat' || data.type === 'connected') {
+          return;
+        }
+        
+        const fileId = documentIdToFileIdMap.current.get(data.documentId);
+
+        if (!fileId) {
+          console.log(`No file mapping found for document ${data.documentId}`);
+          return;
+        }
+
+        switch (data.type) {
+          case 'progress':
+            setFiles(prev => prev.map(f => f.id === fileId ? {
+              ...f,
+              status: "processing",
+              processingStage: data.message || getStageDisplayName(data.stage || ''),
+              progress: Math.max(f.progress, Math.min(90 + (data.progress || 0) * 0.1, 100)),
+            } : f));
+            break;
+            
+          case 'complete':
+            setFiles(prev => prev.map(f => f.id === fileId ? {
+              ...f,
+              status: "completed",
+              processingStage: "Completed",
+              progress: 100,
+            } : f));
+            
+            // Find and toast success for completed file
+            const completedFile = files.find(f => f.id === fileId);
+            if (completedFile) {
+              toast.success(`"${completedFile.name}" processed successfully!`);
+            }
+            documentIdToFileIdMap.current.delete(data.documentId);
+            break;
+            
+          case 'error':
+            setFiles(prev => prev.map(f => f.id === fileId ? {
+              ...f,
+              status: "error",
+              error: data.error || "Processing failed",
+            } : f));
+            
+            // Find and toast error for failed file
+            const errorFile = files.find(f => f.id === fileId);
+            if (errorFile) {
+              toast.error(`"${errorFile.name}" failed: ${data.error}`);
+            }
+            documentIdToFileIdMap.current.delete(data.documentId);
+            break;
+        }
+      } catch (error) {
+        console.error('Error parsing SSE event:', error);
+      }
+    };
+    
+    eventSource.onerror = (err) => {
+      console.error('SSE connection error:', err);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [files]);
 
   const getStatusIcon = useCallback((status: UploadedFile["status"]) => {
     switch (status) {
@@ -518,7 +565,7 @@ export default function DashboardUploadPage() {
                     </div>
                   </div>
                   <Button 
-                    variant="default" 
+                    variant="default"
                     size="sm"
                     onClick={() => router.push(`/dashboard/chats/new?documentId=${file.documentId}`)}
                   >
@@ -546,4 +593,4 @@ export default function DashboardUploadPage() {
       )}
     </div>
   );
-} 
+}

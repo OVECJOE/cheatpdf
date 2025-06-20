@@ -35,12 +35,6 @@ export function ServiceWorkerRegistration() {
           }
         });
 
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!isDevelopment) {
-          window.location.reload();
-        }
-      });
-
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission().catch(() => {});
       }
@@ -69,7 +63,7 @@ export function ServiceWorkerRegistration() {
     if (status === 'authenticated') {
       sendSessionKeyToSW();
     }
-  }, [session, status]);
+  }, [session?.user?.id, status]);
 
   return null;
 } 

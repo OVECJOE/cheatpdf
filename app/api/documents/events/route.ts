@@ -3,7 +3,7 @@ import { documentProcessor } from '@/lib/core/document-processor';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/config/auth';
 import { getToken } from 'next-auth/jwt';
-import db from '@/lib/config/db';
+import { getDocumentUser, allDocumentUserEntries, unregisterDocumentUser } from './ud-map';
 
 interface ProgressEvent {
   documentId: string;
@@ -22,37 +22,101 @@ interface CompleteEvent {
   documentId: string;
 }
 
-// Store user-specific controllers
+// Store user-specific controllers and document-to-user mappings
 const userClients = new Map<string, ReadableStreamDefaultController>();
+
+// Helper function to get stage display name
+const getStageDisplayName = (stage: string): string => {
+  switch (stage) {
+    case 'VALIDATING':
+      return 'Validating PDF file...';
+    case 'PDF_PARSE':
+      return 'Extracting text from PDF...';
+    case 'PDF_LOADER':
+      return 'Loading PDF content...';
+    case 'PER_PAGE':
+      return 'Processing with OCR...';
+    case 'CHUNKING':
+      return 'Splitting into chunks...';
+    case 'VECTORIZING':
+      return 'Creating searchable vectors...';
+    default:
+      return stage || 'Processing...';
+  }
+};
+
+// Helper function to safely send SSE message
+const sendSSEMessage = (controller: ReadableStreamDefaultController, data: Record<string, unknown>) => {
+  try {
+    const eventMessage = `data: ${JSON.stringify(data)}\n\n`;
+    controller.enqueue(new TextEncoder().encode(eventMessage));
+  } catch (error) {
+    console.error('Failed to send SSE message:', error);
+  }
+};
 
 // Listen to document processor events globally
 documentProcessor.on('progress', async (data: ProgressEvent) => {
-  const document = await db.document.findUnique({ where: { id: data.documentId }, select: { userId: true } });
-  if (document && userClients.has(document.userId)) {
-    const controller = userClients.get(document.userId);
-    const eventMessage = `data: ${JSON.stringify({ type: 'progress', ...data })}\n\n`;
-    controller?.enqueue(new TextEncoder().encode(eventMessage));
+  const userId = getDocumentUser(data.documentId);
+  
+  if (userId && userClients.has(userId)) {
+    const controller = userClients.get(userId);
+    if (controller) {
+      const eventData = {
+        type: 'progress',
+        documentId: data.documentId,
+        stage: data.stage,
+        progress: Math.round(data.progress),
+        message: data.message || getStageDisplayName(data.stage),
+        timestamp: data.timestamp || new Date()
+      };
+      
+      sendSSEMessage(controller, eventData);
+    }
   }
 });
 
 documentProcessor.on('complete', async (data: CompleteEvent) => {
-  const document = await db.document.findUnique({ where: { id: data.documentId }, select: { userId: true } });
-  if (document && userClients.has(document.userId)) {
-    const controller = userClients.get(document.userId);
-    const eventMessage = `data: ${JSON.stringify({ type: 'complete', ...data, timestamp: new Date() })}\n\n`;
-    controller?.enqueue(new TextEncoder().encode(eventMessage));
+  const userId = getDocumentUser(data.documentId);
+  
+  if (userId && userClients.has(userId)) {
+    const controller = userClients.get(userId);
+    if (controller) {
+      const eventData = {
+        type: 'complete',
+        documentId: data.documentId,
+        message: 'Document processing completed successfully',
+        timestamp: new Date()
+      };
+      
+      sendSSEMessage(controller, eventData);
+    }
   }
+  
+  // Clean up the mapping after completion
+  unregisterDocumentUser(data.documentId);
 });
 
 documentProcessor.on('error', async (data: ErrorEvent) => {
-  const document = await db.document.findUnique({ where: { id: data.documentId }, select: { userId: true } });
-  if (document && userClients.has(document.userId)) {
-    const controller = userClients.get(document.userId);
-    const eventMessage = `data: ${JSON.stringify({ type: 'error', ...data, timestamp: new Date() })}\n\n`;
-    controller?.enqueue(new TextEncoder().encode(eventMessage));
+  const userId = getDocumentUser(data.documentId);
+  
+  if (userId && userClients.has(userId)) {
+    const controller = userClients.get(userId);
+    if (controller) {
+      const eventData = {
+        type: 'error',
+        documentId: data.documentId,
+        error: data.error || 'Processing failed',
+        timestamp: new Date()
+      };
+      
+      sendSSEMessage(controller, eventData);
+    }
   }
+  
+  // Clean up the mapping after error
+  unregisterDocumentUser(data.documentId);
 });
-
 
 export async function GET(request: NextRequest) {
   try {
@@ -76,6 +140,8 @@ export async function GET(request: NextRequest) {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control',
     };
 
     const stream = new ReadableStream({
@@ -83,18 +149,63 @@ export async function GET(request: NextRequest) {
         console.log(`SSE connection established for user ${userId}`);
         userClients.set(userId, controller);
 
-        const initialMessage = `data: ${JSON.stringify({
+        // Send initial connection message
+        const initialMessage = {
           type: 'connected',
           message: 'SSE connection established',
           timestamp: new Date().toISOString()
-        })}\n\n`;
-        controller.enqueue(new TextEncoder().encode(initialMessage));
+        };
+        
+        sendSSEMessage(controller, initialMessage);
 
-        request.signal.addEventListener('abort', () => {
+        // Send periodic heartbeat to keep connection alive
+        const heartbeatInterval = setInterval(() => {
+          if (userClients.has(userId)) {
+            const heartbeatMessage = {
+              type: 'heartbeat',
+              timestamp: new Date().toISOString()
+            };
+            sendSSEMessage(controller, heartbeatMessage);
+          } else {
+            clearInterval(heartbeatInterval);
+          }
+        }, 30000); // Send heartbeat every 30 seconds
+
+        // Handle connection close
+        const cleanup = () => {
           console.log(`SSE connection closed for user ${userId}`);
+          clearInterval(heartbeatInterval);
           userClients.delete(userId);
-          controller.close();
-        });
+          
+          // Clean up any document mappings for this user
+          for (const [docId, mappedUserId] of allDocumentUserEntries()) {
+            if (mappedUserId === userId) {
+              unregisterDocumentUser(docId);
+            }
+          }
+          
+          try {
+            controller.close();
+          } catch (error) {
+            console.error('Error closing SSE controller:', error);
+          }
+        };
+
+        // Listen for connection abort/close
+        request.signal.addEventListener('abort', cleanup);
+        
+        // Additional cleanup for various close scenarios
+        const checkConnection = setInterval(() => {
+          if (request.signal.aborted) {
+            clearInterval(checkConnection);
+            cleanup();
+          }
+        }, 5000);
+      },
+      
+      cancel() {
+        console.log(`SSE stream cancelled for user ${userId}`);
+        userClients.delete(userId);
       }
     });
 
@@ -103,4 +214,4 @@ export async function GET(request: NextRequest) {
     console.error('SSE Error:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
-} 
+}
