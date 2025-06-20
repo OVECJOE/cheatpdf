@@ -29,6 +29,7 @@ export function PWAManager() {
     const [isIOS, setIsIOS] = useState(false)
     const [message, setMessage] = useState('')
     const [isLoading, setIsLoading] = useState(false)
+    const [installPromptAvailable, setInstallPromptAvailable] = useState(false)
 
     useEffect(() => {
         // Check if push notifications are supported
@@ -42,6 +43,22 @@ export function PWAManager() {
 
         // Check if iOS
         setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as Window & typeof globalThis & { MSStream: unknown }).MSStream)
+
+        // Listen for install prompt availability
+        window.addEventListener('installPromptAvailable', () => {
+            setInstallPromptAvailable(true)
+        })
+
+        // Listen for successful installation
+        window.addEventListener('appInstalled', () => {
+            setIsInstalled(true)
+            setInstallPromptAvailable(false)
+        })
+
+        // Check if install prompt is already available
+        if (window.deferredPrompt) {
+            setInstallPromptAvailable(true)
+        }
     }, [])
 
     async function registerServiceWorker() {
@@ -70,6 +87,29 @@ export function PWAManager() {
         } catch (error) {
             console.error('Service worker registration failed:', error)
         }
+    }
+
+    async function installApp() {
+        if (!window.deferredPrompt) {
+            console.log('No install prompt available')
+            return
+        }
+
+        // Show the install prompt
+        window.deferredPrompt.prompt()
+
+        // Wait for the user to respond to the prompt
+        const { outcome } = await window.deferredPrompt.userChoice
+
+        if (outcome === 'accepted') {
+            console.log('User accepted the install prompt')
+        } else {
+            console.log('User dismissed the install prompt')
+        }
+
+        // Clear the deferredPrompt
+        window.deferredPrompt = null
+        setInstallPromptAvailable(false)
     }
 
     async function subscribeToPush() {
@@ -246,13 +286,27 @@ export function PWAManager() {
                                     <li>3. Tap &quot;Add&quot; to install</li>
                                 </ol>
                             </div>
+                        ) : installPromptAvailable ? (
+                            <div className="space-y-3">
+                                <p className="text-sm text-muted-foreground">
+                                    Click the install button below to install CheatPDF on your device
+                                </p>
+                                <Button
+                                    onClick={installApp}
+                                    className="w-full"
+                                    size="sm"
+                                >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Install CheatPDF
+                                </Button>
+                            </div>
                         ) : (
                             <div className="space-y-2">
                                 <p className="text-sm text-muted-foreground">
-                                    Click the install button in your browser&apos;s address bar or menu to install CheatPDF
+                                    The install prompt will appear after you interact with the app. Try navigating around or refreshing the page.
                                 </p>
                                 <Badge variant="secondary">
-                                    Available for installation
+                                    Waiting for install prompt
                                 </Badge>
                             </div>
                         )}
@@ -283,6 +337,12 @@ export function PWAManager() {
                             <span>App Installation:</span>
                             <Badge variant={isInstalled ? "default" : "secondary"}>
                                 {isInstalled ? "Installed" : "Not Installed"}
+                            </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                            <span>Install Prompt:</span>
+                            <Badge variant={installPromptAvailable ? "default" : "secondary"}>
+                                {installPromptAvailable ? "Available" : "Not Available"}
                             </Badge>
                         </div>
                     </div>

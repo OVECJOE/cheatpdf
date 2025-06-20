@@ -3,9 +3,6 @@ import "next";
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      LANGSMITH_API_KEY: string;
-      LANGSMITH_PROJECT_ID: string;
-      LANGSMITH_API_URL?: string;
       MISTRAL_API_KEY: string;
 
       PINECONE_API_KEY: string;
