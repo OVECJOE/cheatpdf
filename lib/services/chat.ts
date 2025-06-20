@@ -95,13 +95,17 @@ export class ChatService {
         }
     }
 
-    public async getChatHistory(chatId: string, userId: string) {
+    public async getChatHistory(chatId: string, userId: string, offset?: number, limit?: number) {
         try {
+            // Get total count first
+            const totalCount = await db.message.count({ where: { chatId } });
             const chat = await db.chat.findFirst({
                 where: { id: chatId, userId },
                 include: {
                     messages: {
                         orderBy: { createdAt: "asc" },
+                        skip: offset ?? 0,
+                        take: limit ?? undefined,
                     },
                     document: {
                         select: { id: true, name: true },
@@ -113,7 +117,7 @@ export class ChatService {
                 throw new Error("Chat not found or access denied");
             }
 
-            return chat;
+            return { ...chat, totalCount };
         } catch (error) {
             console.error("Error fetching chat history:", error);
             throw new Error("Failed to fetch chat history");

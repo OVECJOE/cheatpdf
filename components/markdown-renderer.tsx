@@ -132,17 +132,17 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
           ),
 
           // Enhanced code blocks with your theme colors
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          code: ({ inline, className, children, ...props }: any) => {
+          code: (props) => {
+            const { node, className, children, ...rest } = props;
             const match = /language-(\w+)/.exec(className || "");
             const language = match ? match[1] : "";
 
-            if (inline && !/katex/.test(className || "")) {
+            if ((node && (node as { type?: string }).type === 'inlineCode') && !/katex/.test(className || "")) {
               return (
                 <code
                   className="bg-muted px-1 py-0.5 rounded text-[0.95em] font-mono text-foreground align-middle"
                   style={{ display: 'inline', fontSize: '0.97em', verticalAlign: 'baseline' }}
-                  {...props}
+                  {...rest}
                 >
                   {children}
                 </code>
@@ -161,7 +161,7 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
                 >
                   <code
                     className="block p-3 text-sm font-mono leading-relaxed text-foreground"
-                    {...props}
+                    {...rest}
                   >
                     {children}
                   </code>

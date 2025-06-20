@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -30,151 +30,70 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import MarkdownRenderer from "@/components/markdown-renderer";
-
-interface Message {
-  id: string;
-  content: string;
-  role: "USER" | "ASSISTANT";
-  createdAt: string;
-}
-
-interface Chat {
-  id: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  document: {
-    id: string;
-    name: string;
-    fileName: string;
-  };
-  messages: Message[];
-}
+import { useChatPagination, Message as ChatMessage } from '@/lib/hooks/use-chat-pagination';
 
 export default function ChatDetailPage() {
   const params = useParams();
   const router = useRouter();
   const chatId = params.id as string;
-
-  const [chat, setChat] = useState<Chat | null>(null);
-  const [sending, setSending] = useState(false);
   const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Pagination state for messages
-  const [startIndex, setStartIndex] = useState(0);
-  const PAGE_SIZE = 10;
+  // Chat pagination hook
+  const {
+    messages,
+    loading,
+    hasPrev,
+    hasNext,
+    loadPrev,
+    loadNext,
+    jumpToLatest,
+    refetch,
+    init,
+  } = useChatPagination({ chatId, pageSize: 10 });
 
-  const getVisibleMessages = useCallback(() => {
-    if (!chat) return [];
-    const total = chat.messages.length;
-    const start = Math.max(0, total - PAGE_SIZE - startIndex);
-    const end = total - startIndex;
-    return chat.messages.slice(start, end);
-  }, [chat, startIndex]);
-
-  // Handler to load previous messages
-  const loadPreviousMessages = useCallback(() => {
-    if (!chat) return;
-    setStartIndex((prev) => Math.min(chat.messages.length - PAGE_SIZE, prev + PAGE_SIZE));
-  }, [chat]);
-
-  // When chat or messages change, reset to latest page
+  // Fetch chat meta (title, doc) on mount
+  const [chatMeta, setChatMeta] = useState<{ title: string; document: { id: string; name: string; fileName: string }; createdAt: string } | null>(null);
   useEffect(() => {
-    if (chat) {
-      setStartIndex(0);
-    }
-  }, [chat]);
-
-  useEffect(() => {
-    if (chatId) {
-      fetchChat();
-    }
+    (async () => {
+      const res = await fetch(`/api/chats/${chatId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setChatMeta({ title: data.chat.title, document: data.chat.document, createdAt: data.chat.createdAt });
+      } else {
+        toast.error("Chat not found");
+        router.push("/dashboard/chats");
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [chat?.messages]);
+  // Init pagination on mount
+  useEffect(() => { init(); }, [init]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const fetchChat = async () => {
-    try {
-      const response = await fetch(`/api/chats/${chatId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setChat(data.chat);
-      } else if (response.status === 404) {
-        toast.error("Chat not found");
-        router.push("/dashboard/chats");
-      } else {
-        toast.error("Failed to load chat");
-      }
-    } catch (error) {
-      console.error("Error fetching chat:", error);
-      toast.error("Failed to load chat");
-    }
-  };
+  // Scroll to bottom on new messages
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const sendMessage = async () => {
-    if (!message.trim() || sending || !chat) return;
-
+    if (!message.trim() || sending) return;
     const userMessage = message.trim();
     setMessage("");
     setSending(true);
-
-    // Add user message optimistically
-    const tempUserMessage: Message = {
-      id: `temp-${Date.now()}`,
-      content: userMessage,
-      role: "USER",
-      createdAt: new Date().toISOString(),
-    };
-
-    setChat(prev => prev ? {
-      ...prev,
-      messages: [...prev.messages, tempUserMessage]
-    } : null);
-
     try {
       const response = await fetch(`/api/chats/${chatId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userMessage,
-        }),
+        body: JSON.stringify({ message: userMessage }),
       });
-
       if (response.ok) {
-        const data = await response.json();
-
-        // Replace temp message with real messages
-        setChat(prev => prev ? {
-          ...prev,
-          messages: [...prev.messages, data.message]
-        } : null);
+        refetch();
       } else {
-        // Remove temp message on error
-        setChat(prev => prev ? {
-          ...prev,
-          messages: prev.messages.filter(m => m.id !== tempUserMessage.id)
-        } : null);
-
         const errorData = await response.json();
         toast.error(errorData.error || "Failed to send message");
       }
-    } catch (error) {
-      // Remove temp message on error
-      setChat(prev => prev ? {
-        ...prev,
-        messages: prev.messages.filter(m => m.id !== tempUserMessage.id)
-      } : null);
-
-      console.error("Error sending message:", error);
+    } catch {
       toast.error("Failed to send message");
     } finally {
       setSending(false);
@@ -218,13 +137,13 @@ export default function ChatDetailPage() {
   };
 
   const deleteChat = async () => {
-    if (!chat || !confirm("Are you sure you want to delete this chat? This action cannot be undone.")) {
+    if (!chatMeta || !confirm("Are you sure you want to delete this chat? This action cannot be undone.")) {
       return;
     }
 
     setDeleting(true);
     try {
-      const response = await fetch(`/api/chats/${chat.id}`, {
+      const response = await fetch(`/api/chats/${chatId}`, {
         method: "DELETE",
       });
 
@@ -242,14 +161,19 @@ export default function ChatDetailPage() {
     }
   };
 
-  const jumpToLatest = () => {
-    setStartIndex(0);
-    setTimeout(() => {
-      scrollToBottom();
-    }, 100);
+  // Scroll event handler for prev/next
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const handleScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    if (el.scrollTop === 0 && hasPrev) {
+      loadPrev();
+    } else if (el.scrollHeight - el.scrollTop === el.clientHeight && hasNext) {
+      loadNext();
+    }
   };
 
-  if (!chat) {
+  if (!chatMeta) {
     return (
       <div className="p-6">
         <Card className="p-8 border-border bg-card text-center">
@@ -286,13 +210,13 @@ export default function ChatDetailPage() {
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">{chat.title}</h1>
+                <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">{chatMeta.title}</h1>
                 <div className="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground">
                   <FileText className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate">{chat.document.name}</span>
+                  <span className="truncate">{chatMeta.document.name}</span>
                   <span className="hidden sm:inline">•</span>
                   <Clock className="w-3 h-3 flex-shrink-0 hidden sm:inline" />
-                  <span className="hidden sm:inline">{formatDistanceToNow(new Date(chat.createdAt), { addSuffix: true })}</span>
+                  <span className="hidden sm:inline">{formatDistanceToNow(new Date(chatMeta.createdAt), { addSuffix: true })}</span>
                 </div>
               </div>
             </div>
@@ -306,7 +230,7 @@ export default function ChatDetailPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-card border-border">
               <DropdownMenuItem
-                onClick={() => router.push(`/dashboard/documents/${chat.document.id}`)}
+                onClick={() => router.push(`/dashboard/documents/${chatMeta.document.id}`)}
                 className="cursor-pointer"
               >
                 <FileText className="w-4 h-4 mr-2" />
@@ -330,17 +254,13 @@ export default function ChatDetailPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 min-h-0">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 min-h-0" ref={messagesContainerRef} onScroll={handleScroll}>
         <div className="space-y-4 pb-4">
-          {/* Load previous button if there are more messages */}
-          {chat && chat.messages.length - startIndex > PAGE_SIZE && (
-            <div className="flex justify-center mb-2">
-              <Button size="sm" variant="outline" onClick={loadPreviousMessages}>
-                Load previous messages
-              </Button>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
-          )}
-          {getVisibleMessages().length === 0 ? (
+          ) : messages.length === 0 ? (
             <div className="text-center py-8 sm:py-12">
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
@@ -349,7 +269,7 @@ export default function ChatDetailPage() {
                 Start the conversation!
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground mb-4 px-4">
-                Ask questions about &quot;{chat.document.name}&quot; to get started.
+                Ask questions about &quot;{chatMeta.document.name}&quot; to get started.
               </p>
               <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto px-4">
                 <Badge variant="outline" className="text-xs">&quot;Summarize the main points&quot;</Badge>
@@ -358,7 +278,7 @@ export default function ChatDetailPage() {
               </div>
             </div>
           ) : (
-            getVisibleMessages().map((msg) => (
+            messages.map((msg: ChatMessage) => (
               <div
                 key={msg.id}
                 className={`flex items-start space-x-3 ${msg.role === "USER" ? "flex-row-reverse space-x-reverse" : ""}`}
@@ -411,8 +331,18 @@ export default function ChatDetailPage() {
             </div>
           )}
           <div ref={messagesEndRef} />
-          {startIndex > 0 && (
-            <div className="flex justify-center mt-2">
+          {(hasPrev || hasNext) && (
+            <div className="flex justify-center mt-2 gap-2">
+              {hasPrev && (
+                <Button size="sm" variant="outline" onClick={loadPrev}>
+                  Previous
+                </Button>
+              )}
+              {hasNext && (
+                <Button size="sm" variant="outline" onClick={loadNext}>
+                  Next
+                </Button>
+              )}
               <Button size="sm" variant="outline" onClick={jumpToLatest}>
                 Jump to latest
               </Button>

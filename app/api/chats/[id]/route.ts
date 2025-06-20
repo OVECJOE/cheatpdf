@@ -15,8 +15,21 @@ export async function GET(
     }
 
     const { id } = await params;
-    const chat = await chatService.getChatHistory(id, session.user.id)
-    return NextResponse.json({ chat })
+    const { searchParams } = new URL(request.url);
+    const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined;
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
+
+    const chat = await chatService.getChatHistory(id, session.user.id, offset, limit);
+    if (typeof offset !== 'undefined' || typeof limit !== 'undefined') {
+      // Paginated response
+      return NextResponse.json({
+        messages: chat.messages,
+        totalCount: chat.totalCount,
+      });
+    } else {
+      // Full chat object
+      return NextResponse.json({ chat });
+    }
   } catch (error) {
     return NextResponse.json(
       { error: (error as Error).message || 'Failed to fetch chats' },
