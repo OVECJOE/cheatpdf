@@ -72,6 +72,7 @@ export default function DashboardUploadPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [sseConnected, setSseConnected] = useState(false);
   
   const uploadQueueRef = useRef<UploadedFile[]>([]);
   const activeUploadsRef = useRef<Set<string>>(new Set());
@@ -281,88 +282,109 @@ export default function DashboardUploadPage() {
       return;
     }
 
-    const eventSource = new EventSource('/api/documents/events');
-    eventSourceRef.current = eventSource;
-    
-    eventSource.onmessage = (event) => {
-      try {
-        const data: SSEEvent = JSON.parse(event.data);
-        
-        // Skip heartbeat and connection events
-        if (data.type === 'heartbeat' || data.type === 'connected') {
-          return;
-        }
-        
-        const fileId = documentIdToFileIdMap.current.get(data.documentId);
+    const connectSSE = () => {
+      const eventSource = new EventSource('/api/documents/events');
+      eventSourceRef.current = eventSource;
+      
+      eventSource.onopen = () => {
+        console.log('SSE connection established');
+        setSseConnected(true);
+      };
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data: SSEEvent = JSON.parse(event.data);
+          
+          // Skip heartbeat and connection events
+          if (data.type === 'heartbeat' || data.type === 'connected') {
+            console.log('SSE event received:', data.type);
+            return;
+          }
+          
+          const fileId = documentIdToFileIdMap.current.get(data.documentId);
 
-        if (!fileId) {
-          console.log(`No file mapping found for document ${data.documentId}`);
-          return;
-        }
+          if (!fileId) {
+            console.log(`No file mapping found for document ${data.documentId}`);
+            return;
+          }
 
-        switch (data.type) {
-          case 'progress':
-            setFiles(prev => prev.map(f => f.id === fileId ? {
-              ...f,
-              status: "processing",
-              processingStage: data.message || getStageDisplayName(data.stage || ''),
-              progress: Math.max(f.progress, Math.min(90 + (data.progress || 0) * 0.1, 100)),
-            } : f));
-            break;
-            
-          case 'complete':
-            setFiles(prev => {
-              const updatedFiles = prev.map(f => f.id === fileId ? {
+          console.log('Processing SSE event:', data.type, 'for file:', fileId);
+
+          switch (data.type) {
+            case 'progress':
+              setFiles(prev => prev.map(f => f.id === fileId ? {
                 ...f,
-                status: "completed" as const,
-                processingStage: "Completed",
-                progress: 100,
-              } : f);
+                status: "processing",
+                processingStage: data.message || getStageDisplayName(data.stage || ''),
+                progress: Math.max(f.progress, Math.min(90 + (data.progress || 0) * 0.1, 100)),
+              } : f));
+              break;
               
-              // Find and toast success for completed file
-              const completedFile = updatedFiles.find(f => f.id === fileId);
-              if (completedFile) {
-                toast.success(`"${completedFile.name}" processed successfully!`);
-              }
+            case 'complete':
+              setFiles(prev => {
+                const updatedFiles = prev.map(f => f.id === fileId ? {
+                  ...f,
+                  status: "completed" as const,
+                  processingStage: "Completed",
+                  progress: 100,
+                } : f);
+                
+                // Find and toast success for completed file
+                const completedFile = updatedFiles.find(f => f.id === fileId);
+                if (completedFile) {
+                  toast.success(`"${completedFile.name}" processed successfully!`);
+                }
+                
+                return updatedFiles;
+              });
               
-              return updatedFiles;
-            });
-            
-            documentIdToFileIdMap.current.delete(data.documentId);
-            break;
-            
-          case 'error':
-            setFiles(prev => {
-              const updatedFiles = prev.map(f => f.id === fileId ? {
-                ...f,
-                status: "error" as const,
-                error: data.error || "Processing failed",
-              } : f);
+              documentIdToFileIdMap.current.delete(data.documentId);
+              break;
               
-              // Find and toast error for failed file
-              const errorFile = updatedFiles.find(f => f.id === fileId);
-              if (errorFile) {
-                toast.error(`"${errorFile.name}" failed: ${data.error}`);
-              }
+            case 'error':
+              setFiles(prev => {
+                const updatedFiles = prev.map(f => f.id === fileId ? {
+                  ...f,
+                  status: "error" as const,
+                  error: data.error || "Processing failed",
+                } : f);
+                
+                // Find and toast error for failed file
+                const errorFile = updatedFiles.find(f => f.id === fileId);
+                if (errorFile) {
+                  toast.error(`"${errorFile.name}" failed: ${data.error}`);
+                }
+                
+                return updatedFiles;
+              });
               
-              return updatedFiles;
-            });
-            
-            documentIdToFileIdMap.current.delete(data.documentId);
-            break;
+              documentIdToFileIdMap.current.delete(data.documentId);
+              break;
+          }
+        } catch (error) {
+          console.error('Error parsing SSE event:', error);
         }
-      } catch (error) {
-        console.error('Error parsing SSE event:', error);
-      }
+      };
+      
+      eventSource.onerror = (err) => {
+        console.error('SSE connection error:', err);
+        setSseConnected(false);
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+          eventSourceRef.current = null;
+        }
+        
+        // Attempt to reconnect after 5 seconds
+        setTimeout(() => {
+          if (!eventSourceRef.current) {
+            console.log('Attempting to reconnect SSE...');
+            connectSSE();
+          }
+        }, 5000);
+      };
     };
-    
-    eventSource.onerror = (err) => {
-      console.error('SSE connection error:', err);
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-      }
-    };
+
+    connectSSE();
 
     return () => {
       if (eventSourceRef.current) {
@@ -370,7 +392,7 @@ export default function DashboardUploadPage() {
         eventSourceRef.current = null;
       }
     };
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
 
   const getStatusIcon = useCallback((status: UploadedFile["status"]) => {
     switch (status) {
@@ -403,6 +425,12 @@ export default function DashboardUploadPage() {
         <p className="text-sm sm:text-base text-muted-foreground">
           Upload PDF documents to start chatting with your study materials using AI
         </p>
+        <div className="flex items-center space-x-2 text-xs">
+          <div className={`w-2 h-2 rounded-full ${sseConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <span className="text-muted-foreground">
+            {sseConnected ? 'Real-time updates connected' : 'Connecting to real-time updates...'}
+          </span>
+        </div>
       </div>
 
       <Card className="p-4 sm:p-8 border-border bg-card">
