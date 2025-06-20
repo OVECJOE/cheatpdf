@@ -1,7 +1,15 @@
 import Link from "next/link";
+import { Menu } from "lucide-react";
+
 import AppLogo from "./logo";
 import { Button } from "../ui/button";
 import { ThemeToggle } from "./theme-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 export default function AppHeader() {
   return (
@@ -11,30 +19,24 @@ export default function AppHeader() {
           <AppLogo />
         </Link>
 
-        <nav className="flex items-center space-x-6">
+        <nav className="hidden md:flex items-center space-x-6">
           <Link
-            href="/#features"
-            className="text-secondary font-medium hover:text-primary transition-colors hidden md:block"
+            href="/features"
+            className="text-secondary font-medium hover:text-primary transition-colors"
           >
             Features
           </Link>
           <Link
-            href="/#pricing"
-            className="text-secondary font-medium hover:text-primary transition-colors hidden md:block"
+            href="/contact"
+            className="text-secondary font-medium hover:text-primary transition-colors"
           >
-            Pricing
-          </Link>
-          <Link
-            href="/#how-it-works"
-            className="text-secondary font-medium hover:text-primary transition-colors hidden md:block"
-          >
-            How it Works
+            Contact
           </Link>
           <Link
             href="/dashboard"
             className="text-secondary font-medium hover:text-primary transition-colors"
           >
-            Sign In
+            Dashboard
           </Link>
           <ThemeToggle />
           <Link href="/donate">
@@ -43,6 +45,31 @@ export default function AppHeader() {
             </Button>
           </Link>
         </nav>
+
+        <div className="md:hidden flex items-center space-x-2">
+          <ThemeToggle />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <Link href="/features">Features</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/contact">Contact</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/donate">Donate</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   );

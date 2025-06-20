@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://cheatpdf.live/sitemap.xml
+
+# Crawl delay (optional - be respectful to server)
+Crawl-delay: 1
+
+# Disallow admin and private areas
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /static/
+
+# Allow important pages
+Allow: /
+Allow: /features
+Allow: /contact
+Allow: /blog
+Allow: /privacy
+Allow: /terms

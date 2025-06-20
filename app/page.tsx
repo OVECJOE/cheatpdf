@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,16 +7,69 @@ import {
   ArrowRight,
   Brain,
   Clock,
-  Users,
   CheckCircle,
   Star,
   Zap,
-  Shield,
-  Globe,
+  MessageCircle,
+  Target,
+  BookOpen,
+  GraduationCap,
 } from "lucide-react";
 import AppLogo from "@/components/app/logo";
 import Image from "next/image";
 import AppHeader from "@/components/app/header";
+
+export const metadata: Metadata = {
+  title: "CheatPDF - AI-Powered Study Assistant | Chat with PDFs & Generate Exams",
+  description: "Transform your PDFs into smart study partners. Chat with documents, generate practice exams, and study smarter with AI. Perfect for students, researchers, and professionals. Upload PDFs and get instant answers, summaries, and personalized practice tests.",
+  keywords: [
+    "AI study assistant",
+    "PDF chat",
+    "document analysis",
+    "practice exams",
+    "study tools",
+    "AI tutor",
+    "PDF to quiz",
+    "document summarization",
+    "study materials",
+    "exam preparation",
+    "AI learning",
+    "PDF reader",
+    "study partner",
+    "academic AI",
+    "document processing",
+    "smart study",
+    "AI education",
+    "PDF analysis",
+    "study help",
+    "exam practice"
+  ],
+  openGraph: {
+    title: "CheatPDF - AI-Powered Study Assistant | Chat with PDFs & Generate Exams",
+    description: "Transform your PDFs into smart study partners. Chat with documents, generate practice exams, and study smarter with AI.",
+    url: "https://cheatpdf.com",
+    siteName: "CheatPDF",
+    images: [
+      {
+        url: "https://cheatpdf.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "CheatPDF - AI-Powered Study Assistant",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CheatPDF - AI-Powered Study Assistant | Chat with PDFs & Generate Exams",
+    description: "Transform your PDFs into smart study partners. Chat with documents, generate practice exams, and study smarter with AI.",
+    images: ["https://cheatpdf.com/og-image.png"],
+  },
+  alternates: {
+    canonical: "https://cheatpdf.com",
+  },
+};
 
 export default function LandingPage() {
   return (
@@ -45,7 +99,7 @@ export default function LandingPage() {
                 <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
                   Upload your study materials, practice with AI-generated exams,
                   and chat with your PDFs. CheatPDF helps students ace their
-                  exams with personalized AI tutoring.
+                  exams with personalized AI tutoring and intelligent document analysis.
                 </p>
               </div>
 
@@ -121,10 +175,11 @@ export default function LandingPage() {
             <div className="relative order-1 lg:order-2">
               <Image
                 src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f"
-                alt="Students studying with technology"
+                alt="Students studying with technology and AI-powered study tools"
                 width={800}
                 height={600}
                 className="rounded-2xl shadow-2xl w-full h-auto"
+                priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent rounded-2xl"></div>
             </div>
@@ -144,7 +199,7 @@ export default function LandingPage() {
             </h2>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
               Everything you need to study smarter, not harder. Turn any PDF
-              into an interactive learning experience.
+              into an interactive learning experience with AI-powered tools.
             </p>
           </div>
 
@@ -152,7 +207,7 @@ export default function LandingPage() {
             <Card className="p-4 sm:p-6 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
               <div className="space-y-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold text-foreground">
                   AI Chat with PDFs
@@ -160,7 +215,7 @@ export default function LandingPage() {
                 <p className="text-sm sm:text-base text-muted-foreground">
                   Ask questions about your study materials and get instant,
                   accurate answers. It&apos;s like having a tutor available
-                  24/7.
+                  24/7 with deep knowledge of your documents.
                 </p>
               </div>
             </Card>
@@ -175,7 +230,7 @@ export default function LandingPage() {
                 </h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
                   Generate realistic practice exams from your materials. Get
-                  detailed explanations for wrong answers only after completion.
+                  detailed explanations for wrong answers and track your progress over time.
                 </p>
                 <Badge variant="secondary" className="text-xs">
                   Premium Feature
@@ -193,52 +248,52 @@ export default function LandingPage() {
                 </h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
                   Get key points, summaries, and study guides generated
-                  automatically from your uploaded documents.
+                  automatically from your uploaded documents using advanced AI.
                 </p>
               </div>
             </Card>
 
             <Card className="p-4 sm:p-6 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
               <div className="space-y-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/15 rounded-lg flex items-center justify-center">
-                  <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 rounded-lg flex items-center justify-center">
+                  <Target className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold text-foreground">
-                  Multi-Language Support
+                  Smart Study Analytics
                 </h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Study in your preferred language. CheatPDF adapts to your
-                  location and language preferences automatically.
+                  Track your learning progress, identify knowledge gaps, and get
+                  personalized recommendations for improvement.
                 </p>
               </div>
             </Card>
 
             <Card className="p-4 sm:p-6 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
               <div className="space-y-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-destructive/10 rounded-lg flex items-center justify-center">
-                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-destructive" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-secondary/20 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-secondary" />
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold text-foreground">
-                  Secure & Private
+                  Study History & Notes
                 </h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Your study materials are encrypted and private. We never share
-                  your documents or study data with anyone.
+                  Keep track of all your study sessions, conversations, and
+                  important notes in one organized place.
                 </p>
               </div>
             </Card>
 
             <Card className="p-4 sm:p-6 border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
               <div className="space-y-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-secondary/15 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-secondary" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/30 rounded-lg flex items-center justify-center">
+                  <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold text-foreground">
-                  For All Students
+                  Academic Focus
                 </h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Whether you&apos;re in high school, college, or professional
-                  training - CheatPDF adapts to your learning level.
+                  Designed specifically for students, researchers, and educators
+                  with features tailored to academic success.
                 </p>
               </div>
             </Card>
@@ -434,6 +489,58 @@ export default function LandingPage() {
                   </Button>
                 </Link>
               </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-12 px-4">
+        <div className="container mx-auto">
+          <div className="text-center space-y-4 mb-12 lg:mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Everything you need to know about CheatPDF pricing and plans.
+            </p>
+          </div>
+
+          <div className="max-w-3xl mx-auto space-y-6">
+            <Card className="p-6 border-border bg-card">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Can I cancel my subscription anytime?
+              </h3>
+              <p className="text-muted-foreground">
+                Yes, you can cancel your subscription at any time. You&apos;ll continue to have access to your plan until the end of your billing period.
+              </p>
+            </Card>
+
+            <Card className="p-6 border-border bg-card">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Is there a free trial for Pro plans?
+              </h3>
+              <p className="text-muted-foreground">
+                Yes! You can try our Pro plan free for 7 days. No credit card required to start your trial.
+              </p>
+            </Card>
+
+            <Card className="p-6 border-border bg-card">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Do you offer student discounts?
+              </h3>
+              <p className="text-muted-foreground">
+                Yes, we offer special pricing for students and educational institutions. Contact us for more details.
+              </p>
+            </Card>
+
+            <Card className="p-6 border-border bg-card">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                What happens to my documents if I downgrade?
+              </h3>
+              <p className="text-muted-foreground">
+                Your documents are safe! If you downgrade, you&apos;ll keep access to your first 5 documents. Additional documents will be archived until you upgrade again.
+              </p>
             </Card>
           </div>
         </div>
