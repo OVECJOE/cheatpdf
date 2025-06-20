@@ -82,7 +82,7 @@ function AuthErrorContent() {
         <p className="text-sm text-muted-foreground">
           Need help?{" "}
           <span className="text-brand-amber font-semibold">
-            Contact us at support@cheatpdf.com
+            Contact us at info@cheatpdf.live
           </span>
         </p>
       </div>

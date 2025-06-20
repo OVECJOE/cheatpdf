@@ -21,6 +21,7 @@ import {
   Clock,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getStageDisplayName } from "@/lib/utils";
 
 interface UploadedFile {
   id: string;
@@ -66,25 +67,6 @@ interface SSEEvent {
 const MAX_CONCURRENT_UPLOADS = 3;
 const PROGRESS_UPDATE_INTERVAL = 1000;
 
-const getStageDisplayName = (stage: string): string => {
-  switch (stage) {
-    case 'VALIDATING':
-      return 'Validating PDF file...';
-    case 'PDF_PARSE':
-      return 'Extracting text from PDF...';
-    case 'PDF_LOADER':
-      return 'Loading PDF content...';
-    case 'PER_PAGE':
-      return 'Processing with OCR...';
-    case 'CHUNKING':
-      return 'Splitting into chunks...';
-    case 'VECTORIZING':
-      return 'Creating searchable vectors...';
-    default:
-      return 'Processing...';
-  }
-};
-
 export default function DashboardUploadPage() {
   const router = useRouter();
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -95,6 +77,7 @@ export default function DashboardUploadPage() {
   const activeUploadsRef = useRef<Set<string>>(new Set());
   const progressTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const documentIdToFileIdMap = useRef<Map<string, string>>(new Map());
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   // Add the missing addFileToQueue function
   const addFileToQueue = useCallback((file: File) => {
@@ -129,6 +112,7 @@ export default function DashboardUploadPage() {
     setFiles(prev => [...prev, newFile]);
     uploadQueueRef.current.push(newFile);
     processQueue();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]);
 
   const processQueue = useCallback(() => {
@@ -138,6 +122,7 @@ export default function DashboardUploadPage() {
         startUpload(nextFile);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -291,7 +276,13 @@ export default function DashboardUploadPage() {
   }, [processQueue]);
 
   useEffect(() => {
+    // Only create one SSE connection
+    if (eventSourceRef.current) {
+      return;
+    }
+
     const eventSource = new EventSource('/api/documents/events');
+    eventSourceRef.current = eventSource;
     
     eventSource.onmessage = (event) => {
       try {
@@ -320,33 +311,43 @@ export default function DashboardUploadPage() {
             break;
             
           case 'complete':
-            setFiles(prev => prev.map(f => f.id === fileId ? {
-              ...f,
-              status: "completed",
-              processingStage: "Completed",
-              progress: 100,
-            } : f));
+            setFiles(prev => {
+              const updatedFiles = prev.map(f => f.id === fileId ? {
+                ...f,
+                status: "completed" as const,
+                processingStage: "Completed",
+                progress: 100,
+              } : f);
+              
+              // Find and toast success for completed file
+              const completedFile = updatedFiles.find(f => f.id === fileId);
+              if (completedFile) {
+                toast.success(`"${completedFile.name}" processed successfully!`);
+              }
+              
+              return updatedFiles;
+            });
             
-            // Find and toast success for completed file
-            const completedFile = files.find(f => f.id === fileId);
-            if (completedFile) {
-              toast.success(`"${completedFile.name}" processed successfully!`);
-            }
             documentIdToFileIdMap.current.delete(data.documentId);
             break;
             
           case 'error':
-            setFiles(prev => prev.map(f => f.id === fileId ? {
-              ...f,
-              status: "error",
-              error: data.error || "Processing failed",
-            } : f));
+            setFiles(prev => {
+              const updatedFiles = prev.map(f => f.id === fileId ? {
+                ...f,
+                status: "error" as const,
+                error: data.error || "Processing failed",
+              } : f);
+              
+              // Find and toast error for failed file
+              const errorFile = updatedFiles.find(f => f.id === fileId);
+              if (errorFile) {
+                toast.error(`"${errorFile.name}" failed: ${data.error}`);
+              }
+              
+              return updatedFiles;
+            });
             
-            // Find and toast error for failed file
-            const errorFile = files.find(f => f.id === fileId);
-            if (errorFile) {
-              toast.error(`"${errorFile.name}" failed: ${data.error}`);
-            }
             documentIdToFileIdMap.current.delete(data.documentId);
             break;
         }
@@ -357,13 +358,19 @@ export default function DashboardUploadPage() {
     
     eventSource.onerror = (err) => {
       console.error('SSE connection error:', err);
-      eventSource.close();
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
     };
 
     return () => {
-      eventSource.close();
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
     };
-  }, [files]);
+  }, []); // Empty dependency array - only run once on mount
 
   const getStatusIcon = useCallback((status: UploadedFile["status"]) => {
     switch (status) {

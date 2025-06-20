@@ -35,8 +35,10 @@ import {
   FileText,
   MessageCircle,
   Calendar,
+  Smartphone,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/app/theme-toggle";
+import { PWAManager } from "@/components/pwa-manager";
 import { toast } from "sonner";
 
 interface UserProfile {
@@ -198,7 +200,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Email cannot be changed. Contact support if needed.
+                  Email address cannot be changed
                 </p>
               </div>
               
@@ -208,13 +210,27 @@ export default function SettingsPage() {
                 className="w-full sm:w-auto"
               >
                 {saving ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
                 ) : (
-                  <Save className="w-4 h-4 mr-2" />
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
                 )}
-                Save Changes
               </Button>
             </div>
+          </Card>
+
+          {/* PWA Settings */}
+          <Card className="p-6 border-border bg-card">
+            <div className="flex items-center space-x-3 mb-6">
+              <Smartphone className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">App Settings</h2>
+            </div>
+            <PWAManager />
           </Card>
 
           {/* Subscription Settings */}

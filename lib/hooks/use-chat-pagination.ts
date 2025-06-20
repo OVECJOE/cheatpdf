@@ -5,6 +5,7 @@ export interface Message {
   content: string;
   role: 'USER' | 'ASSISTANT';
   createdAt: string;
+  status?: 'pending';
 }
 
 export function useChatPagination({
@@ -80,6 +81,7 @@ export function useChatPagination({
 
   return {
     messages,
+    setMessages,
     loading,
     hasPrev,
     hasNext,

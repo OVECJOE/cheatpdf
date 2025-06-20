@@ -5,12 +5,23 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   MessageCircle,
@@ -23,14 +34,13 @@ import {
   Trash2,
   Copy,
   ArrowLeft,
-  Sparkles,
   Clock,
-  CheckCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import MarkdownRenderer from "@/components/markdown-renderer";
 import { useChatPagination, Message as ChatMessage } from '@/lib/hooks/use-chat-pagination';
+import ChatPageSkeleton from "./loading";
 
 export default function ChatDetailPage() {
   const params = useParams();
@@ -40,63 +50,86 @@ export default function ChatDetailPage() {
   const [sending, setSending] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [chatMeta, setChatMeta] = useState<{ title: string; document: { id: string; name: string; fileName: string }; createdAt: string } | null>(null);
+  const [loadingMeta, setLoadingMeta] = useState(true);
 
-  // Chat pagination hook
   const {
     messages,
+    setMessages,
     loading,
     hasPrev,
-    hasNext,
     loadPrev,
-    loadNext,
     jumpToLatest,
-    refetch,
     init,
-  } = useChatPagination({ chatId, pageSize: 10 });
+  } = useChatPagination({ chatId, pageSize: 20 });
 
-  // Fetch chat meta (title, doc) on mount
-  const [chatMeta, setChatMeta] = useState<{ title: string; document: { id: string; name: string; fileName: string }; createdAt: string } | null>(null);
   useEffect(() => {
     (async () => {
-      const res = await fetch(`/api/chats/${chatId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setChatMeta({ title: data.chat.title, document: data.chat.document, createdAt: data.chat.createdAt });
-      } else {
-        toast.error("Chat not found");
-        router.push("/dashboard/chats");
+      try {
+        const res = await fetch(`/api/chats/${chatId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setChatMeta({ title: data.chat.title, document: data.chat.document, createdAt: data.chat.createdAt });
+        } else {
+          setChatMeta(null);
+        }
+      } catch (error) {
+        console.error("Failed to load chat details:", error);
+        setChatMeta(null);
+        toast.error("Failed to load chat details.");
+      } finally {
+        setLoadingMeta(false);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId]);
 
-  // Init pagination on mount
   useEffect(() => { init(); }, [init]);
 
-  // Scroll to bottom on new messages
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => {
+    if (!loading) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [messages, loading]);
 
   const sendMessage = async () => {
     if (!message.trim() || sending) return;
+
     const userMessage = message.trim();
+    
+    const optimisticMessage: ChatMessage = {
+      id: `pending-${Date.now()}`,
+      content: userMessage,
+      role: 'USER',
+      createdAt: new Date().toISOString(),
+      status: 'pending',
+    };
+    
+    setMessages(prevMessages => [...prevMessages, optimisticMessage]);
     setMessage("");
     setSending(true);
+
     try {
       const response = await fetch(`/api/chats/${chatId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage }),
       });
-      if (response.ok) {
-        refetch();
-      } else {
+
+      if (!response.ok) {
         const errorData = await response.json();
         toast.error(errorData.error || "Failed to send message");
+        setMessage(userMessage);
+        setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       }
     } catch {
-      toast.error("Failed to send message");
+      toast.error("Failed to send message. Please check your connection.");
+      setMessage(userMessage);
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
     } finally {
       setSending(false);
+      jumpToLatest();
     }
   };
 
@@ -107,29 +140,16 @@ export default function ChatDetailPage() {
     }
   };
 
-  // Auto-resize textarea based on content
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
-
-    // Reset height to get the correct scrollHeight
-    e.target.style.height = 'auto';
-
-    // Set height based on scrollHeight, with min and max constraints
-    const scrollHeight = e.target.scrollHeight;
-    const minHeight = 40; // min-h-[40px]
-    const maxHeight = 120; // max-h-[120px]
-
-    if (scrollHeight > maxHeight) {
-      e.target.style.height = `${maxHeight}px`;
-      e.target.style.overflowY = 'auto';
-    } else if (scrollHeight < minHeight) {
-      e.target.style.height = `${minHeight}px`;
-      e.target.style.overflowY = 'hidden';
-    } else {
-      e.target.style.height = `${scrollHeight}px`;
-      e.target.style.overflowY = 'hidden';
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 120;
+      textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+      textareaRef.current.style.overflowY = scrollHeight > maxHeight ? 'auto' : 'hidden';
     }
-  };
+  }, [message]);
 
   const copyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
@@ -137,9 +157,7 @@ export default function ChatDetailPage() {
   };
 
   const deleteChat = async () => {
-    if (!chatMeta || !confirm("Are you sure you want to delete this chat? This action cannot be undone.")) {
-      return;
-    }
+    if (!chatMeta) return;
 
     setDeleting(true);
     try {
@@ -161,18 +179,20 @@ export default function ChatDetailPage() {
     }
   };
 
-  // Scroll event handler for prev/next
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const handleScroll = () => {
     const el = messagesContainerRef.current;
-    if (!el) return;
+    if (!el || loading) return;
+
     if (el.scrollTop === 0 && hasPrev) {
       loadPrev();
-    } else if (el.scrollHeight - el.scrollTop === el.clientHeight && hasNext) {
-      loadNext();
     }
   };
 
+  if (loadingMeta) {
+    return <ChatPageSkeleton />;
+  }
+  
   if (!chatMeta) {
     return (
       <div className="p-6">
@@ -192,184 +212,148 @@ export default function ChatDetailPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-3.5rem)] md:h-[calc(100vh-3.5rem)]">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
       {/* Header */}
-      <div className="flex-shrink-0 p-4 sm:p-6 pb-0">
-        <div className="flex items-center justify-between space-y-3 sm:space-y-0 mb-4">
+      <div className="flex-shrink-0 p-4 sm:p-6 border-b border-border">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push("/dashboard/chats")}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              <span className="hidden xs:inline">Back</span>
+            <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => router.back()}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div className="flex items-center space-x-3 min-w-0 flex-1">
-              <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
-                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">{chatMeta.title}</h1>
-                <div className="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground">
-                  <FileText className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate">{chatMeta.document.name}</span>
-                  <span className="hidden sm:inline">•</span>
-                  <Clock className="w-3 h-3 flex-shrink-0 hidden sm:inline" />
-                  <span className="hidden sm:inline">{formatDistanceToNow(new Date(chatMeta.createdAt), { addSuffix: true })}</span>
-                </div>
-              </div>
+            <div className="flex-shrink-0">
+              <FileText className="w-8 h-8 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold truncate text-foreground">{chatMeta.title}</h1>
+              <p className="text-sm text-muted-foreground truncate" title={chatMeta.document.name}>
+                {chatMeta.document.name}
+              </p>
             </div>
           </div>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="flex-shrink-0">
-                <MoreVertical className="w-4 h-4" />
+              <Button variant="ghost" size="icon" disabled={deleting}>
+                {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <MoreVertical className="w-4 h-4" />}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-card border-border">
-              <DropdownMenuItem
-                onClick={() => router.push(`/dashboard/documents/${chatMeta.document.id}`)}
-                className="cursor-pointer"
-              >
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => router.push(`/dashboard/documents/${chatMeta.document.id}`)}>
                 <FileText className="w-4 h-4 mr-2" />
-                View Document
+                <span>View Document</span>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={deleteChat}
-                className="cursor-pointer text-destructive"
-                disabled={deleting}
-              >
-                {deleting ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4 mr-2" />
-                )}
-                Delete Chat
-              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-500 focus:text-red-500">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    <span>Delete Chat</span>
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete this chat history.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={deleteChat} className="bg-red-500 hover:bg-red-600">
+                      Yes, delete chat
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 min-h-0" ref={messagesContainerRef} onScroll={handleScroll}>
-        <div className="space-y-4 pb-4">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="text-center py-8 sm:py-12">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+      <div 
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6"
+      >
+        {loading && messages.length === 0 && (
+          <div className="flex justify-center items-center h-full">
+            <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+          </div>
+        )}
+
+        {hasPrev && (
+          <div className="text-center">
+            <Button variant="outline" size="sm" onClick={loadPrev} disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Load previous messages
+            </Button>
+          </div>
+        )}
+        
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={`flex items-start gap-3 sm:gap-4 ${
+              msg.role === "USER" ? "justify-end" : "justify-start"
+            } ${msg.status === 'pending' ? 'opacity-60' : ''}`}
+          >
+            {msg.role === "ASSISTANT" && (
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                Start the conversation!
-              </h3>
-              <p className="text-sm sm:text-base text-muted-foreground mb-4 px-4">
-                Ask questions about &quot;{chatMeta.document.name}&quot; to get started.
-              </p>
-              <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto px-4">
-                <Badge variant="outline" className="text-xs">&quot;Summarize the main points&quot;</Badge>
-                <Badge variant="outline" className="text-xs">&quot;What are the key concepts?&quot;</Badge>
-                <Badge variant="outline" className="text-xs">&quot;Explain this topic in detail&quot;</Badge>
-              </div>
-            </div>
-          ) : (
-            messages.map((msg: ChatMessage) => (
-              <div
-                key={msg.id}
-                className={`flex items-start space-x-3 ${msg.role === "USER" ? "flex-row-reverse space-x-reverse" : ""}`}
-              >
-                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === "USER" ? "bg-primary/10" : "bg-secondary/10"}`}>
-                  {msg.role === "USER" ? (
-                    <User className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
-                  ) : (
-                    <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-secondary" />
-                  )}
-                </div>
-                <div className={`flex-1 min-w-0 ${msg.role === "USER" ? "text-right" : ""}`}>
-                  <div className={`inline-block sm:max-w-[85%] lg:max-w-[75%] p-3 sm:p-4 rounded-lg ${msg.role === "USER" ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
-                    {msg.role === "USER" ? (
-                      <div className="text-sm whitespace-pre-wrap break-words">{msg.content}</div>
-                    ) : (
-                      <div className="text-sm">
-                        <MarkdownRenderer content={msg.content} />
-                      </div>
-                    )}
-                  </div>
-                  <div className={`flex items-center space-x-2 mt-2 text-xs text-muted-foreground ${msg.role === "USER" ? "justify-end" : ""}`}>
-                    <span className="hidden sm:inline">{formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyMessage(msg.content)}
-                      className="h-6 w-6 p-0 hover:bg-muted"
-                    >
+            )}
+            <div
+              className={`max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl w-fit rounded-xl p-3 sm:p-4 text-sm sm:text-base shadow-sm break-words ${
+                msg.role === "USER"
+                  ? "bg-primary/20 text-primary rounded-br-none"
+                  : "bg-card text-card-foreground border rounded-bl-none"
+              }`}
+            >
+              <MarkdownRenderer content={msg.content} />
+              <div className="text-xs mt-2 flex items-center justify-end opacity-70 space-x-2">
+                {msg.status === 'pending' ? (
+                  <>
+                    <Clock className="w-3 h-3" />
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}</span>
+                    <button onClick={() => copyMessage(msg.content)} className="hover:opacity-100 transition-opacity">
                       <Copy className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-          {sending && (
-            <div className="flex items-start space-x-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-secondary" />
-              </div>
-              <div className="flex-1">
-                <div className="inline-block bg-card border border-border p-3 sm:p-4 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-secondary" />
-                    <span className="text-sm text-muted-foreground">AI is thinking...</span>
-                  </div>
-                </div>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
-          )}
-          <div ref={messagesEndRef} />
-          {(hasPrev || hasNext) && (
-            <div className="flex justify-center mt-2 gap-2">
-              {hasPrev && (
-                <Button size="sm" variant="outline" onClick={loadPrev}>
-                  Previous
-                </Button>
-              )}
-              {hasNext && (
-                <Button size="sm" variant="outline" onClick={loadNext}>
-                  Next
-                </Button>
-              )}
-              <Button size="sm" variant="outline" onClick={jumpToLatest}>
-                Jump to latest
-              </Button>
-            </div>
-          )}
-        </div>
+            {msg.role === "USER" && (
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                {msg.status === 'pending' ? <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground animate-spin" /> : <User className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />}
+              </div>
+            )}
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
       </div>
-      {/* Message Input */}
-      <div className="flex-shrink-0 p-4 sm:p-6 pt-0 pb-4 sm:pb-6">
-        <Card className="p-3 sm:p-4 border-border bg-card">
-          <div className="flex items-end space-x-2 sm:space-x-3">
-            <div className="flex-1">
-              <Textarea
-                value={message}
-                onChange={handleTextareaChange}
-                onKeyDown={handleKeyPress}
-                placeholder="Ask a question about the document..."
-                disabled={sending}
-                className="resize-none text-sm sm:text-base min-h-[40px] max-h-[120px]"
-                rows={1}
-              />
-            </div>
+
+      {/* Input */}
+      <div className="flex-shrink-0 p-4 sm:p-6 pt-2 border-t border-border bg-card">
+        <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="relative">
+          <Textarea
+            ref={textareaRef}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder="Ask a follow-up question..."
+            className="w-full min-h-[40px] resize-none bg-background pr-12 py-3"
+            rows={1}
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
             <Button
-              onClick={sendMessage}
+              type="submit"
+              size="icon"
               disabled={!message.trim() || sending}
-              size="sm"
-              className="flex-shrink-0"
+              className="rounded-full w-8 h-8"
             >
               {sending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -378,15 +362,10 @@ export default function ChatDetailPage() {
               )}
             </Button>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-3 space-y-1 sm:space-y-0 text-xs text-muted-foreground">
-            <span className="hidden sm:inline">Press Enter to send, Shift+Enter for new line</span>
-            <span className="sm:hidden text-center">Tap Send or press Enter</span>
-            <div className="flex items-center justify-center sm:justify-end space-x-2">
-              <CheckCircle className="w-3 h-3 text-secondary" />
-              <span>AI-powered responses</span>
-            </div>
-          </div>
-        </Card>
+        </form>
+        <p className="text-xs text-muted-foreground mt-4 text-center">
+          Press <kbd className="px-1.5 py-0.5 border bg-muted rounded-sm">Enter</kbd> to send, <kbd className="px-1.5 py-0.5 border bg-muted rounded-sm">Shift+Enter</kbd> for a new line.
+        </p>
       </div>
     </div>
   );

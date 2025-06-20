@@ -181,14 +181,16 @@ class DonationService {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      // Get total donation stats
+      // Get total stats
       const totalStats = await db.donation.aggregate({
-        where: { status: "COMPLETED" },
+        where: {
+          status: "COMPLETED",
+        },
         _sum: {
           amount: true,
         },
         _count: {
-          id: true,
+          donorEmail: true,
         },
       });
 
@@ -202,29 +204,23 @@ class DonationService {
         },
         _sum: {
           amount: true,
-          studentsToHelp: true,
         },
       });
-
-      // Get total students helped
-      const totalStudentsHelped = await db.studentBeneficiary.count();
 
       // Update or create donation stats
       await db.donationStats.upsert({
         where: { id: "global-stats" },
         update: {
           totalDonations: totalStats._sum.amount || 0,
-          totalStudentsHelped,
-          currentMonthDonations: monthStats._sum.amount || 0,
-          currentMonthStudents: monthStats._sum.studentsToHelp || 0,
+          totalDonors: totalStats._count.donorEmail || 0,
+          monthlyRecurring: monthStats._sum.amount || 0,
           lastUpdated: now,
         },
         create: {
           id: "global-stats",
           totalDonations: totalStats._sum.amount || 0,
-          totalStudentsHelped,
-          currentMonthDonations: monthStats._sum.amount || 0,
-          currentMonthStudents: monthStats._sum.studentsToHelp || 0,
+          totalDonors: totalStats._count.donorEmail || 0,
+          monthlyRecurring: monthStats._sum.amount || 0,
           lastUpdated: now,
         },
       });
@@ -239,14 +235,16 @@ class DonationService {
         where: { id: "global-stats" },
       });
 
-      return (
-        stats || {
-          totalDonations: 0,
-          totalStudentsHelped: 0,
-          currentMonthDonations: 0,
-          currentMonthStudents: 0,
-        }
-      );
+      // Get total students helped from beneficiaries
+      const totalStudentsHelped = await db.studentBeneficiary.count();
+
+      return {
+        totalDonations: stats?.totalDonations || 0,
+        totalDonors: stats?.totalDonors || 0,
+        monthlyRecurring: stats?.monthlyRecurring || 0,
+        totalStudentsHelped,
+        lastUpdated: stats?.lastUpdated || new Date(),
+      };
     } catch {
       throw new Error("Failed to fetch donation statistics");
     }

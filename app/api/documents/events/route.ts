@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/config/auth';
 import { getToken } from 'next-auth/jwt';
 import { getDocumentUser, allDocumentUserEntries, unregisterDocumentUser } from './ud-map';
+import { getStageDisplayName } from '@/lib/utils';
 
 interface ProgressEvent {
   documentId: string;
@@ -24,26 +25,6 @@ interface CompleteEvent {
 
 // Store user-specific controllers and document-to-user mappings
 const userClients = new Map<string, ReadableStreamDefaultController>();
-
-// Helper function to get stage display name
-const getStageDisplayName = (stage: string): string => {
-  switch (stage) {
-    case 'VALIDATING':
-      return 'Validating PDF file...';
-    case 'PDF_PARSE':
-      return 'Extracting text from PDF...';
-    case 'PDF_LOADER':
-      return 'Loading PDF content...';
-    case 'PER_PAGE':
-      return 'Processing with OCR...';
-    case 'CHUNKING':
-      return 'Splitting into chunks...';
-    case 'VECTORIZING':
-      return 'Creating searchable vectors...';
-    default:
-      return stage || 'Processing...';
-  }
-};
 
 // Helper function to safely send SSE message
 const sendSSEMessage = (controller: ReadableStreamDefaultController, data: Record<string, unknown>) => {
@@ -172,7 +153,13 @@ export async function GET(request: NextRequest) {
         }, 30000); // Send heartbeat every 30 seconds
 
         // Handle connection close
+        let isCleanedUp = false;
         const cleanup = () => {
+          if (isCleanedUp) {
+            return; // Prevent multiple cleanup calls
+          }
+          isCleanedUp = true;
+          
           console.log(`SSE connection closed for user ${userId}`);
           clearInterval(heartbeatInterval);
           userClients.delete(userId);
@@ -185,7 +172,9 @@ export async function GET(request: NextRequest) {
           }
           
           try {
-            controller.close();
+            if (!controller.desiredSize) {
+              controller.close();
+            }
           } catch (error) {
             console.error('Error closing SSE controller:', error);
           }
@@ -196,7 +185,7 @@ export async function GET(request: NextRequest) {
         
         // Additional cleanup for various close scenarios
         const checkConnection = setInterval(() => {
-          if (request.signal.aborted) {
+          if (request.signal.aborted && !isCleanedUp) {
             clearInterval(checkConnection);
             cleanup();
           }

@@ -280,13 +280,25 @@ model StudentBeneficiary {
   @@map("student_beneficiaries")
 }
 
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, endpoint])
+  @@map("push_subscriptions")
+}
+
 model DonationStats {
-  id                    String   @id @default(cuid())
-  totalDonations        Float    @default(0)
-  totalStudentsHelped   Int      @default(0)
-  currentMonthDonations Float    @default(0)
-  currentMonthStudents  Int      @default(0)
-  lastUpdated           DateTime @default(now())
+  id                String   @id @default(cuid())
+  totalDonations    Float    @default(0)
+  totalDonors       Int      @default(0)
+  monthlyRecurring  Float    @default(0)
+  lastUpdated       DateTime @default(now())
 
   @@map("donation_stats")
 }
