@@ -7,6 +7,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserType {
+  STUDENT
+}
+
+enum SubscriptionStatus {
+  FREE
+  ACTIVE
+  CANCELED
+  PAST_DUE
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+enum ExamStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum DonationStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum DonationFrequency {
+  MONTHLY
+  QUARTERLY
+  BIANNUAL
+}
+
+enum DocumentExtractionStage {
+  PDF_PARSE
+  PDF_LOADER
+  PER_PAGE
+  CHUNKING
+  VALIDATING
+  VECTORIZING
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -60,12 +104,12 @@ model User {
   subscriptionEnds   DateTime?
   stripeCustomerId   String?
 
-  accounts      Account[]
-  sessions      Session[]
-  documents     Document[]
-  chats         Chat[]
-  exams         Exam[]
-  beneficiaries StudentBeneficiary[]
+  accounts       Account[]
+  sessions       Session[]
+  documents      Document[]
+  chats          Chat[]
+  exams          Exam[]
+  beneficiaries  StudentBeneficiary[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -84,18 +128,18 @@ model VerificationToken {
 }
 
 model Document {
-  id          String  @id @default(cuid())
-  name        String
-  fileName    String
-  fileSize    Int
-  contentType String
-  content     String  @db.Text
-  vectorized  Boolean @default(false)
+  id              String                  @id @default(cuid())
+  name            String
+  fileName        String
+  fileSize        Int
+  contentType     String
+  content         String                  @db.Text
+  vectorized      Boolean                 @default(false)
   extractionStage DocumentExtractionStage @default(PDF_PARSE)
-  fileData String?
+  fileData        String?
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   chats Chat[]
   exams Exam[]
@@ -245,47 +289,4 @@ model DonationStats {
   lastUpdated           DateTime @default(now())
 
   @@map("donation_stats")
-}
-
-enum UserType {
-  STUDENT
-}
-
-enum SubscriptionStatus {
-  FREE
-  ACTIVE
-  CANCELED
-  PAST_DUE
-}
-
-enum MessageRole {
-  USER
-  ASSISTANT
-}
-
-enum ExamStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  COMPLETED
-}
-
-enum DonationStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
-}
-
-enum DonationFrequency {
-  MONTHLY
-  QUARTERLY
-  BIANNUAL
-}
-
-enum DocumentExtractionStage {
-  PDF_PARSE
-  PDF_LOADER
-  PER_PAGE
-  PENDING
-  FAILED
 }

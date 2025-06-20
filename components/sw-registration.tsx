@@ -1,31 +1,26 @@
 "use client";
 
 import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 export function ServiceWorkerRegistration() {
+  const { data: session, status } = useSession();
+
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      // Check if we're in development
       const isDevelopment = process.env.NODE_ENV === 'development';
       
-      // Register service worker
       navigator.serviceWorker
         .register('/service-worker.js', {
           scope: '/',
-          updateViaCache: 'none' // Always check for updates
+          updateViaCache: 'none'
         })
         .then((registration) => {
-          console.log('Service Worker registered successfully:', registration);
-          
-          // Check for updates
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // New service worker available
-                  console.log('New service worker available');
-                  // In development, reload immediately
                   if (isDevelopment) {
                     window.location.reload();
                   }
@@ -35,37 +30,46 @@ export function ServiceWorkerRegistration() {
           });
         })
         .catch((error) => {
-          console.error('Service Worker registration failed:', error);
-          
-          // In development, provide more detailed error information
           if (isDevelopment) {
-            console.error('Service Worker Error Details:', {
-              error: error.message,
-              stack: error.stack,
-              name: error.name
-            });
+            console.warn('Service Worker registration failed:', error);
           }
         });
 
-      // Handle service worker updates
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('Service Worker controller changed');
-        // Only reload in production to avoid development reload loops
         if (!isDevelopment) {
           window.location.reload();
         }
       });
 
-      // Request notification permission
       if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission().catch((error) => {
-          console.warn('Failed to request notification permission:', error);
-        });
+        Notification.requestPermission().catch(() => {});
       }
-    } else {
-      console.log('Service Worker not supported in this browser');
     }
   }, []);
 
-  return null; // This component doesn't render anything
+  // Send session key to service worker when authenticated and ready
+  useEffect(() => {
+    async function sendSessionKeyToSW() {
+      if (
+        typeof window !== 'undefined' &&
+        'serviceWorker' in navigator &&
+        session?.user?.id &&
+        navigator.serviceWorker.controller
+      ) {
+        // Derive a 32-byte key from user id (SHA-256, base64)
+        const enc = new TextEncoder().encode(session.user.id);
+        const hash = await window.crypto.subtle.digest('SHA-256', enc);
+        const base64Key = btoa(String.fromCharCode(...new Uint8Array(hash)));
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SET_SESSION_KEY',
+          key: base64Key,
+        });
+      }
+    }
+    if (status === 'authenticated') {
+      sendSessionKeyToSW();
+    }
+  }, [session, status]);
+
+  return null;
 } 

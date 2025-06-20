@@ -10,13 +10,11 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
-
     const document = await db.document.findFirst({
       where: { 
         id,
@@ -94,9 +92,7 @@ export async function DELETE(
     }
 
     const { id } = await params;
-
     await documentProcessor.deleteDocument(id, session.user.id);
-
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting document:", error);

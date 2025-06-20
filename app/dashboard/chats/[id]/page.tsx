@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -57,11 +57,35 @@ export default function ChatDetailPage() {
   const chatId = params.id as string;
 
   const [chat, setChat] = useState<Chat | null>(null);
-  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState("");
   const [deleting, setDeleting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Pagination state for messages
+  const [startIndex, setStartIndex] = useState(0);
+  const PAGE_SIZE = 10;
+
+  const getVisibleMessages = useCallback(() => {
+    if (!chat) return [];
+    const total = chat.messages.length;
+    const start = Math.max(0, total - PAGE_SIZE - startIndex);
+    const end = total - startIndex;
+    return chat.messages.slice(start, end);
+  }, [chat, startIndex]);
+
+  // Handler to load previous messages
+  const loadPreviousMessages = useCallback(() => {
+    if (!chat) return;
+    setStartIndex((prev) => Math.min(chat.messages.length - PAGE_SIZE, prev + PAGE_SIZE));
+  }, [chat]);
+
+  // When chat or messages change, reset to latest page
+  useEffect(() => {
+    if (chat) {
+      setStartIndex(0);
+    }
+  }, [chat]);
 
   useEffect(() => {
     if (chatId) {
@@ -93,8 +117,6 @@ export default function ChatDetailPage() {
     } catch (error) {
       console.error("Error fetching chat:", error);
       toast.error("Failed to load chat");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -220,15 +242,12 @@ export default function ChatDetailPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </div>
-    );
-  }
+  const jumpToLatest = () => {
+    setStartIndex(0);
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+  };
 
   if (!chat) {
     return (
@@ -252,7 +271,7 @@ export default function ChatDetailPage() {
     <div className="flex flex-col h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-3.5rem)] md:h-[calc(100vh-3.5rem)]">
       {/* Header */}
       <div className="flex-shrink-0 p-4 sm:p-6 pb-0">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 mb-4">
+        <div className="flex items-center justify-between space-y-3 sm:space-y-0 mb-4">
           <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
             <Button
               variant="ghost"
@@ -313,7 +332,15 @@ export default function ChatDetailPage() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 min-h-0">
         <div className="space-y-4 pb-4">
-          {chat.messages.length === 0 ? (
+          {/* Load previous button if there are more messages */}
+          {chat && chat.messages.length - startIndex > PAGE_SIZE && (
+            <div className="flex justify-center mb-2">
+              <Button size="sm" variant="outline" onClick={loadPreviousMessages}>
+                Load previous messages
+              </Button>
+            </div>
+          )}
+          {getVisibleMessages().length === 0 ? (
             <div className="text-center py-8 sm:py-12">
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
@@ -325,52 +352,35 @@ export default function ChatDetailPage() {
                 Ask questions about &quot;{chat.document.name}&quot; to get started.
               </p>
               <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto px-4">
-                <Badge variant="outline" className="text-xs">
-                  &quot;Summarize the main points&quot;
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  &quot;What are the key concepts?&quot;
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  &quot;Explain this topic in detail&quot;
-                </Badge>
+                <Badge variant="outline" className="text-xs">&quot;Summarize the main points&quot;</Badge>
+                <Badge variant="outline" className="text-xs">&quot;What are the key concepts?&quot;</Badge>
+                <Badge variant="outline" className="text-xs">&quot;Explain this topic in detail&quot;</Badge>
               </div>
             </div>
           ) : (
-            chat.messages.map((msg) => (
+            getVisibleMessages().map((msg) => (
               <div
                 key={msg.id}
-                className={`flex items-start space-x-3 ${msg.role === "USER" ? "flex-row-reverse space-x-reverse" : ""
-                  }`}
+                className={`flex items-start space-x-3 ${msg.role === "USER" ? "flex-row-reverse space-x-reverse" : ""}`}
               >
-                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === "USER"
-                    ? "bg-primary/10"
-                    : "bg-secondary/10"
-                  }`}>
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === "USER" ? "bg-primary/10" : "bg-secondary/10"}`}>
                   {msg.role === "USER" ? (
                     <User className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                   ) : (
                     <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-secondary" />
                   )}
                 </div>
-
-                <div className={`flex-1 min-w-0 ${msg.role === "USER" ? "text-right" : ""
-                  }`}>
-                  <div className={`inline-block max-w-[85%] sm:max-w-[80%] p-3 sm:p-4 rounded-lg ${msg.role === "USER"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card border border-border"
-                    }`}>
+                <div className={`flex-1 min-w-0 ${msg.role === "USER" ? "text-right" : ""}`}>
+                  <div className={`inline-block sm:max-w-[85%] lg:max-w-[75%] p-3 sm:p-4 rounded-lg ${msg.role === "USER" ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
                     {msg.role === "USER" ? (
-                      <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                      <div className="text-sm whitespace-pre-wrap break-words">{msg.content}</div>
                     ) : (
                       <div className="text-sm">
                         <MarkdownRenderer content={msg.content} />
                       </div>
                     )}
                   </div>
-
-                  <div className={`flex items-center space-x-2 mt-2 text-xs text-muted-foreground ${msg.role === "USER" ? "justify-end" : ""
-                    }`}>
+                  <div className={`flex items-center space-x-2 mt-2 text-xs text-muted-foreground ${msg.role === "USER" ? "justify-end" : ""}`}>
                     <span className="hidden sm:inline">{formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}</span>
                     <Button
                       variant="ghost"
@@ -385,7 +395,6 @@ export default function ChatDetailPage() {
               </div>
             ))
           )}
-
           {sending && (
             <div className="flex items-start space-x-3">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
@@ -401,11 +410,16 @@ export default function ChatDetailPage() {
               </div>
             </div>
           )}
-
           <div ref={messagesEndRef} />
+          {startIndex > 0 && (
+            <div className="flex justify-center mt-2">
+              <Button size="sm" variant="outline" onClick={jumpToLatest}>
+                Jump to latest
+              </Button>
+            </div>
+          )}
         </div>
       </div>
-
       {/* Message Input */}
       <div className="flex-shrink-0 p-4 sm:p-6 pt-0 pb-4 sm:pb-6">
         <Card className="p-3 sm:p-4 border-border bg-card">
@@ -434,7 +448,6 @@ export default function ChatDetailPage() {
               )}
             </Button>
           </div>
-
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-3 space-y-1 sm:space-y-0 text-xs text-muted-foreground">
             <span className="hidden sm:inline">Press Enter to send, Shift+Enter for new line</span>
             <span className="sm:hidden text-center">Tap Send or press Enter</span>

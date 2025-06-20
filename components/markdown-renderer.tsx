@@ -140,7 +140,8 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
             if (inline && !/katex/.test(className || "")) {
               return (
                 <code
-                  className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground"
+                  className="bg-muted px-1 py-0.5 rounded text-[0.95em] font-mono text-foreground align-middle"
+                  style={{ display: 'inline', fontSize: '0.97em', verticalAlign: 'baseline' }}
                   {...props}
                 >
                   {children}

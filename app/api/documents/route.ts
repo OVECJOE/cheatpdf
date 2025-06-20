@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/config/auth'
 import { documentProcessor } from '@/lib/core/document-processor'
 import db from '@/lib/config/db'
-import { DocumentExtractionStage, SubscriptionStatus } from '@prisma/client'
+import { SubscriptionStatus } from '@prisma/client'
 import { sanitizeFileName } from '@/lib/utils'
 
 export async function GET() {
@@ -22,6 +22,7 @@ export async function GET() {
         fileSize: true,
         contentType: true,
         vectorized: true,
+        extractionStage: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -29,7 +30,7 @@ export async function GET() {
             chats: true,
             exams: true,
           },
-        },
+        }
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -44,6 +45,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  let documentId: string | null = null
+
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
@@ -66,48 +69,79 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
+    // Basic validation
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      return NextResponse.json({ error: 'Only PDF files are supported' }, { status: 400 })
+    }
+
+    if (file.size > 100 * 1024 * 1024) { // 100MB limit
+      return NextResponse.json({ error: 'File size exceeds 100MB limit' }, { status: 400 })
+    }
+
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
+    // Quick PDF validation
+    if (buffer.subarray(0, 4).toString() !== '%PDF') {
+      return NextResponse.json({ error: 'File is not a valid PDF' }, { status: 400 })
+    }
+
     const safeFileName = sanitizeFileName(file.name)
+    const docName = safeFileName.replace(/\.[^/.]+$/, '').replace(/_/g, ' ')
+    const fileData = buffer.toString('base64')
+
+    // Create document
     const document = await db.document.create({
       data: {
-        name: safeFileName.replace(/\.[^/.]+$/, ''),
+        name: docName,
         fileName: safeFileName,
         fileSize: buffer.length,
         contentType: file.type,
         userId: session.user.id,
         vectorized: false,
-        extractionStage: DocumentExtractionStage.PENDING,
         content: "",
-        fileData: buffer.toString('base64')
-      },
+        fileData,
+      }
     })
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || new URL(request.url).origin}/api/documents/process`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        documentId: document.id,
-        userId: session.user.id
-      })
-    }).catch(error => {
-      console.error('Failed to trigger background processing:', error)
-      documentProcessor.deleteDocument(document.id, session.user.id)
-    })
+    documentId = document.id
+
+    // Start processing immediately since global SSE is already established
+    setTimeout(async () => {
+      try {
+        console.log(`Starting direct document processing for ${documentId}`);
+        await documentProcessor.processAndStoreDocument(
+          buffer,
+          safeFileName,
+          session.user.id,
+          document.id
+        )
+        console.log(`Direct document processing completed for ${documentId}`);
+      } catch (error) {
+        console.error(`Direct document processing failed for ${documentId}:`, error);
+      }
+    }, 500); // Short delay to ensure upload response is sent first
 
     return NextResponse.json({
       document: {
         ...document,
-        fileData: undefined
+        fileData: undefined,
       },
-      status: 'processing'
+      status: 'queued'
     }, { status: 201 })
 
   } catch (error) {
-    console.error('Document upload error:', error)
+    // Clean up document if it was created
+    if (documentId) {
+      try {
+        await db.document.delete({ where: { id: documentId } })
+      } catch (cleanupError) {
+        console.error('Failed to cleanup document after error:', cleanupError)
+      }
+    }
+
     return NextResponse.json(
-      { error: 'Failed to upload document: ' + (error as Error).message },
+      { error: (error as Error).message || 'Failed to upload document' },
       { status: 500 }
     )
   }
@@ -131,12 +165,22 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    await documentProcessor.deleteDocument(documentId, session.user.id)
+    // Delete document
+    const document = await db.document.findFirst({
+      where: { id: documentId, userId: session.user.id }
+    })
+
+    if (!document) {
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+    }
+
+    await documentProcessor.deleteDocument(documentId as string, session.user.id)
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error('Document deletion error:', error)
     return NextResponse.json(
-      { error: (error as Error).message },
+      { error: 'Failed to delete document: ' + (error as Error).message },
       { status: 500 }
     )
   }

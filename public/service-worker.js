@@ -1,230 +1,271 @@
-const CACHE_NAME = 'cheatpdf-v1';
-const STATIC_CACHE = 'cheatpdf-static-v1';
-const DYNAMIC_CACHE = 'cheatpdf-dynamic-v1';
+const STATIC_CACHE = 'cheatpdf-static-v3';
+const DYNAMIC_CACHE = 'cheatpdf-dynamic-v3';
 
 // Files to cache immediately
 const STATIC_FILES = [
-  '/',
-  '/dashboard',
-  '/dashboard/upload',
-  '/dashboard/documents',
-  '/dashboard/chats',
-  '/dashboard/exams',
-  '/offline.html'
+  '/offline.html',
+  '/favicon.svg'
 ];
 
+// --- IndexedDB + Encryption Offline Cache ---
+const DB_NAME = 'cheatpdf-offline-db';
+const DB_STORE = 'responses';
+const DB_VERSION = 1;
+const CACHE_LIMIT = 50; // max entries
+const CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes in ms
+let sessionKey = null; // AES-GCM CryptoKey, in-memory only
+
 // Install event - cache static files
-self.addEventListener('install', function(event) {
-  console.log('Service Worker installing...');
+self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(STATIC_CACHE)
-      .then(function(cache) {
-        console.log('Caching static files');
-        return cache.addAll(STATIC_FILES);
-      })
-      .then(function() {
-        console.log('Service Worker installed');
-        return self.skipWaiting();
-      })
-      .catch(function(error) {
-        console.error('Service Worker install failed:', error);
-      })
+      .then(cache => cache.addAll(STATIC_FILES))
+      .then(() => self.skipWaiting())
   );
 });
 
 // Activate event - clean up old caches
-self.addEventListener('activate', function(event) {
-  console.log('Service Worker activating...');
+self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(function(cacheNames) {
-        return Promise.all(
-          cacheNames.map(function(cacheName) {
-            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-              console.log('Deleting old cache:', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      })
-      .then(function() {
-        console.log('Service Worker activated');
-        return self.clients.claim();
-      })
-      .catch(function(error) {
-        console.error('Service Worker activation failed:', error);
-      })
+      .then(names => Promise.all(
+        names.filter(name => name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
+          .map(name => caches.delete(name))
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
 // Background sync for document processing
-self.addEventListener('sync', function(event) {
-  console.log('Background sync triggered:', event.tag);
-  
+self.addEventListener('sync', event => {
   if (event.tag === 'document-processing') {
     event.waitUntil(processPendingDocuments());
   }
 });
 
 // Handle document processing in background
-function processPendingDocuments() {
-  console.log('Processing pending documents...');
-  // This would be implemented when we have the background processing system
-  return Promise.resolve();
+async function processPendingDocuments() {
+  try {
+    const response = await fetch('/api/documents/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trigger: 'background_sync' })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      if (result.processed) {
+        self.registration.showNotification('CheatPDF', {
+          body: `Document "${result.documentId}" processed successfully!`,
+          icon: '/favicon.svg',
+          badge: '/favicon.svg',
+          tag: 'document-processed',
+          data: { documentId: result.documentId, action: 'view_document' }
+        });
+      }
+    }
+  } catch (error) {
+    console.warn('Background processing failed:', error);
+  }
 }
 
-// Fetch event - handle network requests
-self.addEventListener('fetch', function(event) {
-  var request = event.request;
-  var url = new URL(request.url);
-
-  // Handle API requests
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(handleApiRequest(request));
-    return;
-  }
-
-  // Handle static file requests
-  if (request.method === 'GET') {
-    event.respondWith(handleStaticRequest(request));
-    return;
+// Listen for session key from app
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SET_SESSION_KEY') {
+    // event.data.key should be a base64 string
+    importSessionKey(event.data.key).then(key => {
+      sessionKey = key;
+    });
   }
 });
 
-// Handle API requests with offline support
-async function handleApiRequest(request) {
-  // Skip caching for unsupported schemes
-  if (!isCacheableRequest(request)) {
-    return fetch(request);
-  }
-
-  try {
-    const response = await fetch(request);
-    return response;
-  } catch (error) {
-    console.log('Network failed, checking cache:', request.url);
-
-    // For GET requests, try cache
-    if (request.method === 'GET') {
-      const cachedResponse = await caches.match(request);
-      if (cachedResponse) {
-        return cachedResponse;
+// IndexedDB helpers
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE, { keyPath: 'id' });
       }
-      throw error;
-    }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbPut(entry) {
+  const db = await openDB();
+  const tx = db.transaction(DB_STORE, 'readwrite');
+  tx.objectStore(DB_STORE).put(entry);
+  return tx.complete || tx.done || new Promise(r => tx.oncomplete = r);
+}
+async function idbGet(id) {
+  const db = await openDB();
+  const tx = db.transaction(DB_STORE, 'readonly');
+  return new Promise((resolve, reject) => {
+    const req = tx.objectStore(DB_STORE).get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbDelete(id) {
+  const db = await openDB();
+  const tx = db.transaction(DB_STORE, 'readwrite');
+  tx.objectStore(DB_STORE).delete(id);
+  return tx.complete || tx.done || new Promise(r => tx.oncomplete = r);
+}
+async function idbGetAll() {
+  const db = await openDB();
+  const tx = db.transaction(DB_STORE, 'readonly');
+  return new Promise((resolve, reject) => {
+    const req = tx.objectStore(DB_STORE).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
 
-    throw error;
+// Encryption helpers
+async function importSessionKey(base64) {
+  const raw = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+  return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+}
+async function encryptData(data, key) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder().encode(data);
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc);
+  return { iv: Array.from(iv), ciphertext: Array.from(new Uint8Array(ciphertext)) };
+}
+async function decryptData({ iv, ciphertext }, key) {
+  const ivArr = new Uint8Array(iv);
+  const ctArr = new Uint8Array(ciphertext);
+  const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: ivArr }, key, ctArr);
+  return new TextDecoder().decode(dec);
+}
+
+// LRU eviction
+async function enforceCacheLimit() {
+  const all = await idbGetAll();
+  if (all.length > CACHE_LIMIT) {
+    all.sort((a, b) => a.timestamp - b.timestamp); // oldest first
+    for (let i = 0; i < all.length - CACHE_LIMIT; ++i) {
+      await idbDelete(all[i].id);
+    }
+  }
+}
+// Expiry
+async function removeExpired() {
+  const now = Date.now();
+  const all = await idbGetAll();
+  for (const entry of all) {
+    if (now - entry.timestamp > CACHE_MAX_AGE) {
+      await idbDelete(entry.id);
+    }
   }
 }
 
-// Handle static file requests
-async function handleStaticRequest(request) {
-  // Skip caching for unsupported schemes
-  if (!isCacheableRequest(request)) {
-    return fetch(request);
+// Helper to make a cache key
+function makeCacheId(request) {
+  return request.url + '::' + request.method;
+}
+
+// Main fetch event for navigation/static/API
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  // Only cache GET requests for navigation, document, or static assets
+  if (
+    request.method === 'GET' &&
+    (request.mode === 'navigate' ||
+      request.destination === 'document' ||
+      request.destination === 'script' ||
+      request.destination === 'style' ||
+      request.destination === 'font' ||
+      request.destination === 'image' ||
+      request.url.includes('/_next/') ||
+      request.url.includes('/api/')
+    )
+  ) {
+    event.respondWith(offlineCacheHandler(request));
+  }
+});
+
+async function offlineCacheHandler(request) {
+  await removeExpired();
+  const cacheId = makeCacheId(request);
+  const now = Date.now();
+
+  // Check for a fresh cache entry
+  if (sessionKey) {
+    const entry = await idbGet(cacheId);
+    if (entry && (now - entry.timestamp < CACHE_TTL)) {
+      // Serve fresh cache
+      try {
+        const decrypted = await decryptData(entry.encrypted, sessionKey);
+        return new Response(decrypted, { status: 200 });
+      } catch {
+        await idbDelete(cacheId);
+      }
+    }
   }
 
+  // Otherwise, fetch from network and update cache
   try {
     const response = await fetch(request);
-    // Cache successful responses
-    if (response.ok) {
-      var responseClone = response.clone();
-      caches.open(DYNAMIC_CACHE)
-        .then(function (cache) {
-          cache.put(request, responseClone);
-        })
-        .catch(function (error) {
-          console.error('Failed to cache response:', error);
-        });
+    if (response.ok && sessionKey) {
+      const cloned = response.clone();
+      const text = await cloned.text();
+      const encrypted = await encryptData(text, sessionKey);
+      await idbPut({ id: cacheId, encrypted, timestamp: Date.now() });
+      await enforceCacheLimit();
     }
     return response;
-  } catch (error_1) {
-    console.log('Network failed, serving from cache:', request.url);
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
+  } catch (err) {
+    // If offline, try IndexedDB (may be stale)
+    if (sessionKey) {
+      const entry = await idbGet(cacheId);
+      if (entry && entry.encrypted) {
+        try {
+          const decrypted = await decryptData(entry.encrypted, sessionKey);
+          return new Response(decrypted, { status: 200 });
+        } catch {
+          await idbDelete(cacheId);
+        }
+      }
     }
-
-    // Return offline page for navigation requests
-    if (request.destination === 'document') {
+    // fallback to offline.html for navigation
+    if (request.mode === 'navigate' || request.destination === 'document') {
       return caches.match('/offline.html');
     }
-
-    throw error_1;
+    throw err;
   }
-}
-
-// Check if a request is cacheable
-function isCacheableRequest(request) {
-  var url = new URL(request.url);
-  
-  // Only cache HTTP and HTTPS requests
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    return false;
-  }
-  
-  // Skip chrome-extension, chrome, and other browser-specific schemes
-  if (url.protocol === 'chrome-extension:' || 
-      url.protocol === 'chrome:' || 
-      url.protocol === 'moz-extension:' ||
-      url.protocol === 'safari-extension:') {
-    return false;
-  }
-  
-  // Skip data URLs
-  if (url.protocol === 'data:') {
-    return false;
-  }
-  
-  // Skip blob URLs
-  if (url.protocol === 'blob:') {
-    return false;
-  }
-  
-  return true;
 }
 
 // Push event for notifications
-self.addEventListener('push', function(event) {
-  console.log('Push event received:', event);
-  
-  var options = {
+self.addEventListener('push', event => {
+  const options = {
     body: event.data ? event.data.text() : 'Document processing update',
     icon: '/favicon.svg',
     badge: '/favicon.svg',
     vibrate: [100, 50, 100],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1
-    },
+    data: { dateOfArrival: Date.now(), primaryKey: 1 },
     actions: [
-      {
-        action: 'explore',
-        title: 'View Documents',
-        icon: '/favicon.svg'
-      },
-      {
-        action: 'close',
-        title: 'Close',
-        icon: '/favicon.svg'
-      }
+      { action: 'explore', title: 'View Documents', icon: '/favicon.svg' },
+      { action: 'close', title: 'Close', icon: '/favicon.svg' }
     ]
   };
   
-  event.waitUntil(
-    self.registration.showNotification('CheatPDF', options)
-  );
+  event.waitUntil(self.registration.showNotification('CheatPDF', options));
 });
 
 // Notification click event
-self.addEventListener('notificationclick', function(event) {
-  console.log('Notification clicked:', event);
-  
+self.addEventListener('notificationclick', event => {
   event.notification.close();
   
-  if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/dashboard/documents')
-    );
-  }
+  const url = event.notification.data?.action === 'view_document' 
+    ? `/dashboard/documents/${event.notification.data.documentId}`
+    : event.action === 'explore' 
+      ? '/dashboard/documents'
+      : '/dashboard';
+
+  event.waitUntil(clients.openWindow(url));
 });

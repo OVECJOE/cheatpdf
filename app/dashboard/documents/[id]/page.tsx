@@ -147,38 +147,36 @@ export default function DocumentDetailPage() {
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 w-full">
           <Button
             variant="outline"
             size="sm"
             onClick={() => router.push("/dashboard/documents")}
-            className="self-start sm:self-auto"
+            className="w-full md:w-auto self-start md:self-auto"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">{document.name}</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg md:text-2xl font-bold text-foreground break-words">{document.name}</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
               Document details and activity overview
             </p>
           </div>
         </div>
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+        <div className="flex items-center justify-between md:justify-end flex-grow md:flex-grow-0 gap-2 md:gap-2 w-full md:w-auto">
           <Button
             onClick={() => router.push(`/dashboard/chats/new?document=${document.id}`)}
             disabled={!document.vectorized}
-            className="w-full sm:w-auto"
+            className="w-full md:w-auto"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
             Start Chat
           </Button>
-          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="w-full sm:w-auto">
+              <Button variant="outline" size="icon" className="w-full p-2 md:w-auto">
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -209,30 +207,30 @@ export default function DocumentDetailPage() {
       </div>
 
       {/* Document Info Card */}
-      <Card className="p-4 sm:p-6 border-border bg-card">
-        <div className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
-          <div className="p-2 sm:p-3 bg-primary/10 rounded-lg self-start">
-            <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+      <Card className="p-4 md:p-6 border-border bg-card w-full">
+        <div className="flex flex-col md:flex-row md:items-start gap-3 md:gap-4">
+          <div className="p-2 md:p-3 bg-primary/10 rounded-lg self-start">
+            <FileText className="w-6 h-6 md:w-8 md:h-8 text-primary" />
           </div>
-          <div className="flex-1 space-y-2">
-            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-              <h2 className="text-lg sm:text-xl font-semibold text-foreground">{document.name}</h2>
-              <Badge variant={document.vectorized ? "default" : "secondary"} className="self-start sm:self-auto">
+          <div className="flex-1 space-y-2 min-w-0">
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
+              <h2 className="text-lg md:text-xl font-semibold text-foreground break-words">{document.name}</h2>
+              <Badge variant={document.vectorized ? "default" : "secondary"} className="self-start md:self-auto">
                 {document.vectorized ? "Ready" : "Processing"}
               </Badge>
             </div>
-            <p className="text-sm sm:text-base text-muted-foreground break-all">{document.fileName}</p>
-            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 text-xs sm:text-sm text-muted-foreground">
+            <p className="text-sm md:text-base text-muted-foreground break-all">{document.fileName}</p>
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6 text-xs md:text-sm text-muted-foreground">
               <span className="flex items-center">
-                <HardDrive className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <HardDrive className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                 {formatFileSize(document.fileSize)}
               </span>
               <span className="flex items-center">
-                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <Calendar className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                 {format(new Date(document.createdAt), "MMM d, yyyy")}
               </span>
               <span className="flex items-center">
-                <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <Clock className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                 {formatDistanceToNow(new Date(document.updatedAt), { addSuffix: true })}
               </span>
             </div>
@@ -241,39 +239,38 @@ export default function DocumentDetailPage() {
       </Card>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <Card className="p-3 sm:p-4 border-border bg-card">
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="p-1.5 sm:p-2 bg-secondary/10 rounded-lg">
-              <MessageCircle className="w-4 h-4 sm:w-6 sm:h-6 text-secondary" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 w-full">
+        <Card className="p-3 md:p-4 border-border bg-card w-full">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="p-1.5 md:p-2 bg-secondary/10 rounded-lg">
+              <MessageCircle className="w-4 h-4 md:w-6 md:h-6 text-secondary" />
             </div>
             <div>
-              <p className="text-xl sm:text-2xl font-bold text-foreground">{document._count.chats}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Total Chats</p>
+              <p className="text-xl md:text-2xl font-bold text-foreground">{document._count.chats}</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Total Chats</p>
             </div>
           </div>
         </Card>
-
-        <Card className="p-3 sm:p-4 border-border bg-card">
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="p-1.5 sm:p-2 bg-accent/10 rounded-lg">
-              <ClipboardList className="w-4 h-4 sm:w-6 sm:h-6 text-accent" />
+        <Card className="p-3 md:p-4 border-border bg-card w-full">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="p-1.5 md:p-2 bg-accent/10 rounded-lg">
+              <ClipboardList className="w-4 h-4 md:w-6 md:h-6 text-accent" />
             </div>
             <div>
-              <p className="text-xl sm:text-2xl font-bold text-foreground">{document._count.exams}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Total Exams</p>
+              <p className="text-xl md:text-2xl font-bold text-foreground">{document._count.exams}</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Total Exams</p>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 w-full overflow-x-auto">
         {/* Recent Chats */}
-        <Card className="p-4 sm:p-6 border-border bg-card">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 space-y-2 sm:space-y-0">
-            <h3 className="text-base sm:text-lg font-semibold text-foreground flex items-center">
-              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+        <Card className="p-4 md:p-6 border-border bg-card w-full">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3 md:mb-4 gap-2 md:gap-0">
+            <h3 className="text-base md:text-lg font-semibold text-foreground flex items-center">
+              <MessageCircle className="w-4 h-4 md:w-5 md:h-5 mr-2" />
               Recent Chats
             </h3>
             {document._count.chats > 0 && (
@@ -282,45 +279,45 @@ export default function DocumentDetailPage() {
                 size="sm"
                 onClick={() => router.push(`/dashboard/chats/new?document=${document.id}`)}
                 disabled={!document.vectorized}
-                className="self-start sm:self-auto"
+                className="w-full md:w-auto"
               >
                 New Chat
               </Button>
             )}
           </div>
-          
           {document.chats.length === 0 ? (
-            <div className="text-center py-6 sm:py-8">
-              <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mx-auto mb-2 sm:mb-3" />
-              <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">No chats yet</p>
+            <div className="text-center py-6 md:py-8">
+              <MessageCircle className="w-10 h-10 md:w-12 md:h-12 text-muted-foreground mx-auto mb-2 md:mb-3" />
+              <p className="text-sm md:text-base text-muted-foreground mb-3 md:mb-4">No chats yet</p>
               <Button
                 size="sm"
                 onClick={() => router.push(`/dashboard/chats/new?document=${document.id}`)}
                 disabled={!document.vectorized}
+                className="w-full md:w-auto"
               >
                 Start First Chat
               </Button>
             </div>
           ) : (
-            <div className="space-y-2 sm:space-y-3">
+            <div className="space-y-2 md:space-y-3">
               {document.chats.map((chat) => (
                 <div
                   key={chat.id}
-                  className="flex items-center justify-between p-2 sm:p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                  className="flex items-center justify-between p-2 md:p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
                   onClick={() => router.push(`/dashboard/chats/${chat.id}`)}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate text-sm sm:text-base">{chat.title}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
+                    <p className="font-medium text-foreground truncate text-sm md:text-base">{chat.title}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       {formatDistanceToNow(new Date(chat.createdAt), { addSuffix: true })}
                     </p>
                   </div>
-                  <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0 ml-2" />
+                  <Eye className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground flex-shrink-0 ml-2" />
                 </div>
               ))}
               {document._count.chats > 5 && (
                 <div className="text-center pt-2">
-                  <p className="text-xs sm:text-sm text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     +{document._count.chats - 5} more chats
                   </p>
                 </div>
@@ -328,12 +325,11 @@ export default function DocumentDetailPage() {
             </div>
           )}
         </Card>
-
         {/* Recent Exams */}
-        <Card className="p-4 sm:p-6 border-border bg-card">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 space-y-2 sm:space-y-0">
-            <h3 className="text-base sm:text-lg font-semibold text-foreground flex items-center">
-              <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+        <Card className="p-4 md:p-6 border-border bg-card w-full">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3 md:mb-4 gap-2 md:gap-0">
+            <h3 className="text-base md:text-lg font-semibold text-foreground flex items-center">
+              <ClipboardList className="w-4 h-4 md:w-5 md:h-5 mr-2" />
               Recent Exams
             </h3>
             {document._count.exams > 0 && (
@@ -342,50 +338,50 @@ export default function DocumentDetailPage() {
                 size="sm"
                 onClick={() => router.push(`/dashboard/exams/new?document=${document.id}`)}
                 disabled={!document.vectorized}
-                className="self-start sm:self-auto"
+                className="w-full md:w-auto"
               >
                 New Exam
               </Button>
             )}
           </div>
-          
           {document.exams.length === 0 ? (
-            <div className="text-center py-6 sm:py-8">
-              <ClipboardList className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mx-auto mb-2 sm:mb-3" />
-              <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">No exams yet</p>
+            <div className="text-center py-6 md:py-8">
+              <ClipboardList className="w-10 h-10 md:w-12 md:h-12 text-muted-foreground mx-auto mb-2 md:mb-3" />
+              <p className="text-sm md:text-base text-muted-foreground mb-3 md:mb-4">No exams yet</p>
               <Button
                 size="sm"
                 onClick={() => router.push(`/dashboard/exams/new?document=${document.id}`)}
                 disabled={!document.vectorized}
+                className="w-full md:w-auto"
               >
                 Create First Exam
               </Button>
             </div>
           ) : (
-            <div className="space-y-2 sm:space-y-3">
+            <div className="space-y-2 md:space-y-3">
               {document.exams.map((exam) => (
                 <div
                   key={exam.id}
-                  className="flex items-center justify-between p-2 sm:p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                  className="flex items-center justify-between p-2 md:p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
                   onClick={() => router.push(`/dashboard/exams/${exam.id}`)}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate text-sm sm:text-base">{exam.title}</p>
-                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mt-1">
-                      <Badge variant="outline" className="text-xs self-start sm:self-auto">
+                    <p className="font-medium text-foreground truncate text-sm md:text-base">{exam.title}</p>
+                    <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs self-start md:self-auto">
                         {exam.status}
                       </Badge>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         {formatDistanceToNow(new Date(exam.createdAt), { addSuffix: true })}
                       </p>
                     </div>
                   </div>
-                  <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0 ml-2" />
+                  <Eye className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground flex-shrink-0 ml-2" />
                 </div>
               ))}
               {document._count.exams > 5 && (
                 <div className="text-center pt-2">
-                  <p className="text-xs sm:text-sm text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     +{document._count.exams - 5} more exams
                   </p>
                 </div>
