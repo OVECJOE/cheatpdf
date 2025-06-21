@@ -133,7 +133,7 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
 
           // Enhanced code blocks with your theme colors
           code: (props) => {
-            const { node, className, children, ...rest } = props;
+            const { className, children, ...rest } = props;
             const match = /language-(\w+)/.exec(className || "");
             const language = match ? match[1] : "";
 
