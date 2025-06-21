@@ -240,7 +240,7 @@ export default function NewChatPage() {
                               : "text-primary/70"
                           }`} />
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 max-w-[90%]">
                           <h3 className="font-semibold text-foreground truncate">
                             {document.name}
                           </h3>
