@@ -240,11 +240,11 @@ export default function NewChatPage() {
                               : "text-primary/70"
                           }`} />
                         </div>
-                        <div className="flex-1 min-w-0 max-w-[90%]">
-                          <h3 className="font-semibold text-foreground truncate">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-foreground truncate max-w-[90%]">
                             {document.name}
                           </h3>
-                          <p className="text-sm text-muted-foreground truncate">
+                          <p className="text-sm text-muted-foreground truncate max-w-[90%]">
                             {document.fileName}
                           </p>
                         </div>
@@ -303,7 +303,7 @@ export default function NewChatPage() {
                       <div className="flex items-center space-x-3">
                         <FileText className="w-5 h-5 text-primary flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground truncate">
+                          <p className="font-medium text-foreground truncate max-w-[90%]">
                             {selectedDocument.name}
                           </p>
                           <p className="text-sm text-muted-foreground">
