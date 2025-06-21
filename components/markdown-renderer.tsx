@@ -137,11 +137,13 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
             const match = /language-(\w+)/.exec(className || "");
             const language = match ? match[1] : "";
 
-            if ((node && (node as { type?: string }).type === 'inlineCode') && !/katex/.test(className || "")) {
+            // Check if this is inline code (not a code block)
+            const isInline = !className || (!language && !className.includes('katex'));
+
+            if (isInline) {
               return (
                 <code
-                  className="bg-muted px-1 py-0.5 rounded text-[0.95em] font-mono text-foreground align-middle"
-                  style={{ display: 'inline', fontSize: '0.97em', verticalAlign: 'baseline' }}
+                  className="bg-muted text-foreground font-mono text-[0.875em] px-1.5 py-0.5 rounded-sm !inline whitespace-nowrap"
                   {...rest}
                 >
                   {children}
@@ -149,6 +151,7 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
               );
             }
 
+            // This is a code block
             return (
               <div className="mb-4">
                 {language && (
@@ -185,7 +188,7 @@ const MarkdownMathRenderer: React.FC<MarkdownMathRendererProps> = ({
             <th className="border-b border-border px-4 py-3 text-left font-semibold text-foreground text-sm bg-muted">
               {children}
             </th>
-          ),
+            ),
           td: ({ children }) => (
             <td className="border-b border-border px-4 py-3 text-foreground text-sm">
               {children}
